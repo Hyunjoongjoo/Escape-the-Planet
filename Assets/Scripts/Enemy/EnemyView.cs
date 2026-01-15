@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PlayerView : MonoBehaviour
+public class EnemyView : MonoBehaviour
 {
     [SerializeField] private Animator _anim;
     [SerializeField] private SpriteRenderer _sprite;
@@ -11,18 +11,15 @@ public class PlayerView : MonoBehaviour
         {
             _anim = GetComponent<Animator>();
         }
+
         if (_sprite == null)
         {
             _sprite = GetComponent<SpriteRenderer>();
         }
     }
 
-    public void SetMove(float x, float speed)
+    public void SetMove(float x)
     {
-
-        _anim.SetFloat("Speed", speed);
-
-        //X축 기준으로 이미지 방향 전환
         if (x > 0)
         {
             _sprite.flipX = false;
@@ -31,25 +28,17 @@ public class PlayerView : MonoBehaviour
         {
             _sprite.flipX = true;
         }
+
+        _anim.SetFloat("Speed", Mathf.Abs(x));
     }
-    public void SetDead(bool value)
-    {
-        _anim.SetBool("IsDead", value);
-    }
+
     public void PlayHit()
     {
         _anim.SetTrigger("Hit");
     }
 
-    public void PlayAttack()
+    public void PlayDead()
     {
-        _anim.SetTrigger("Attack");
-    }
-    public void SetVisible(bool value)
-    {
-        if (_sprite != null)
-        {
-            _sprite.enabled = value;
-        }
+        _anim.SetBool("IsDead", true);
     }
 }

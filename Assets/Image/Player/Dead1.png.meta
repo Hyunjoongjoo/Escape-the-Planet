@@ -1,19 +1,10 @@
 fileFormatVersion: 2
-guid: e1cefa3ed57db9c4f8e03ed465abf17d
+guid: 311087b69aad2e044b7c13567987709f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 4457663794195168306
-    second: Hit_0
-  - first:
-      213: -5364657433725072944
-    second: Hit_1
-  - first:
-      213: -4947864620551752270
-    second: Hit_2
-  - first:
-      213: 8733631668352107246
-    second: Hit_3
+      213: 2239153577810235294
+    second: Dead1_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -60,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 80
+  spritePixelsToUnits: 34
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -161,89 +152,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Hit_0
+      name: Dead1_0
       rect:
         serializedVersion: 2
-        x: 188
-        y: 337
-        width: 171
-        height: 210
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 17
+        y: 31
+        width: 113
+        height: 58
+      alignment: 9
+      pivot: {x: 0.49859384, y: 0.88081414}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 23c7f156a9dccdd30800000000000000
-      internalID: 4457663794195168306
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Hit_1
-      rect:
-        serializedVersion: 2
-        x: 403
-        y: 337
-        width: 197
-        height: 214
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 0d98829bc78ec85b0800000000000000
-      internalID: -5364657433725072944
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Hit_2
-      rect:
-        serializedVersion: 2
-        x: 642
-        y: 337
-        width: 197
-        height: 215
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 2b53a4fa757a55bb0800000000000000
-      internalID: -4947864620551752270
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Hit_3
-      rect:
-        serializedVersion: 2
-        x: 912
-        y: 337
-        width: 173
-        height: 200
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: ee2ca37cab7143970800000000000000
-      internalID: 8733631668352107246
+      spriteID: e9f8ce2c052131f10800000000000000
+      internalID: 2239153577810235294
       vertices: []
       indices: 
       edges: []
@@ -252,7 +177,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 3bd2ef251ad6d0c41bfd4b9f13d55499
     internalID: 0
     vertices: []
     indices: 
@@ -262,10 +187,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Hit_0: 4457663794195168306
-      Hit_1: -5364657433725072944
-      Hit_2: -4947864620551752270
-      Hit_3: 8733631668352107246
+      Dead1_0: 2239153577810235294
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

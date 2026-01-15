@@ -13,6 +13,9 @@ GameObject:
   - component: {fileID: 8399182175847015580}
   - component: {fileID: 6969027826276686070}
   - component: {fileID: 7210584906722885470}
+  - component: {fileID: 6948405316957910650}
+  - component: {fileID: 6492898895146147617}
+  - component: {fileID: 7086554905837338611}
   m_Layer: 0
   m_Name: Enemy1
   m_TagString: Enemy
@@ -149,8 +152,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 2.15, y: 2.27}
+  m_Offset: {x: 0.021618247, y: -0.6869261}
+  m_Size: {x: 1.1555655, y: 1.1555655}
   m_Direction: 0
 --- !u!50 &7210584906722885470
 Rigidbody2D:
@@ -178,4 +181,44 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
+--- !u!114 &6948405316957910650
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3677597617400711434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70ba54a99693dfd4680afe19b19fc6e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyView
+  _anim: {fileID: 8399182175847015580}
+  _sprite: {fileID: 912240971900846226}
+--- !u!114 &6492898895146147617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3677597617400711434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa8a8236a132e2a4e9a5a3f8d1b5535e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyState
+  current: 0
+--- !u!114 &7086554905837338611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3677597617400711434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b884818b01189554fa122ddf8d8f5456, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  stats: {fileID: 11400000, guid: 2510aafdfb9153c4db8f61024f6fcdbe, type: 2}
