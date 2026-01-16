@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6948405316957910650}
   - component: {fileID: 6492898895146147617}
   - component: {fileID: 7086554905837338611}
+  - component: {fileID: -5617942573071438566}
   m_Layer: 0
   m_Name: Enemy1
   m_TagString: Enemy
@@ -178,9 +179,9 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &6948405316957910650
 MonoBehaviour:
@@ -221,4 +222,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b884818b01189554fa122ddf8d8f5456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  stats: {fileID: 11400000, guid: 2510aafdfb9153c4db8f61024f6fcdbe, type: 2}
+  _stats: {fileID: 11400000, guid: 2510aafdfb9153c4db8f61024f6fcdbe, type: 2}
+  _damageInterval: 0.5
+  _useBuiltInMovement: 0
+--- !u!114 &-5617942573071438566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3677597617400711434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db2d99cd70a1ee841b152250ff9e5bd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyChaserAI
+  _player: {fileID: 0}
+  _detectRange: 12
+  _lostRange: 18
+  _walkSpeed: 1
+  _runSpeed: 6.1
+  _idleTimeMin: 0.5
+  _idleTimeMax: 1.5
+  _walkTimeMin: 1
+  _walkTimeMax: 2

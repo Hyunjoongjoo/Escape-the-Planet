@@ -5,6 +5,7 @@ public class PlayerView : MonoBehaviour
     [SerializeField] private Animator _anim;
     [SerializeField] private SpriteRenderer _sprite;
 
+
     private void Awake()
     {
         if (_anim == null)
@@ -17,21 +18,13 @@ public class PlayerView : MonoBehaviour
         }
     }
 
-    public void SetMove(float x, float speed)
+    public void SetMove(int facing, float speed01)
     {
+        _sprite.flipX = (facing == -1);
 
-        _anim.SetFloat("Speed", speed);
-
-        //X축 기준으로 이미지 방향 전환
-        if (x > 0)
-        {
-            _sprite.flipX = false;
-        }
-        else if (x < 0)
-        {
-            _sprite.flipX = true;
-        }
+        _anim.SetFloat("Speed", speed01);
     }
+
     public void SetDead(bool value)
     {
         _anim.SetBool("IsDead", value);

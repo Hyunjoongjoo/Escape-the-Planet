@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 1988400974562895650}
   - component: {fileID: 4669714965343213798}
   - component: {fileID: 6167899845666770973}
+  - component: {fileID: 3131796683418922067}
   m_Layer: 0
   m_Name: Enemy2
   m_TagString: Enemy
@@ -178,9 +179,9 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &1988400974562895650
 MonoBehaviour:
@@ -221,4 +222,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b884818b01189554fa122ddf8d8f5456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  stats: {fileID: 11400000, guid: 2510aafdfb9153c4db8f61024f6fcdbe, type: 2}
+  _stats: {fileID: 11400000, guid: 2ac661661d85a1e48aafc70cc8c14c76, type: 2}
+  _damageInterval: 0.5
+  _useBuiltInMovement: 1
+--- !u!114 &3131796683418922067
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8313538246144434867}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8778e569bf030204c91a08c82d3e5a69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyWatcherAlarm
+  _player: {fileID: 0}
+  _detectRange: 3
+  _keepDistance: 5
+  _keepTolerance: 0.5
+  _cancelRange: 10
+  _alarmTime: 3
+  _callRange: 30
+  _resetTimerOnCancel: 1

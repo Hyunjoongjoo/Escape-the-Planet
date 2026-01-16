@@ -5,14 +5,21 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyState))]
 public class EnemyController : MonoBehaviour
 {
-    [SerializeField] private EnemyStats stats;
+    [SerializeField] private EnemyStats _stats;
+    [SerializeField] private float _damageInterval = 0.5f;
+    [SerializeField] private bool _useBuiltInMovement = true;
 
     private EnemyModel _model;
     private EnemyView _view;
     private EnemyState _state;
     private Rigidbody2D _rb;
-
     private Transform _player;
+    private float _nextDamageTime = 0f;
+
+    public float MoveSpeed
+    {
+        get { return _model.moveSpeed; }
+    }
 
     private void Awake()
     {
@@ -24,18 +31,30 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
-        _model.Init(stats);
-        _player = GameObject.FindWithTag("Player").transform;
+        _model.Init(_stats);
+        GameObject playerObj = GameObject.FindWithTag("Player");
+        if (playerObj != null)
+        {
+            _player = playerObj.transform;
+        }
+        else
+        {
+            Debug.LogError("플레이어 태그 오브젝트를 찾지 못함");
+        }
     }
 
     private void FixedUpdate()
     {
+
         if (_state.current == EnemyState.State.Dead)
         {
             return;
         }
 
-        MoveTowardPlayer();
+        if (_useBuiltInMovement)
+        {
+            UpdateMovement();
+        }
     }
 
     private void Update()
@@ -50,14 +69,44 @@ public class EnemyController : MonoBehaviour
     {
         if (_player == null)
         {
+            _rb.linearVelocity = Vector2.zero;
+            return;
+        }
+        Vector2 dir = (_player.position - transform.position).normalized;
+
+        _rb.linearVelocity = dir * _model.moveSpeed;
+        float speed01 = _rb.linearVelocity.magnitude / _model.moveSpeed;
+        _view.SetMove(dir, speed01);
+        _state.ChangeState(EnemyState.State.Move);
+    }
+
+    private void UpdateMovement()
+    {
+        if (_player == null)
+        {
             return;
         }
 
-        Vector2 dir = (_player.position - transform.position).normalized;
-        _rb.MovePosition(_rb.position + dir * _model.moveSpeed * Time.fixedDeltaTime);
+        float dist = Vector2.Distance(transform.position, _player.position);
 
-        _view.SetMove(dir.x);
-        _state.ChangeState(EnemyState.State.Move);
+
+        if (_model.alwaysChase == true)
+        {
+            MoveTowardPlayer();
+            return;
+        }
+
+
+        if (dist <= _model.approachDistance)
+        {
+            MoveTowardPlayer();
+        }
+        else
+        {
+
+            _view.SetMove(Vector2.zero, 0f);
+            _state.ChangeState(EnemyState.State.Idle);
+        }
     }
 
 
@@ -68,11 +117,17 @@ public class EnemyController : MonoBehaviour
             return;
         }
 
+        if (Time.time < _nextDamageTime)
+        {
+            return;
+        }
+
         if (collision.collider.CompareTag("Player"))
         {
-            Debug.Log("Enemy OnCollisionStay2D with: " + collision.collider.name);
             PlayerController player = collision.collider.GetComponent<PlayerController>();
             player?.TakeDamage(_model.contactDamage);
+
+            _nextDamageTime = Time.time + _damageInterval;
         }
     }
 
@@ -91,11 +146,23 @@ public class EnemyController : MonoBehaviour
             Die();
         }
     }
-
+    
     private void Die()
     {
         _state.ChangeState(EnemyState.State.Dead);
+
+        EnemyChaserAI ai = GetComponent<EnemyChaserAI>();
+        if (ai != null)
+        {
+            ai.enabled = false;
+        }
+
+        _view.SetMove(Vector2.zero, 0f);
         _view.PlayDead();
+
+        _rb.linearVelocity = Vector2.zero;
+        _rb.simulated = false;
+
         Destroy(gameObject, 1.5f);
     }
 }

@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 1355136411180059880}
   - component: {fileID: 466528316304022138}
   - component: {fileID: 5409565594470372409}
+  - component: {fileID: 2994842963847793504}
   m_Layer: 0
   m_Name: Enemy3
   m_TagString: Enemy
@@ -178,9 +179,9 @@ Rigidbody2D:
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
 --- !u!114 &1355136411180059880
 MonoBehaviour:
@@ -221,4 +222,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b884818b01189554fa122ddf8d8f5456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  stats: {fileID: 11400000, guid: 2510aafdfb9153c4db8f61024f6fcdbe, type: 2}
+  _stats: {fileID: 11400000, guid: 2510aafdfb9153c4db8f61024f6fcdbe, type: 2}
+  _damageInterval: 0.5
+  _useBuiltInMovement: 0
+--- !u!114 &2994842963847793504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 292313202207572370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 615606a1c3e15144b9a6965a1d4381ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLurkerAI
+  _player: {fileID: 0}
+  _detectRange: 6
+  _hideRange: 9
+  _patrolTimeMin: 1
+  _patrolTimeMax: 2
+  _hideTimeMin: 0.4
+  _hideTimeMax: 1.2
+  _fleeSpeedMultiplier: 1.4
+  _minFleeTime: 1.2
+  _revealRange: 8
+  _fullRevealRange: 5
+  _revealAlpha: 0.15
+  _fleeStartAlpha: 0.6
+  _fleeFadeDuration: 0.05
+  _sprite: {fileID: 4827499228775436516}

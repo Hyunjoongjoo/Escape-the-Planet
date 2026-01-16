@@ -7,6 +7,7 @@ public class PlayerModel
     public int maxHP;
     public int currentHP;
     public float attackPower;
+    public WeaponData currentWeapon;
 
     public void Init(PlayerStats model)
     {

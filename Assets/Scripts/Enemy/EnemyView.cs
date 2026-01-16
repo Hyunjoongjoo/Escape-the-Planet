@@ -18,18 +18,19 @@ public class EnemyView : MonoBehaviour
         }
     }
 
-    public void SetMove(float x)
+    public void SetMove(Vector2 dir, float speed01)
     {
-        if (x > 0)
+
+        if (dir.x > 0f)
         {
             _sprite.flipX = false;
         }
-        else if (x < 0)
+        else if (dir.x < 0f)
         {
             _sprite.flipX = true;
         }
 
-        _anim.SetFloat("Speed", Mathf.Abs(x));
+        _anim.SetFloat("Speed", speed01);
     }
 
     public void PlayHit()

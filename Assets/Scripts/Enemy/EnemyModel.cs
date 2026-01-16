@@ -7,6 +7,8 @@ public class EnemyModel
     public int maxHP;
     public int currentHP;
     public int contactDamage;
+    public bool alwaysChase;
+    public float approachDistance;
 
     private EnemyStats _stats;
 
