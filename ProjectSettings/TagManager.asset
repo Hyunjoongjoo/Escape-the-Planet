@@ -43,5 +43,17 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Ground
+    uniqueID: 2050723837
+    locked: 0
+  - name: Entity
+    uniqueID: 1963787685
+    locked: 0
+  - name: WallTop
+    uniqueID: 1022014395
+    locked: 0
+  - name: Overlay
+    uniqueID: 2981030701
+    locked: 0
   m_RenderingLayers:
   - Default

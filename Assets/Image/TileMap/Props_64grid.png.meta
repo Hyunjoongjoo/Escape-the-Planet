@@ -1,0 +1,761 @@
+fileFormatVersion: 2
+guid: 7d1ea257ef23c4246a88532ab7534244
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1443604907125457734
+    second: Props_64grid_0
+  - first:
+      213: 3609502557138544495
+    second: Props_64grid_1
+  - first:
+      213: -3678175486155622137
+    second: Props_64grid_2
+  - first:
+      213: 2698781612900351531
+    second: Props_64grid_3
+  - first:
+      213: -6934997269722783158
+    second: Props_64grid_4
+  - first:
+      213: 1879972370510220601
+    second: Props_64grid_5
+  - first:
+      213: 5838364820083887840
+    second: Props_64grid_6
+  - first:
+      213: 7381932966845201095
+    second: Props_64grid_7
+  - first:
+      213: 3468249419673378310
+    second: Props_64grid_8
+  - first:
+      213: -2009462937406753831
+    second: Props_64grid_9
+  - first:
+      213: 5171332786918829372
+    second: Props_64grid_10
+  - first:
+      213: -5111075054456835101
+    second: Props_64grid_11
+  - first:
+      213: 8599807044102836289
+    second: Props_64grid_12
+  - first:
+      213: -5038276789343612951
+    second: Props_64grid_13
+  - first:
+      213: 1130282860831996080
+    second: Props_64grid_14
+  - first:
+      213: 6843806984742120185
+    second: Props_64grid_15
+  - first:
+      213: 8952767738025309426
+    second: Props_64grid_16
+  - first:
+      213: 739660836059221002
+    second: Props_64grid_17
+  - first:
+      213: -3389380554072677946
+    second: Props_64grid_18
+  - first:
+      213: -6504172754053543452
+    second: Props_64grid_19
+  - first:
+      213: -2458804952846991252
+    second: Props_64grid_20
+  - first:
+      213: -430652953482830973
+    second: Props_64grid_21
+  - first:
+      213: -6099055456791106668
+    second: Props_64grid_22
+  - first:
+      213: -2940107146402439646
+    second: Props_64grid_23
+  - first:
+      213: 6061267551439836104
+    second: Props_64grid_24
+  - first:
+      213: -5711064698343570027
+    second: Props_64grid_25
+  - first:
+      213: 2943332518395607681
+    second: Props_64grid_26
+  - first:
+      213: -2074671791525736533
+    second: Props_64grid_27
+  - first:
+      213: 1508743500205056652
+    second: Props_64grid_28
+  - first:
+      213: -5713343259829633468
+    second: Props_64grid_29
+  - first:
+      213: 5026055003825016279
+    second: Props_64grid_30
+  - first:
+      213: 6422492947100664452
+    second: Props_64grid_31
+  - first:
+      213: 6883867896706413192
+    second: Props_64grid_32
+  - first:
+      213: -8664451648762141567
+    second: Props_64grid_33
+  - first:
+      213: 3889517280800088534
+    second: Props_64grid_34
+  - first:
+      213: 7108694584993653187
+    second: Props_64grid_35
+  - first:
+      213: -5065302638198581569
+    second: Props_64grid_36
+  - first:
+      213: -2309647601663440311
+    second: Props_64grid_37
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Props_64grid_0
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 392
+        width: 68
+        height: 85
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: abcb6ca4cf847fbe0800000000000000
+      internalID: -1443604907125457734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_1
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 389
+        width: 98
+        height: 89
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f676b16a377871230800000000000000
+      internalID: 3609502557138544495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_2
+      rect:
+        serializedVersion: 2
+        x: 269
+        y: 391
+        width: 145
+        height: 85
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 709f42612ee74fcc0800000000000000
+      internalID: -3678175486155622137
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_3
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 392
+        width: 54
+        height: 84
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2ef743049ff37520800000000000000
+      internalID: 2698781612900351531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_4
+      rect:
+        serializedVersion: 2
+        x: 491
+        y: 392
+        width: 120
+        height: 85
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a42aed3f9b0f1cf90800000000000000
+      internalID: -6934997269722783158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_5
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 393
+        width: 117
+        height: 83
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93d8fc319e0071a10800000000000000
+      internalID: 1879972370510220601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_6
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 272
+        width: 119
+        height: 101
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0eecc32fed9060150800000000000000
+      internalID: 5838364820083887840
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_7
+      rect:
+        serializedVersion: 2
+        x: 221
+        y: 272
+        width: 184
+        height: 103
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7cabd841ce4e17660800000000000000
+      internalID: 7381932966845201095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_8
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 284
+        width: 121
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60e161cb872b12030800000000000000
+      internalID: 3468249419673378310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_9
+      rect:
+        serializedVersion: 2
+        x: 561
+        y: 289
+        width: 105
+        height: 80
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9d3be82ea14fc14e0800000000000000
+      internalID: -2009462937406753831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_10
+      rect:
+        serializedVersion: 2
+        x: 680
+        y: 293
+        width: 57
+        height: 70
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3da0a355c344c740800000000000000
+      internalID: 5171332786918829372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_11
+      rect:
+        serializedVersion: 2
+        x: 82
+        y: 185
+        width: 42
+        height: 69
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e37dbe4150d119b0800000000000000
+      internalID: -5111075054456835101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_12
+      rect:
+        serializedVersion: 2
+        x: 140
+        y: 183
+        width: 65
+        height: 84
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 140d6a061f6a85770800000000000000
+      internalID: 8599807044102836289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_13
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 185
+        width: 196
+        height: 68
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ef041b34f1741ab0800000000000000
+      internalID: -5038276789343612951
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_14
+      rect:
+        serializedVersion: 2
+        x: 419
+        y: 183
+        width: 131
+        height: 79
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b87a9ff5429faf00800000000000000
+      internalID: 1130282860831996080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_15
+      rect:
+        serializedVersion: 2
+        x: 566
+        y: 187
+        width: 82
+        height: 76
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9fa24ec41361afe50800000000000000
+      internalID: 6843806984742120185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_16
+      rect:
+        serializedVersion: 2
+        x: 656
+        y: 191
+        width: 81
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f4739de2de9e3c70800000000000000
+      internalID: 8952767738025309426
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_17
+      rect:
+        serializedVersion: 2
+        x: 92
+        y: 120
+        width: 259
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0c049b8c9dc34a00800000000000000
+      internalID: 739660836059221002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_18
+      rect:
+        serializedVersion: 2
+        x: 380
+        y: 121
+        width: 179
+        height: 49
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c1a1e1085086f0d0800000000000000
+      internalID: -3389380554072677946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Props_64grid_20
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 125
+        width: 162
+        height: 41
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6085953ce190edd0800000000000000
+      internalID: -2458804952846991252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: ac606fd5cc8122a4d8e2aedca9291b7b
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Props_64grid_0: -1443604907125457734
+      Props_64grid_1: 3609502557138544495
+      Props_64grid_10: 5171332786918829372
+      Props_64grid_11: -5111075054456835101
+      Props_64grid_12: 8599807044102836289
+      Props_64grid_13: -5038276789343612951
+      Props_64grid_14: 1130282860831996080
+      Props_64grid_15: 6843806984742120185
+      Props_64grid_16: 8952767738025309426
+      Props_64grid_17: 739660836059221002
+      Props_64grid_18: -3389380554072677946
+      Props_64grid_19: -6504172754053543452
+      Props_64grid_2: -3678175486155622137
+      Props_64grid_20: -2458804952846991252
+      Props_64grid_21: -430652953482830973
+      Props_64grid_22: -6099055456791106668
+      Props_64grid_23: -2940107146402439646
+      Props_64grid_24: 6061267551439836104
+      Props_64grid_25: -5711064698343570027
+      Props_64grid_26: 2943332518395607681
+      Props_64grid_27: -2074671791525736533
+      Props_64grid_28: 1508743500205056652
+      Props_64grid_29: -5713343259829633468
+      Props_64grid_3: 2698781612900351531
+      Props_64grid_30: 5026055003825016279
+      Props_64grid_31: 6422492947100664452
+      Props_64grid_32: 6883867896706413192
+      Props_64grid_33: -8664451648762141567
+      Props_64grid_34: 3889517280800088534
+      Props_64grid_35: 7108694584993653187
+      Props_64grid_36: -5065302638198581569
+      Props_64grid_37: -2309647601663440311
+      Props_64grid_4: -6934997269722783158
+      Props_64grid_5: 1879972370510220601
+      Props_64grid_6: 5838364820083887840
+      Props_64grid_7: 7381932966845201095
+      Props_64grid_8: 3468249419673378310
+      Props_64grid_9: -2009462937406753831
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

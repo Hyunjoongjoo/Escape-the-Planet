@@ -1,0 +1,465 @@
+fileFormatVersion: 2
+guid: 841bc668088c6bf4395eb2a89c7bc17c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6529308362669930435
+    second: FactoryTileset_0
+  - first:
+      213: 6213874634017289214
+    second: FactoryTileset_1
+  - first:
+      213: 608676406172777720
+    second: FactoryTileset_2
+  - first:
+      213: 8423254808551240326
+    second: FactoryTileset_3
+  - first:
+      213: 3251795418016053460
+    second: FactoryTileset_4
+  - first:
+      213: 6242743316813930941
+    second: FactoryTileset_5
+  - first:
+      213: 7512340830373429379
+    second: FactoryTileset_6
+  - first:
+      213: 7010641696877883333
+    second: FactoryTileset_7
+  - first:
+      213: -4536324240943637892
+    second: FactoryTileset_8
+  - first:
+      213: -2947217872680234456
+    second: FactoryTileset_9
+  - first:
+      213: -3225718529580542242
+    second: FactoryTileset_10
+  - first:
+      213: 3323203291617342911
+    second: FactoryTileset_11
+  - first:
+      213: -1078679252322326104
+    second: FactoryTileset_12
+  - first:
+      213: -8746826985219064464
+    second: FactoryTileset_13
+  - first:
+      213: -2330983085738658471
+    second: FactoryTileset_14
+  - first:
+      213: -4983967393522596283
+    second: FactoryTileset_15
+  - first:
+      213: 1169030704418462123
+    second: FactoryTileset_16
+  - first:
+      213: -1735518238012290354
+    second: FactoryTileset_17
+  - first:
+      213: 121969506703324854
+    second: FactoryTileset_18
+  - first:
+      213: 2346858209336449445
+    second: FactoryTileset_19
+  - first:
+      213: -2023524787300978210
+    second: FactoryTileset_20
+  - first:
+      213: 6334475690122998960
+    second: FactoryTileset_21
+  - first:
+      213: -6901154415430543960
+    second: FactoryTileset_22
+  - first:
+      213: 9141854769266057786
+    second: FactoryTileset_23
+  - first:
+      213: 2611907235097839050
+    second: FactoryTileset_24
+  - first:
+      213: -3148519063227107860
+    second: FactoryTileset_25
+  - first:
+      213: 4889134456949441190
+    second: FactoryTileset_26
+  - first:
+      213: -5266702499960110440
+    second: FactoryTileset_27
+  - first:
+      213: 4220716672614785891
+    second: FactoryTileset_28
+  - first:
+      213: 6926663139608872015
+    second: FactoryTileset_29
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WindowsStoreApps
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: FactoryTileset_0
+      rect:
+        serializedVersion: 2
+        x: 534
+        y: 383
+        width: 184
+        height: 115
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d38421e43ac3365a0800000000000000
+      internalID: -6529308362669930435
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FactoryTileset_1
+      rect:
+        serializedVersion: 2
+        x: 8
+        y: 180
+        width: 111
+        height: 88
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef3396f9e0e1c3650800000000000000
+      internalID: 6213874634017289214
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FactoryTileset_18
+      rect:
+        serializedVersion: 2
+        x: 664
+        y: 826
+        width: 338
+        height: 17
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b63b70ce9251b100800000000000000
+      internalID: 121969506703324854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FactoryTileset_19
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 741
+        width: 203
+        height: 94
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a955b17b17b19020800000000000000
+      internalID: 2346858209336449445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FactoryTileset_23
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 559
+        width: 477
+        height: 67
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a32605e1a746ede70800000000000000
+      internalID: 9141854769266057786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FactoryTileset_26
+      rect:
+        serializedVersion: 2
+        x: 25
+        y: 273
+        width: 332
+        height: 78
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a2089582e1b9d340800000000000000
+      internalID: 4889134456949441190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FactoryTileset_2
+      rect:
+        serializedVersion: 2
+        x: 337
+        y: 404
+        width: 186
+        height: 83
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 400ce835f251f7840b3a42a72ffed176
+      internalID: 608676406172777720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: FactoryTileset_3
+      rect:
+        serializedVersion: 2
+        x: 414
+        y: 652
+        width: 72
+        height: 77
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f28a271ca34e73947a3607b6828431af
+      internalID: 8423254808551240326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 30b25a91d7193aa4095d5bd1d4f85219
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      FactoryTileset_0: -6529308362669930435
+      FactoryTileset_1: 6213874634017289214
+      FactoryTileset_10: -3225718529580542242
+      FactoryTileset_11: 3323203291617342911
+      FactoryTileset_12: -1078679252322326104
+      FactoryTileset_13: -8746826985219064464
+      FactoryTileset_14: -2330983085738658471
+      FactoryTileset_15: -4983967393522596283
+      FactoryTileset_16: 1169030704418462123
+      FactoryTileset_17: -1735518238012290354
+      FactoryTileset_18: 121969506703324854
+      FactoryTileset_19: 2346858209336449445
+      FactoryTileset_2: 608676406172777720
+      FactoryTileset_20: -2023524787300978210
+      FactoryTileset_21: 6334475690122998960
+      FactoryTileset_22: -6901154415430543960
+      FactoryTileset_23: 9141854769266057786
+      FactoryTileset_24: 2611907235097839050
+      FactoryTileset_25: -3148519063227107860
+      FactoryTileset_26: 4889134456949441190
+      FactoryTileset_27: -5266702499960110440
+      FactoryTileset_28: 4220716672614785891
+      FactoryTileset_29: 6926663139608872015
+      FactoryTileset_3: 8423254808551240326
+      FactoryTileset_4: 3251795418016053460
+      FactoryTileset_5: 6242743316813930941
+      FactoryTileset_6: 7512340830373429379
+      FactoryTileset_7: 7010641696877883333
+      FactoryTileset_8: -4536324240943637892
+      FactoryTileset_9: -2947217872680234456
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
