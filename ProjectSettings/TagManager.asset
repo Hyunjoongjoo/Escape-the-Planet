@@ -10,7 +10,7 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Walls
   - Water
   - UI
   - 
@@ -49,11 +49,17 @@ TagManager:
   - name: Entity
     uniqueID: 1963787685
     locked: 0
-  - name: WallTop
+  - name: Wall1
     uniqueID: 1022014395
     locked: 0
-  - name: Overlay
-    uniqueID: 2981030701
+  - name: Wall2
+    uniqueID: 2210689051
+    locked: 0
+  - name: New Layer 4
+    uniqueID: 3349955285
+    locked: 0
+  - name: Player
+    uniqueID: 3500792955
     locked: 0
   m_RenderingLayers:
   - Default

@@ -4,11 +4,17 @@ public class EnemyLurkerAI : MonoBehaviour
 {
     [SerializeField] private Transform _player;
 
-    [SerializeField] private float _detectRange = 6f;     // 플레이어 인지 거리
-    [SerializeField] private float _hideRange = 10f;      // 이 이상 멀면 다시 배회로
+    [SerializeField] private float _detectRange = 6f;
+    [SerializeField] private float _hideRange = 10f;
 
-    [SerializeField] private float _patrolTimeMin = 1f;
-    [SerializeField] private float _patrolTimeMax = 2f;
+    [SerializeField] private float _wanderMoveTimeMin = 0.6f;
+    [SerializeField] private float _wanderMoveTimeMax = 1.5f;
+    [SerializeField] private float _wanderIdleTimeMin = 0.25f;
+    [SerializeField] private float _wanderIdleTimeMax = 0.9f;
+    [SerializeField] private float _wanderSpeedMultiplier = 0.5f;
+
+    [SerializeField] private float _wanderObstacleRayDist = 0.6f;
+    [SerializeField] private LayerMask _blockMask;
 
     [SerializeField] private float _hideTimeMin = 0.4f;
     [SerializeField] private float _hideTimeMax = 1.2f;
@@ -16,8 +22,8 @@ public class EnemyLurkerAI : MonoBehaviour
     [SerializeField] private float _fleeSpeedMultiplier = 1.4f;
     [SerializeField] private float _minFleeTime = 1.0f;
 
-    [SerializeField] private float _revealRange = 12f;    //이 거리에서 반투명
-    [SerializeField] private float _fullRevealRange = 7f; //이 거리에서 보이게
+    [SerializeField] private float _revealRange = 12f;
+    [SerializeField] private float _fullRevealRange = 7f;
     [SerializeField, Range(0f, 1f)] private float _revealAlpha = 0.2f;
 
     [SerializeField, Range(0f, 1f)] private float _fleeStartAlpha = 0.6f;
@@ -25,26 +31,36 @@ public class EnemyLurkerAI : MonoBehaviour
 
     [SerializeField] private SpriteRenderer _sprite;
 
-    private Rigidbody2D _rigid;
     private EnemyView _view;
     private EnemyState _enemyState;
     private EnemyController _controller;
 
-    private enum State 
-    { 
-        Patrol, Hidden, Chase, Flee 
+    private enum State
+    {
+        Patrol,
+        Hidden,
+        Chase,
+        Flee
     }
-    private State _state = State.Patrol;
 
-    private Vector2 _moveDir;
+    private enum PatrolMode
+    {
+        Move,
+        Idle
+    }
+
+    private State _state = State.Patrol;
+    private PatrolMode _patrolMode = PatrolMode.Move;
+
+    private Vector2 _wanderDir = Vector2.zero;
+    private float _wanderTimer = 0f;
+
     private float _stateTimer;
     private float _fleeTimer;
-
     private float _fleeFadeTimer = 0f;
 
     private void Awake()
     {
-        _rigid = GetComponent<Rigidbody2D>();
         _view = GetComponent<EnemyView>();
         _enemyState = GetComponent<EnemyState>();
         _controller = GetComponent<EnemyController>();
@@ -82,13 +98,12 @@ public class EnemyLurkerAI : MonoBehaviour
 
         if (_enemyState.current == EnemyState.State.Dead)
         {
-            _rigid.linearVelocity = Vector2.zero;
-            _view.SetMove(Vector2.zero, 0f);
+            _controller.StopMove();
             SetAlpha(1f);
             return;
         }
 
-        float dist = Vector2.Distance(_rigid.position, _player.position);
+        float dist = Vector2.Distance(transform.position, _player.position);
 
         UpdateVisibility(dist);
 
@@ -117,23 +132,66 @@ public class EnemyLurkerAI : MonoBehaviour
             return;
         }
 
-        _stateTimer -= Time.fixedDeltaTime;
+        _wanderTimer -= Time.fixedDeltaTime;
 
-        float speed = _controller.MoveSpeed * 0.5f;
-        _rigid.linearVelocity = _moveDir * speed;
-
-        _view.SetMove(_moveDir, 0.5f);
-
-        if (_stateTimer <= 0f)
+        if (_patrolMode == PatrolMode.Idle)
         {
-            ChangeState(State.Patrol);
+            _controller.StopMove();
+
+            if (_wanderTimer <= 0f)
+            {
+                StartPatrolMove();
+            }
+
+            return;
         }
+
+        if (_wanderDir == Vector2.zero)
+        {
+            PickNewWanderDir();
+        }
+
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, _wanderDir, _wanderObstacleRayDist, _blockMask);
+        if (hit.collider != null)
+        {
+            StartPatrolIdle();
+            return;
+        }
+
+        _controller.ApplyExternalMove(_wanderDir, _wanderSpeedMultiplier);
+
+        if (_wanderTimer <= 0f)
+        {
+            StartPatrolIdle();
+        }
+    }
+
+    private void PickNewWanderDir()
+    {
+        _wanderDir = Random.insideUnitCircle.normalized;
+        if (_wanderDir == Vector2.zero)
+        {
+            _wanderDir = Vector2.right;
+        }
+    }
+
+    private void StartPatrolMove()
+    {
+        _patrolMode = PatrolMode.Move;
+        _wanderTimer = Random.Range(_wanderMoveTimeMin, _wanderMoveTimeMax);
+        PickNewWanderDir();
+    }
+
+    private void StartPatrolIdle()
+    {
+        _patrolMode = PatrolMode.Idle;
+        _wanderTimer = Random.Range(_wanderIdleTimeMin, _wanderIdleTimeMax);
+        _wanderDir = Vector2.zero;
     }
 
     private void UpdateHidden(float dist)
     {
-        _rigid.linearVelocity = Vector2.zero;
-        _view.SetMove(Vector2.zero, 0f);
+        _controller.StopMove();
 
         _stateTimer -= Time.fixedDeltaTime;
 
@@ -151,12 +209,8 @@ public class EnemyLurkerAI : MonoBehaviour
 
     private void UpdateChase(float dist)
     {
-        Vector2 dir = ((Vector2)_player.position - _rigid.position).normalized;
-
-        float speed = _controller.MoveSpeed;
-        _rigid.linearVelocity = dir * speed;
-
-        _view.SetMove(dir, 1f);
+        Vector2 dir = ((Vector2)_player.position - (Vector2)transform.position).normalized;
+        _controller.ApplyExternalMove(dir, 1f);
 
         if (dist >= _hideRange)
         {
@@ -168,12 +222,10 @@ public class EnemyLurkerAI : MonoBehaviour
     {
         _fleeTimer += Time.fixedDeltaTime;
 
-        Vector2 awayDir = (_rigid.position - (Vector2)_player.position).normalized;
+        Vector2 awayDir = ((Vector2)transform.position - (Vector2)_player.position).normalized;
 
-        float speed = _controller.MoveSpeed * _fleeSpeedMultiplier;
-        _rigid.linearVelocity = awayDir * speed;
-
-        _view.SetMove(awayDir, 1f);
+        float speedMul = _fleeSpeedMultiplier;
+        _controller.ApplyExternalMove(awayDir, speedMul);
 
         if (_fleeTimer >= _minFleeTime && dist >= _hideRange)
         {
@@ -188,12 +240,10 @@ public class EnemyLurkerAI : MonoBehaviour
         if (next == State.Hidden)
         {
             _stateTimer = Random.Range(_hideTimeMin, _hideTimeMax);
-            _rigid.linearVelocity = Vector2.zero;
         }
         else if (next == State.Patrol)
         {
-            _stateTimer = Random.Range(_patrolTimeMin, _patrolTimeMax);
-            _moveDir = Random.value < 0.5f ? Vector2.left : Vector2.right;
+            StartPatrolMove();
         }
         else if (next == State.Flee)
         {
@@ -201,6 +251,7 @@ public class EnemyLurkerAI : MonoBehaviour
             _fleeFadeTimer = 0f;
         }
     }
+
     private void UpdateVisibility(float dist)
     {
         if (_sprite == null)
@@ -244,6 +295,16 @@ public class EnemyLurkerAI : MonoBehaviour
         SetAlpha(1f);
     }
 
+    public void OnHit()
+    {
+        if (_enemyState.current == EnemyState.State.Dead)
+        {
+            return;
+        }
+
+        ChangeState(State.Flee);
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (_enemyState.current == EnemyState.State.Dead)
@@ -256,11 +317,17 @@ public class EnemyLurkerAI : MonoBehaviour
             ChangeState(State.Flee);
         }
     }
+
     private void SetAlpha(float alpha)
     {
-        Color color = _sprite.color;
-        color.a = alpha;
-        _sprite.color = color;
+        if (_sprite == null)
+        {
+            return;
+        }
+
+        Color c = _sprite.color;
+        c.a = alpha;
+        _sprite.color = c;
     }
 
     private void OnDrawGizmosSelected()

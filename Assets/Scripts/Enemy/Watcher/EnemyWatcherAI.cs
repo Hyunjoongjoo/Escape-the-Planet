@@ -3,16 +3,18 @@ using UnityEngine;
 public class EnemyWatcherAI : MonoBehaviour
 {
     [SerializeField] private Transform _player;
-    [SerializeField] private float _detectRange = 3f;     // 근접해야 감시 시작
-    [SerializeField] private float _keepDistance = 5f;    // 감시 상태에서 유지할 거리
-    [SerializeField] private float _keepTolerance = 0.5f; // 거리 오차 허용
+    [SerializeField] private float _detectRange = 4f;     // 근접해야 감시 시작
+    [SerializeField] private float _keepDistance = 6f;    // 감시 상태에서 유지할 거리
+    [SerializeField] private float _keepTolerance = 1f; // 거리 오차 허용
     [SerializeField] private float _cancelRange = 10f;    // 이 이상 멀어지면 감시 취소
 
     [SerializeField] private float _alarmTime = 3f;        // 감시 유지 시 호출까지 시간
     [SerializeField] private float _callRange = 30f;       // 추적자 호출 범위
     [SerializeField] private bool _resetTimerOnCancel = true;
 
-    private Rigidbody2D _rb;
+    [SerializeField] private float _moveSpeedMultiplier = 0.8f;
+
+    private Rigidbody2D _rigid;
     private EnemyView _view;
     private EnemyState _enemyState;
     private EnemyController _controller;
@@ -23,7 +25,7 @@ public class EnemyWatcherAI : MonoBehaviour
 
     private void Awake()
     {
-        _rb = GetComponent<Rigidbody2D>();
+        _rigid = GetComponent<Rigidbody2D>();
         _view = GetComponent<EnemyView>();
         _enemyState = GetComponent<EnemyState>();
         _controller = GetComponent<EnemyController>();
@@ -53,12 +55,12 @@ public class EnemyWatcherAI : MonoBehaviour
 
         if (_enemyState.current == EnemyState.State.Dead)
         {
-            _rb.linearVelocity = Vector2.zero;
+            _rigid.linearVelocity = Vector2.zero;
             _view.SetMove(Vector2.zero, 0f);
             return;
         }
 
-        float dist = Vector2.Distance(_rb.position, _player.position);
+        float dist = Vector2.Distance(_rigid.position, _player.position);
 
         if (!_watching && dist <= _detectRange)
         {
@@ -69,8 +71,6 @@ public class EnemyWatcherAI : MonoBehaviour
         if (_watching && dist >= _cancelRange)
         {
             _watching = false;
-            _rb.linearVelocity = Vector2.zero;
-            _view.SetMove(Vector2.zero, 0f);
 
             if (_resetTimerOnCancel)
             {
@@ -83,33 +83,33 @@ public class EnemyWatcherAI : MonoBehaviour
 
         if (!_watching)
         {
-            _rb.linearVelocity = Vector2.zero;
+            _rigid.linearVelocity = Vector2.zero;
             _view.SetMove(Vector2.zero, 0f);
             return;
         }
 
-        Vector2 dirToPlayer = ((Vector2)_player.position - _rb.position).normalized;
+        Vector2 dirToPlayer = ((Vector2)_player.position - _rigid.position).normalized;
 
         _view.SetMove(dirToPlayer, 0f);
 
-        float speed = _controller.MoveSpeed;
+        float speed = _controller.MoveSpeed * _moveSpeedMultiplier;
 
         float minDist = _keepDistance - _keepTolerance;
         float maxDist = _keepDistance + _keepTolerance;
 
         if (dist > maxDist)
         {
-            _rb.linearVelocity = dirToPlayer * speed;
+            _rigid.linearVelocity = dirToPlayer * speed;
             _view.SetMove(dirToPlayer, 0.5f);
         }
         else if (dist < minDist)
         {
-            _rb.linearVelocity = -dirToPlayer * speed;
+            _rigid.linearVelocity = -dirToPlayer * speed;
             _view.SetMove(-dirToPlayer, 0.5f);
         }
         else
         {
-            _rb.linearVelocity = Vector2.zero;
+            _rigid.linearVelocity = Vector2.zero;
             _view.SetMove(dirToPlayer, 0f);
         }
 

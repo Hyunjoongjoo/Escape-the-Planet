@@ -7,54 +7,30 @@ public class EnemyController : MonoBehaviour
 {
     [SerializeField] private EnemyStats _stats;
     [SerializeField] private float _damageInterval = 0.5f;
-    [SerializeField] private bool _useBuiltInMovement = true;
 
     private EnemyModel _model;
     private EnemyView _view;
     private EnemyState _state;
-    private Rigidbody2D _rb;
-    private Transform _player;
+    private Rigidbody2D _rigid;
+
     private float _nextDamageTime = 0f;
 
-    public float MoveSpeed
-    {
-        get { return _model.moveSpeed; }
-    }
+    public float MoveSpeed => _model.moveSpeed;
+    public Rigidbody2D Rigidbody => _rigid;
+    public EnemyView View => _view;
+    public EnemyState State => _state;
 
     private void Awake()
     {
         _model = new EnemyModel();
         _view = GetComponent<EnemyView>();
         _state = GetComponent<EnemyState>();
-        _rb = GetComponent<Rigidbody2D>();
+        _rigid = GetComponent<Rigidbody2D>();
     }
 
     private void Start()
     {
         _model.Init(_stats);
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null)
-        {
-            _player = playerObj.transform;
-        }
-        else
-        {
-            Debug.LogError("플레이어 태그 오브젝트를 찾지 못함");
-        }
-    }
-
-    private void FixedUpdate()
-    {
-
-        if (_state.current == EnemyState.State.Dead)
-        {
-            return;
-        }
-
-        if (_useBuiltInMovement)
-        {
-            UpdateMovement();
-        }
     }
 
     private void Update()
@@ -64,51 +40,6 @@ public class EnemyController : MonoBehaviour
             _model.ScaleByTime(Time.deltaTime);
         }
     }
-
-    private void MoveTowardPlayer()
-    {
-        if (_player == null)
-        {
-            _rb.linearVelocity = Vector2.zero;
-            return;
-        }
-        Vector2 dir = (_player.position - transform.position).normalized;
-
-        _rb.linearVelocity = dir * _model.moveSpeed;
-        float speed01 = _rb.linearVelocity.magnitude / _model.moveSpeed;
-        _view.SetMove(dir, speed01);
-        _state.ChangeState(EnemyState.State.Move);
-    }
-
-    private void UpdateMovement()
-    {
-        if (_player == null)
-        {
-            return;
-        }
-
-        float dist = Vector2.Distance(transform.position, _player.position);
-
-
-        if (_model.alwaysChase == true)
-        {
-            MoveTowardPlayer();
-            return;
-        }
-
-
-        if (dist <= _model.approachDistance)
-        {
-            MoveTowardPlayer();
-        }
-        else
-        {
-
-            _view.SetMove(Vector2.zero, 0f);
-            _state.ChangeState(EnemyState.State.Idle);
-        }
-    }
-
 
     private void OnCollisionStay2D(Collision2D collision)
     {
@@ -141,27 +72,65 @@ public class EnemyController : MonoBehaviour
         _model.TakeDamage(dmg);
         _view.PlayHit();
 
+        EnemyLurkerAI lurker = GetComponent<EnemyLurkerAI>();
+        if (lurker != null)
+        {
+            lurker.OnHit();
+        }
+
         if (_model.IsDead())
         {
             Die();
         }
     }
-    
+
+    public void ApplyExternalMove(Vector2 dir01, float speedMultiplier = 1f)
+    {
+        if (_state.current == EnemyState.State.Dead)
+        {
+            return;
+        }
+
+        Vector2 dir = dir01.normalized;
+
+        float speed = _model.moveSpeed * Mathf.Max(0f, speedMultiplier);
+        _rigid.linearVelocity = dir * speed;
+
+        float speed01 = 0f;
+        if (_model.moveSpeed > 0f)
+        {
+            speed01 = _rigid.linearVelocity.magnitude / _model.moveSpeed;
+        }
+
+        _view.SetMove(dir, speed01);
+        _state.ChangeState(EnemyState.State.Move);
+    }
+
+    public void StopMove()
+    {
+        if (_state.current == EnemyState.State.Dead)
+        {
+            return;
+        }
+
+        _rigid.linearVelocity = Vector2.zero;
+    }
+
     private void Die()
     {
         _state.ChangeState(EnemyState.State.Dead);
 
-        EnemyChaserAI ai = GetComponent<EnemyChaserAI>();
-        if (ai != null)
+        ChaserPathChase pathAI = GetComponent<ChaserPathChase>();
+        if (pathAI != null)
         {
-            ai.enabled = false;
+            pathAI.enabled = false;
         }
 
         _view.SetMove(Vector2.zero, 0f);
         _view.PlayDead();
 
-        _rb.linearVelocity = Vector2.zero;
-        _rb.simulated = false;
+        _rigid.linearVelocity = Vector2.zero;
+        _rigid.simulated = false;
 
         Destroy(gameObject, 1.5f);
     }

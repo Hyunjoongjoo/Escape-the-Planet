@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b434a8d012a8b174691043c4ebb7a78d, type: 3}
   m_Name: PlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
-  baseMoveSpeed: 6
+  baseMoveSpeed: 10
   baseMaxHP: 100
   baseAttackPower: 10
   baseInteractRange: 1.2
