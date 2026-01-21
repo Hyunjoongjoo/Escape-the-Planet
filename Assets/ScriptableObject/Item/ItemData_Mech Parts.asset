@@ -15,3 +15,5 @@ MonoBehaviour:
   id: 6
   itemName: "\uBAA8\uD130"
   sprite: {fileID: -8980926471118162133, guid: bd5e81ea88096644f9a171a13d8e177d, type: 3}
+  weight: 30
+  spawnRadius: 9

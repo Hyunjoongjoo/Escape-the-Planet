@@ -17,9 +17,11 @@ public enum ItemId
 [CreateAssetMenu(fileName = "ItemData", menuName = "Scriptable Objects/ItemData")]
 public class ItemData : ScriptableObject
 {
-    public ItemId id;
+    public ItemId id = ItemId.NONE;
     //string itemIdStr = itemData.id.ToString();
     //ItemId id = (ItemId)System.Enum.Parse(typeof(ItemId), itemIdStr);
     public string itemName;
     public Sprite sprite;
+    [Range(1, 1000)] public int weight = 100;
+    public float spawnRadius = 1.2f;
 }

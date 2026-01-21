@@ -43,4 +43,90 @@ public class ItemDatabase : ScriptableObject
 
         return _map.TryGetValue(id, out ItemData data) ? data : null;
     }
+    //public ItemData GetRandom()
+    //{
+    //    if (_items == null || _items.Length == 0)
+    //    {
+    //        return null;
+    //    }
+
+    //    int safety = 200;
+    //    while (safety-- > 0)
+    //    {
+    //        int idx = Random.Range(0, _items.Length);
+    //        ItemData data = _items[idx];
+    //        if (data != null && data.id != ItemId.NONE)
+    //        {
+    //            return data;
+    //        }
+    //    }
+
+    //    return null;
+    //}
+    public ItemData GetRandomWeighted(ItemId excludeId = ItemId.NONE)
+    {
+        if (_items == null || _items.Length == 0)
+        {
+            return null;
+        }
+
+        int total = 0;
+
+        for (int i = 0; i < _items.Length; i++)
+        {
+            ItemData it = _items[i];
+            if (it == null)
+            {
+                continue;
+            }
+
+            if (it.id == ItemId.NONE)
+            {
+                continue;
+            }
+
+            if (excludeId != ItemId.NONE && it.id == excludeId)
+            {
+                continue;
+            }
+
+            total += Mathf.Max(0, it.weight);
+        }
+
+        if (total <= 0)
+        {
+            return null;
+        }
+
+        int roll = Random.Range(0, total);
+        int acc = 0;
+
+        for (int i = 0; i < _items.Length; i++)
+        {
+            ItemData it = _items[i];
+            if (it == null)
+            {
+                continue;
+            }
+
+            if (it.id == ItemId.NONE)
+            {
+                continue;
+            }
+
+            if (excludeId != ItemId.NONE && it.id == excludeId)
+            {
+                continue;
+            }
+
+            acc += Mathf.Max(0, it.weight);
+
+            if (roll < acc)
+            {
+                return it;
+            }
+        }
+
+        return null;
+    }
 }

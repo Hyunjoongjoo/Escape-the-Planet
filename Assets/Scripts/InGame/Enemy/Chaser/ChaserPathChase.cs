@@ -7,8 +7,6 @@ using UnityEngine.Tilemaps;
 public class ChaserPathChase : MonoBehaviour
 {
     [SerializeField] private Transform _target;
-    [SerializeField] private Tilemap _groundTilemap;
-    [SerializeField] private LayerMask _blockMask;
 
     [SerializeField] private float _repathInterval = 0.35f;
     [SerializeField] private int _maxExpand = 2500;
@@ -37,6 +35,38 @@ public class ChaserPathChase : MonoBehaviour
     private float _repathTimer = 0f;
     private Vector3Int _lastGoalCell;
 
+    private void Awake()
+    {
+        _enemy = GetComponent<EnemyController>();
+    }
+    
+
+    private IEnumerator Start()
+    {
+        yield return null;
+
+        if (PathfindingManager.Instance == null)
+        {
+            enabled = false;
+            yield break;
+        }
+
+        _grid = PathfindingManager.Instance.Grid;
+        _astar = PathfindingManager.Instance.AStar;
+
+        if (_grid == null || _astar == null)
+        {
+            enabled = false;
+            yield break;
+        }
+
+        if (_target != null)
+        {
+            _lastGoalCell = _grid.WorldToCell(_target.position);
+            _repathTimer = 0f;
+        }
+    }
+
     public void SetTarget(Transform target)
     {
         _target = target;
@@ -56,6 +86,13 @@ public class ChaserPathChase : MonoBehaviour
 
         _cellPath.Clear();
         _pathIndex = 0;
+
+        if (_enemy != null)
+        {
+            _enemy.StopMove();
+            _enemy.View.SetMove(Vector2.zero, 0f);
+            _enemy.State.ChangeState(EnemyState.State.Idle);
+        }
     }
 
     public void ForceChase(Transform target)
@@ -76,30 +113,7 @@ public class ChaserPathChase : MonoBehaviour
         _repathTimer = 0f;
     }
 
-    private void Awake()
-    {
-        _enemy = GetComponent<EnemyController>();
-    }
 
-    private IEnumerator Start()
-    {
-        if (_groundTilemap == null)
-        {
-            Debug.LogError("[ChaserPathChase] GroundTilemap이 설정되지 않음");
-            enabled = false;
-            yield break;
-        }
-
-        yield return null;
-
-        _grid = new PathGrid(_groundTilemap, _blockMask);
-        _astar = new AStar(_grid);
-
-        if (_target != null)
-        {
-            _lastGoalCell = _grid.WorldToCell(_target.position);
-        }
-    }
 
     private void FixedUpdate()
     {
@@ -112,6 +126,11 @@ public class ChaserPathChase : MonoBehaviour
         {
             _cellPath.Clear();
             _pathIndex = 0;
+
+            _enemy.StopMove();
+            _enemy.View.SetMove(Vector2.zero, 0f);
+            _enemy.State.ChangeState(EnemyState.State.Idle);
+
             return;
         }
 
@@ -379,7 +398,9 @@ public class ChaserPathChase : MonoBehaviour
             return;
         }
 
-        RaycastHit2D hit = Physics2D.CircleCast(pos, _agentRadius, dir, _lookAhead, _blockMask);
+        LayerMask blockMask = Physics2D.GetLayerCollisionMask(gameObject.layer);
+
+        RaycastHit2D hit = Physics2D.CircleCast(pos, _agentRadius, dir, _lookAhead, blockMask);
 
         if (hit.collider != null)
         {

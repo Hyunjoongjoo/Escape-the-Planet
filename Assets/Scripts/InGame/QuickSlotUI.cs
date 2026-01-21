@@ -48,7 +48,6 @@ public class QuickSlotUI : MonoBehaviour
     {
         if (_slotPoints == null || _slotPoints.Length == 0)
         {
-            Debug.LogWarning("[QuickSlotUI] SlotPoints not set.");
             return;
         }
 
@@ -83,9 +82,9 @@ public class QuickSlotUI : MonoBehaviour
             rt.sizeDelta = _iconSize;
 
             Image img = go.GetComponent<Image>();
-            img.enabled = false;              // 처음엔 비어있으니 안 보이게
+            img.enabled = false;           
             img.preserveAspect = true;
-            img.raycastTarget = false;        // 클릭 안 받을거면 끄는게 좋음
+            img.raycastTarget = false;    
 
             _icons[i] = img;
         }

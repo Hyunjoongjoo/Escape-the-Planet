@@ -10,9 +10,9 @@ public class EnemyModel
     public bool alwaysChase;
     public float approachDistance;
 
-    private EnemyStats _stats;
+    private EnemyData _stats;
 
-    public void Init(EnemyStats stats)
+    public void Init(EnemyData stats)
     {
         _stats = stats;
 
@@ -22,11 +22,22 @@ public class EnemyModel
         contactDamage = stats.baseContactDamage;
     }
 
-    public void ScaleByTime(float deltaTime)
+    public void ApplySpawnGrowth(float elapsedMinutes)
     {
-        maxHP += Mathf.RoundToInt(_stats.hpGrowthPerSecond * deltaTime);
-        contactDamage += Mathf.RoundToInt(_stats.damageGrowthPerSecond * deltaTime);
-        moveSpeed += _stats.speedGrowthPerSecond * deltaTime;
+        if (_stats == null)
+        {
+            return;
+        }
+
+        float hpMul = 1f + (_stats.hpGrowthPerMinute * elapsedMinutes);
+        float dmgMul = 1f + (_stats.damageGrowthPerMinute * elapsedMinutes);
+        float spdMul = 1f + (_stats.speedGrowthPerMinute * elapsedMinutes);
+
+        maxHP = Mathf.Max(1, Mathf.RoundToInt(maxHP * hpMul));
+        contactDamage = Mathf.Max(1, Mathf.RoundToInt(contactDamage * dmgMul));
+        moveSpeed = Mathf.Max(0.1f, moveSpeed * spdMul);
+
+        currentHP = maxHP;
     }
 
     public void TakeDamage(int dmg)

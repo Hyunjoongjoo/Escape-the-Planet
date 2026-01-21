@@ -30,33 +30,62 @@ public class EnemyWatcherAI : MonoBehaviour
         _enemyState = GetComponent<EnemyState>();
         _controller = GetComponent<EnemyController>();
     }
+
+    private void OnEnable()
+    {
+        PlayerController.OnPlayerDead += HandlePlayerDead;
+    }
+
+    private void OnDisable()
+    {
+        PlayerController.OnPlayerDead -= HandlePlayerDead;
+    }
+
+
     private void Start()
     {
-        if (_player == null)
+        FindPlayerIfNeeded();
+    }
+
+    private void FindPlayerIfNeeded()
+    {
+        if (_player != null)
         {
-            PlayerController player = FindFirstObjectByType<PlayerController>();
-            if (player != null)
-            {
-                _player = player.FollowTarget;
-            }
-            else
-            {
-                Debug.LogError("[EnemyWatcherAI] 플레이어컨트롤러를 찾지 못함");
-            }
+            return;
+        }
+
+        PlayerController player = FindFirstObjectByType<PlayerController>();
+        if (player != null)
+        {
+            _player = player.FollowTarget;
+        }
+        else
+        {
+            Debug.LogError("플레이어컨트롤러를 찾지 못함");
         }
     }
 
     private void FixedUpdate()
     {
-        if (_player == null)
-        {
-            return;
-        }
-
         if (_enemyState.current == EnemyState.State.Dead)
         {
             _rigid.linearVelocity = Vector2.zero;
             _view.SetMove(Vector2.zero, 0f);
+            return;
+        }
+
+        if (_player == null)
+        {
+            _rigid.linearVelocity = Vector2.zero;
+            _view.SetMove(Vector2.zero, 0f);
+            return;
+        }
+
+        PlayerController player = _player.GetComponentInParent<PlayerController>();
+        if (player != null && player.IsDead)
+        {
+            ResetWatchState();
+            _player = null;
             return;
         }
 
@@ -78,6 +107,8 @@ public class EnemyWatcherAI : MonoBehaviour
                 _called = false;
             }
 
+            _rigid.linearVelocity = Vector2.zero;
+            _view.SetMove(Vector2.zero, 0f);
             return;
         }
 
@@ -124,6 +155,21 @@ public class EnemyWatcherAI : MonoBehaviour
             }
         }
     }
+    private void ResetWatchState()
+    {
+        _watching = false;
+        _called = false;
+        _watchTimer = 0f;
+
+        _rigid.linearVelocity = Vector2.zero;
+        _view.SetMove(Vector2.zero, 0f);
+    }
+
+    private void HandlePlayerDead()
+    {
+        _player = null;
+        ResetWatchState();
+    }
 
     private void CallNearbyChasers()
     {
@@ -134,11 +180,13 @@ public class EnemyWatcherAI : MonoBehaviour
             EnemyChaserAI chaser = hits[i].GetComponent<EnemyChaserAI>();
             if (chaser != null)
             {
-                chaser.ForceChase(_player);
+                if (_player != null)
+                {
+                    chaser.ForceChase(_player);
+                }
             }
         }
 
-        Debug.Log("[EnemyWatcherAI] 추적자 호출");
     }
 
     private void OnDrawGizmosSelected()

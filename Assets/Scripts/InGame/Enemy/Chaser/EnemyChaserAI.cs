@@ -2,11 +2,9 @@ using UnityEngine;
 
 public class EnemyChaserAI : MonoBehaviour
 {
-    [Header("Detect")]
     [SerializeField] private float _detectRange = 12f;
     [SerializeField] private float _lostRange = 18f;
 
-    [Header("Patrol (Wander)")]
     [SerializeField] private float _wanderMoveTimeMin = 0.5f;
     [SerializeField] private float _wanderMoveTimeMax = 1.2f;
     [SerializeField] private float _wanderIdleTimeMin = 0.6f;
@@ -37,7 +35,15 @@ public class EnemyChaserAI : MonoBehaviour
         _enemy = GetComponent<EnemyController>();
         _pathChase = GetComponent<ChaserPathChase>();
     }
+    private void OnEnable()
+    {
+        PlayerController.OnPlayerDead += HandlePlayerDead;
+    }
 
+    private void OnDisable()
+    {
+        PlayerController.OnPlayerDead -= HandlePlayerDead;
+    }
     private void Start()
     {
         GameObject playerObj = GameObject.FindWithTag("Player");
@@ -51,6 +57,7 @@ public class EnemyChaserAI : MonoBehaviour
 
     private void FixedUpdate()
     {
+
         if (_player == null)
         {
             if (_pathChase != null)
@@ -58,6 +65,27 @@ public class EnemyChaserAI : MonoBehaviour
                 _pathChase.ClearTarget();
             }
 
+            _enemy.StopMove();
+            _enemy.View.SetMove(Vector2.zero, 0f);
+            _enemy.State.ChangeState(EnemyState.State.Idle);
+
+            return;
+        }
+
+        PlayerController player = _player.GetComponent<PlayerController>();
+        if (player != null && player.IsDead)
+        {
+            if (_forcedChase)
+            {
+                CancelForceChase();
+            }
+
+            if (_state != State.Patrol)
+            {
+                ChangeState(State.Patrol);
+            }
+
+            UpdateWander();
             return;
         }
 
@@ -117,6 +145,7 @@ public class EnemyChaserAI : MonoBehaviour
         }
         else
         {
+            _enemy.StopMove();
             _enemy.View.SetMove(_wanderDir, 0f);
             _enemy.State.ChangeState(EnemyState.State.Idle);
         }
@@ -132,6 +161,8 @@ public class EnemyChaserAI : MonoBehaviour
             {
                 _pathChase.ClearTarget();
             }
+
+            _enemy.StopMove();
 
             _stateTimer = 0f;
             _isWanderMoving = false;
@@ -162,21 +193,38 @@ public class EnemyChaserAI : MonoBehaviour
         ChangeState(State.Chase);
     }
 
-    //public void CancelForceChase()
-    //{
-    //    _forcedChase = false;
-    //    _forcedTarget = null;
-    //}
+    private void CancelForceChase()
+    {
+        _forcedChase = false;
+
+        if (_pathChase != null)
+        {
+            _pathChase.ClearTarget();
+        }
+    }
+    private void HandlePlayerDead()
+    {
+        CancelForceChase();
+
+        if (_state != State.Patrol)
+        {
+            ChangeState(State.Patrol);
+        }
+
+        _enemy.StopMove();
+        _enemy.View.SetMove(Vector2.zero, 0f);
+
+        _stateTimer = 0f;
+        _isWanderMoving = false;
+    }
 
     private void OnDrawGizmosSelected()
     {
         Vector3 pos = transform.position;
 
-        // 감지 범위 (추적 시작)
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(pos, _detectRange);
 
-        // 추적 해제 범위
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(pos, _lostRange);
     }

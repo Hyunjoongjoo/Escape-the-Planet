@@ -83,8 +83,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -794174341
+  m_SortingLayer: 6
   m_SortingOrder: 0
   m_Sprite: {fileID: 7723652632321733531, guid: ea2bead7b5455764087b016d6dd62f52, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -222,9 +222,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b884818b01189554fa122ddf8d8f5456, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  _stats: {fileID: 11400000, guid: 2ac661661d85a1e48aafc70cc8c14c76, type: 2}
+  _data: {fileID: 11400000, guid: 2ac661661d85a1e48aafc70cc8c14c76, type: 2}
   _damageInterval: 0.5
-  _useBuiltInMovement: 1
 --- !u!114 &3131796683418922067
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -238,10 +237,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyWatcherAlarm
   _player: {fileID: 0}
-  _detectRange: 3
-  _keepDistance: 5
-  _keepTolerance: 0.5
-  _cancelRange: 10
+  _detectRange: 5
+  _keepDistance: 7
+  _keepTolerance: 1
+  _cancelRange: 12
   _alarmTime: 3
   _callRange: 30
   _resetTimerOnCancel: 1
+  _moveSpeedMultiplier: 0.8

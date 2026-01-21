@@ -71,35 +71,66 @@ public class EnemyLurkerAI : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        PlayerController.OnPlayerDead += HandlePlayerDead;
+    }
+
+    private void OnDisable()
+    {
+        PlayerController.OnPlayerDead -= HandlePlayerDead;
+    }
+
     private void Start()
     {
-        if (_player == null)
-        {
-            PlayerController player = FindFirstObjectByType<PlayerController>();
-            if (player != null)
-            {
-                _player = player.FollowTarget;
-            }
-            else
-            {
-                Debug.LogError("[EnemyLurkerAI] 플레이어컨트롤러를 찾지 못함");
-            }
-        }
-
+        FindPlayerIfNeeded();
         ChangeState(State.Patrol);
     }
 
-    private void FixedUpdate()
+    private void FindPlayerIfNeeded()
     {
-        if (_player == null)
+        if (_player != null)
         {
             return;
         }
 
+        PlayerController player = FindFirstObjectByType<PlayerController>();
+        if (player != null)
+        {
+            _player = player.FollowTarget;
+        }
+        else
+        {
+            Debug.LogError("플레이어컨트롤러를 찾지 못함");
+        }
+    }
+
+    private void FixedUpdate()
+    {
         if (_enemyState.current == EnemyState.State.Dead)
         {
             _controller.StopMove();
             SetAlpha(1f);
+            return;
+        }
+
+        if (_player == null)
+        {
+            SetAlpha(0f);
+
+            if (_state != State.Patrol)
+            {
+                ChangeState(State.Patrol);
+            }
+
+            UpdatePatrol(float.MaxValue);
+            return;
+        }
+
+        PlayerController pc = _player.GetComponentInParent<PlayerController>();
+        if (pc != null && pc.IsDead)
+        {
+            HandlePlayerDead();
             return;
         }
 
@@ -329,6 +360,16 @@ public class EnemyLurkerAI : MonoBehaviour
         c.a = alpha;
         _sprite.color = c;
     }
+
+    private void HandlePlayerDead()
+    {
+        _player = null;
+
+        _controller.StopMove();
+
+        ChangeState(State.Patrol);
+    }
+
 
     private void OnDrawGizmosSelected()
     {

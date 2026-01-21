@@ -15,3 +15,5 @@ MonoBehaviour:
   id: 2
   itemName: "\uCCA0\uBE54"
   sprite: {fileID: -1463922387993793746, guid: bd5e81ea88096644f9a171a13d8e177d, type: 3}
+  weight: 60
+  spawnRadius: 9

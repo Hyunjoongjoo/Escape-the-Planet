@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyState))]
 public class EnemyController : MonoBehaviour
 {
-    [SerializeField] private EnemyStats _stats;
+    [SerializeField] private EnemyData _data;
     [SerializeField] private float _damageInterval = 0.5f;
 
     private EnemyModel _model;
@@ -14,6 +14,7 @@ public class EnemyController : MonoBehaviour
     private Rigidbody2D _rigid;
 
     private float _nextDamageTime = 0f;
+    private bool _isInitialized;
 
     public float MoveSpeed => _model.moveSpeed;
     public Rigidbody2D Rigidbody => _rigid;
@@ -30,15 +31,12 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
-        _model.Init(_stats);
-    }
-
-    private void Update()
-    {
-        if (_state.current != EnemyState.State.Dead)
+        if (_isInitialized == true)
         {
-            _model.ScaleByTime(Time.deltaTime);
+            return;
         }
+
+        _model.Init(_data);
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -60,6 +58,17 @@ public class EnemyController : MonoBehaviour
 
             _nextDamageTime = Time.time + _damageInterval;
         }
+    }
+
+    public void Init(EnemyData data, float elapsedMinutes)
+    {
+        _data = data;
+
+        _model = new EnemyModel();
+        _model.Init(_data);
+
+        _model.ApplySpawnGrowth(elapsedMinutes);
+        _isInitialized = true;
     }
 
     public void TakeDamage(int dmg)

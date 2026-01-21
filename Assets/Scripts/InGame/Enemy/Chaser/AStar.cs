@@ -5,13 +5,17 @@ public class AStar
 {
     private readonly PathGrid _grid;
 
-    // 4방향(추천)
-    private static readonly Vector3Int[] _dirs4 =
+    private static readonly Vector3Int[] _dirs8 =
     {
         new Vector3Int(1, 0, 0),
         new Vector3Int(-1, 0, 0),
         new Vector3Int(0, 1, 0),
         new Vector3Int(0, -1, 0),
+
+        new Vector3Int(1, 1, 0),
+        new Vector3Int(1, -1, 0),
+        new Vector3Int(-1, 1, 0),
+        new Vector3Int(-1, -1, 0),
     };
 
     public AStar(PathGrid grid)
@@ -21,7 +25,13 @@ public class AStar
 
     private int Heuristic(Vector3Int a, Vector3Int b)
     {
-        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
+        int dx = Mathf.Abs(a.x - b.x);
+        int dy = Mathf.Abs(a.y - b.y);
+
+        int diag = Mathf.Min(dx, dy);
+        int straight = Mathf.Abs(dx - dy);
+
+        return diag * 14 + straight * 10;
     }
 
     public bool TryFindPath(Vector3Int start, Vector3Int goal, int maxExpand, List<Vector3Int> outPath)
@@ -72,9 +82,20 @@ public class AStar
                 return false;
             }
 
-            foreach (var d in _dirs4)
+            foreach (var d in _dirs8)
             {
                 Vector3Int next = current + d;
+
+                if (d.x != 0 && d.y != 0)
+                {
+                    Vector3Int side1 = current + new Vector3Int(d.x, 0, 0);
+                    Vector3Int side2 = current + new Vector3Int(0, d.y, 0);
+
+                    if (!_grid.IsWalkable(side1) || !_grid.IsWalkable(side2))
+                    {
+                        continue;
+                    }
+                }
 
                 if (!_grid.IsWalkable(next))
                 {
@@ -86,7 +107,8 @@ public class AStar
                     continue;
                 }
 
-                int tentativeG = gScore[current] + 1;
+                int stepCost = (d.x != 0 && d.y != 0) ? 14 : 10;
+                int tentativeG = gScore[current] + stepCost;
 
                 if (gScore.TryGetValue(next, out int oldG) && tentativeG >= oldG)
                 {

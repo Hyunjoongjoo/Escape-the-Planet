@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
 using Photon.Pun;
+using System;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(PlayerView))]
@@ -21,6 +22,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GroundItem _groundItemPrefab;
     [SerializeField] private float _dropDistance = 0.7f;
 
+    [SerializeField] private bool _isDead = false;
+
     private PlayerModel _model;
     private PlayerView _view;
     private PlayerState _state;
@@ -36,6 +39,10 @@ public class PlayerController : MonoBehaviour
 
     private Coroutine _invincibleCoroutine;
     private Coroutine _hitRecoverCoroutine;
+
+    public static event Action OnPlayerDead;
+
+    public bool IsDead => _isDead;
 
     public Transform FollowTarget
     {
@@ -149,11 +156,19 @@ public class PlayerController : MonoBehaviour
     }
     private void FixedUpdate()
     {
+        if (_isDead)
+        {
+            return;
+        }
         Move();
     }
 
     private void Update()
     {
+        if (_isDead)
+        {
+            return;
+        }
         UpdateAnimations();
     }
 
@@ -289,6 +304,17 @@ public class PlayerController : MonoBehaviour
     {
         _state.ChangeState(PlayerState.State.Dead);
 
+        _isDead = true;
+
+        _rigid.linearVelocity = Vector2.zero;
+        _rigid.angularVelocity = 0f;
+        _rigid.bodyType = RigidbodyType2D.Static;
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) 
+        { 
+            col.isTrigger = true;
+        }
         _moveInput = Vector2.zero;
 
         if (_hitRecoverCoroutine != null)
@@ -306,6 +332,7 @@ public class PlayerController : MonoBehaviour
         _weaponHitBox.SetActive(false);
 
         _view.SetDead(true);
+        OnPlayerDead?.Invoke();
     }
     private void TryAttack()
     {
@@ -388,7 +415,6 @@ public class PlayerController : MonoBehaviour
 
         if (_groundItemPrefab == null)
         {
-            Debug.LogWarning("[PlayerController] GroundItem Prefab is null.");
             return;
         }
 
