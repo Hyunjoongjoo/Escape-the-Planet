@@ -1,0 +1,25 @@
+using UnityEngine;
+
+public enum ItemId
+{
+    NONE = 0,
+
+    RM_001_SCRAP_PLATE,
+    RM_002_STEEL_BEAM,
+    RM_003_TOOLBOX_PARTS,
+    RM_004_WIRE_BUNDLE,
+    RM_005_POWER_CELL,
+    RM_006_MECH_PARTS,
+    RM_007_CONTROL_MODULE,
+    RM_008_CIRCUIT_BOARD,
+    RM_009_FUEL_CANISTER,
+}
+[CreateAssetMenu(fileName = "ItemData", menuName = "Scriptable Objects/ItemData")]
+public class ItemData : ScriptableObject
+{
+    public ItemId id;
+    //string itemIdStr = itemData.id.ToString();
+    //ItemId id = (ItemId)System.Enum.Parse(typeof(ItemId), itemIdStr);
+    public string itemName;
+    public Sprite sprite;
+}

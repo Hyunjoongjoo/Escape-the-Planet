@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bf82b21f27e146468a2e3f7f4f22c20, type: 3}
   m_Name: EnemyStats 2
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
-  baseMoveSpeed: 3
+  baseMoveSpeed: 6
   baseMaxHP: 15
   baseContactDamage: 5
   hpGrowthPerSecond: 0.1
