@@ -1,13 +1,14 @@
-using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
 {
     [SerializeField] private Transform _player;
 
-    private readonly List<GroundItem> _nearItems = new List<GroundItem>();
+    private readonly List<IInteractable> _nearTargets = new List<IInteractable>();
 
-    public GroundItem CurrentTarget { get; private set; }
+    public IInteractable CurrentTarget { get; private set; }
 
     private void Awake()
     {
@@ -24,30 +25,36 @@ public class PlayerInteraction : MonoBehaviour
 
     private void UpdateTarget()
     {
-        if (_nearItems.Count == 0)
+        if (_nearTargets.Count == 0)
         {
             CurrentTarget = null;
             return;
         }
 
-        GroundItem nearest = null;
+        IInteractable nearest = null;
         float nearestSqr = float.MaxValue;
 
         Vector3 origin = _player != null ? _player.position : transform.position;
 
-        for (int i = _nearItems.Count - 1; i >= 0; i--)
+        for (int i = _nearTargets.Count - 1; i >= 0; i--)
         {
-            if (_nearItems[i] == null)
+            if (_nearTargets[i] == null)
             {
-                _nearItems.RemoveAt(i);
+                _nearTargets.RemoveAt(i);
                 continue;
             }
 
-            float sqr = (_nearItems[i].transform.position - origin).sqrMagnitude;
+            MonoBehaviour mb = _nearTargets[i] as MonoBehaviour;
+            if (mb == null)
+            {
+                continue;
+            }
+
+            float sqr = (mb.transform.position - origin).sqrMagnitude;
             if (sqr < nearestSqr)
             {
                 nearestSqr = sqr;
-                nearest = _nearItems[i];
+                nearest = _nearTargets[i];
             }
         }
 
@@ -67,26 +74,26 @@ public class PlayerInteraction : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        GroundItem gi = other.GetComponent<GroundItem>();
-        if (gi == null)
+        IInteractable it = other.GetComponent<IInteractable>();
+        if (it == null)
         {
             return;
         }
 
-        if (_nearItems.Contains(gi) == false)
+        if (_nearTargets.Contains(it) == false)
         {
-            _nearItems.Add(gi);
+            _nearTargets.Add(it);
         }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        GroundItem gi = other.GetComponent<GroundItem>();
-        if (gi == null)
+        IInteractable it = other.GetComponent<IInteractable>();
+        if (it == null)
         {
             return;
         }
 
-        _nearItems.Remove(gi);
+        _nearTargets.Remove(it);
     }
 }

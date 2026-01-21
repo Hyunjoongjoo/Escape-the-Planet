@@ -98,4 +98,51 @@ public class QuickSlotManager : MonoBehaviour
     {
         OnSlotUpdated?.Invoke(index, _slots[index]);
     }
+
+    public SaveData ToSaveData()
+    {
+        SaveData data = new SaveData();
+
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            if (_slots[i].IsEmpty || _slots[i].Data == null)
+            {
+                data.quickSlots[i] = ItemId.NONE;
+            }
+            else
+            {
+                data.quickSlots[i] = _slots[i].Data.id;
+            }
+        }
+
+        return data;
+    }
+
+    public void LoadFromSaveData(SaveData save, ItemDatabase db)
+    {
+        if (save == null || db == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            ItemId id = save.quickSlots[i];
+
+            if (id == ItemId.NONE)
+            {
+                _slots[i].Clear();
+            }
+            else
+            {
+                ItemData item = db.Get(id);
+                _slots[i].Set(item);
+            }
+
+            RaiseSlotUpdated(i);
+        }
+
+        CurrentIndex = 0;
+        RaiseSelectedChanged();
+    }
 }

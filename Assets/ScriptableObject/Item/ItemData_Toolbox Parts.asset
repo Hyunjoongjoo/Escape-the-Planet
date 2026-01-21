@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 214ff333cccabee4aa643121fdf4bd89, type: 3}
   m_Name: ItemData_Toolbox Parts
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  id: 2
+  id: 3
   itemName: "\uACF5\uAD6C\uD568"
   sprite: {fileID: -6482214888948375821, guid: bd5e81ea88096644f9a171a13d8e177d, type: 3}

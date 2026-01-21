@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 214ff333cccabee4aa643121fdf4bd89, type: 3}
   m_Name: ItemData_Wire Bundle
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  id: 3
+  id: 4
   itemName: "\uCF00\uC774\uBE14"
   sprite: {fileID: -6687243199115631265, guid: bd5e81ea88096644f9a171a13d8e177d, type: 3}

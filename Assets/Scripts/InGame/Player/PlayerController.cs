@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using Photon.Pun;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(PlayerView))]
@@ -139,7 +140,12 @@ public class PlayerController : MonoBehaviour
     }
     private void Start()
     {
-        UIManager.Instance.InitPlayerUI("PlayerName", _model.currentHP, _model.maxHP);
+        string nickname = "Player";
+        if (PhotonNetwork.IsConnected && PhotonNetwork.LocalPlayer != null)
+        {
+            nickname = PhotonNetwork.LocalPlayer.NickName;
+        }
+        UIManager.Instance.InitPlayerUI(nickname, _model.currentHP, _model.maxHP);
     }
     private void FixedUpdate()
     {
