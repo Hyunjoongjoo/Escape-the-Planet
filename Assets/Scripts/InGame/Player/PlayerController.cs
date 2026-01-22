@@ -40,6 +40,8 @@ public class PlayerController : MonoBehaviour
     private Coroutine _invincibleCoroutine;
     private Coroutine _hitRecoverCoroutine;
 
+    private bool _inputEnabled = true;
+
     public static event Action OnPlayerDead;
 
     public bool IsDead => _isDead;
@@ -71,7 +73,10 @@ public class PlayerController : MonoBehaviour
 
     public void OnMove(InputAction.CallbackContext ctx)
     {
-
+        if (_inputEnabled == false)
+        {
+            return;
+        }
         Vector2 input = ctx.ReadValue<Vector2>();
         _moveInput = input.normalized;
 
@@ -89,6 +94,11 @@ public class PlayerController : MonoBehaviour
 
     public void OnAttack(InputAction.CallbackContext ctx)
     {
+        if (_inputEnabled == false)
+        {
+            return;
+        }
+
         if (ctx.performed == false)
         {
             return;
@@ -99,6 +109,11 @@ public class PlayerController : MonoBehaviour
 
     public void OnInteract(InputAction.CallbackContext ctx)
     {
+        if (_inputEnabled == false)
+        {
+            return;
+        }
+
         if (ctx.started == false)
         {
             return;
@@ -109,6 +124,11 @@ public class PlayerController : MonoBehaviour
 
     public void OnSelectSlot(InputAction.CallbackContext ctx)
     {
+        if (_inputEnabled == false)
+        {
+            return;
+        }
+
         if (ctx.started == false)
         {
             return;
@@ -125,6 +145,11 @@ public class PlayerController : MonoBehaviour
 
     public void OnDrop(InputAction.CallbackContext ctx)
     {
+        if (_inputEnabled == false)
+        {
+            return;
+        }
+
         if (ctx.started == false)
         {
             return;
@@ -396,6 +421,22 @@ public class PlayerController : MonoBehaviour
 
         }
     }
+
+    public void SetInputEnabled(bool enabled)
+    {
+        _inputEnabled = enabled;
+
+        if (_inputEnabled == false)
+        {
+            _moveInput = Vector2.zero;
+
+            if (_rigid != null)
+            {
+                _rigid.linearVelocity = Vector2.zero;
+            }
+        }
+    }
+
     private void TryInteract()
     {
         if (_interaction == null)

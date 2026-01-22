@@ -10,6 +10,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Text _hpText;
     [SerializeField] private Text _playerNameText;
     [SerializeField] private Text _timeText;
+    [SerializeField] private GameObject _gameEndPanel;
+    [SerializeField] private Text _gameEndText;
 
     private void Awake()
     {
@@ -60,4 +62,32 @@ public class UIManager : MonoBehaviour
         _hpSlider.value = currentHP;
         _hpText.text = $"{currentHP} / {maxHP}";
     }
+
+    public void ShowGameEndPanel(GameEndType endType)
+{
+    if (_gameEndPanel != null)
+    {
+        _gameEndPanel.SetActive(true);
+    }
+
+    if (_gameEndText == null)
+    {
+        return;
+    }
+
+    switch (endType)
+    {
+        case GameEndType.Success:
+            _gameEndText.text = "ESCAPE SUCCESS!";
+            break;
+
+        case GameEndType.Fail_TimeOver:
+            _gameEndText.text = "TIME OVER";
+            break;
+
+        case GameEndType.Fail_PlayerDead:
+            _gameEndText.text = "YOU DIED";
+            break;
+    }
+}
 }

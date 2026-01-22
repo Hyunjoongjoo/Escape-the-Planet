@@ -73,35 +73,17 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
-# Packed Addressables (optional)
-# /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
-# /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.json*
-# /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.hash*
-# /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bundle*
-# /[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/Steam/*
+# User excluded folder
 Assets/ExcludeGit/
-# Photon
+
+# Photon (do not commit)
 Assets/Photon/
 Assets/PhotonChat/
 Assets/PhotonRealtime/
 Assets/PhotonUnityNetworking/
 
-# Firebase
-Assets/Firebase/
-Assets/FirebaseSDK/
-Assets/google-services.json
-Assets/GoogleService-Info.plist
-
 # Photon settings (AppId)
 **/PhotonServerSettings.asset
-
-# Firebase Admin SDK / service account keys (NEVER COMMIT)
-**/*serviceAccount*.json
-**/*adminsdk*.json
-
-# Firebase config files (extra safety)
-**/google-services.json
-**/GoogleService-Info.plist
 
 # Photon (folder meta too)
 Assets/Photon.meta
@@ -109,6 +91,36 @@ Assets/PhotonChat.meta
 Assets/PhotonRealtime.meta
 Assets/PhotonUnityNetworking.meta
 
-# Firebase (folder meta too)
+# Firebase (do not commit)
+Assets/Firebase/
+Assets/FirebaseSDK/
 Assets/Firebase.meta
 Assets/FirebaseSDK.meta
+
+# Firebase config files
+Assets/google-services.json
+Assets/GoogleService-Info.plist
+**/google-services.json
+**/GoogleService-Info.plist
+
+# Firebase Admin SDK / service account keys (NEVER COMMIT)
+**/*serviceAccount*.json
+**/*adminsdk*.json
+
+# External Dependency Manager / Resolver (Firebase dependency tools)
+Assets/ExternalDependencyManager/
+Assets/PlayServicesResolver/
+Assets/ExternalDependencyManager.meta
+Assets/PlayServicesResolver.meta
+
+# Firebase often generates plugin binaries here (DO NOT COMMIT)
+Assets/Plugins/
+Assets/Plugins.meta
+
+# Firebase editor icons/resources (DO NOT COMMIT)
+Assets/Editor Default Resources/
+Assets/Editor Default Resources.meta
+Assets/Editor/**/firebase*.png
+Assets/Editor/**/firebase*.png.meta
+Assets/Editor/**/Google*.png
+Assets/Editor/**/Google*.png.meta
