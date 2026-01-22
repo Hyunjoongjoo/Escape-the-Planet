@@ -1,7 +1,8 @@
-using System;
 using UnityEngine;
+using System;
+using Photon.Pun;
 
-public class QuickSlotManager : MonoBehaviour
+public class QuickSlotManager : MonoBehaviourPun
 {
     public static QuickSlotManager Instance { get; private set; }
 
@@ -10,6 +11,10 @@ public class QuickSlotManager : MonoBehaviour
 
     [SerializeField] private QuickSlot[] _slots = new QuickSlot[5];
 
+    [SerializeField] private string _groundItemPrefabName = "GroundItem";
+    [SerializeField] private float _dropScatterRadius = 1.0f;
+
+
     public int CurrentIndex { get; private set; } = 0;
     public QuickSlot[] Slots => _slots;
 
@@ -17,7 +22,7 @@ public class QuickSlotManager : MonoBehaviour
     {
         if (Instance != null)
         {
-            Destroy(gameObject);
+            UnityEngine.Object.Destroy(gameObject);
             return;
         }
 
@@ -38,6 +43,7 @@ public class QuickSlotManager : MonoBehaviour
         {
             RaiseSlotUpdated(i);
         }
+
         RaiseSelectedChanged();
     }
 
@@ -89,16 +95,6 @@ public class QuickSlotManager : MonoBehaviour
         return true;
     }
 
-    private void RaiseSelectedChanged()
-    {
-        OnSelectedChanged?.Invoke(CurrentIndex);
-    }
-
-    private void RaiseSlotUpdated(int index)
-    {
-        OnSlotUpdated?.Invoke(index, _slots[index]);
-    }
-
     public SaveData ToSaveData()
     {
         SaveData data = new SaveData();
@@ -144,5 +140,193 @@ public class QuickSlotManager : MonoBehaviour
 
         CurrentIndex = 0;
         RaiseSelectedChanged();
+    }
+
+    public void DropSelectedItem()
+    {
+        ItemData data = GetSelectedItemData();
+        if (data == null)
+        {
+            return;
+        }
+
+        RemoveSelectedItem();
+
+        Vector2 dropPos = GetDropPosition();
+        photonView.RPC(nameof(RPC_RequestDrop), RpcTarget.MasterClient, (int)data.id, dropPos.x, dropPos.y);
+    }
+
+    [PunRPC]
+    private void RPC_RequestDrop(int itemId, float x, float y, PhotonMessageInfo info)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        Vector2 pos = new Vector2(x, y);
+
+        GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
+
+        GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
+        if (net != null)
+        {
+            net.SetItemId((ItemId)itemId);
+        }
+    }
+
+    private ItemData GetSelectedItemData()
+    {
+        if (CurrentIndex < 0 || CurrentIndex >= _slots.Length)
+        {
+            return null;
+        }
+
+        QuickSlot slot = _slots[CurrentIndex];
+        if (slot == null || slot.IsEmpty)
+        {
+            return null;
+        }
+
+        return slot.Data;
+    }
+
+    private void RemoveSelectedItem()
+    {
+        if (CurrentIndex < 0 || CurrentIndex >= _slots.Length)
+        {
+            return;
+        }
+
+        _slots[CurrentIndex].Clear();
+        RaiseSlotUpdated(CurrentIndex);
+    }
+
+    public void DropAllOnDeath(Vector2 deathPos)
+    {
+        ItemId[] items = GetAllItemIds();
+        if (items == null || items.Length == 0)
+        {
+            return;
+        }
+
+        ClearAllSlots();
+
+        int[] ids = new int[items.Length];
+        for (int i = 0; i < items.Length; i++)
+        {
+            ids[i] = (int)items[i];
+        }
+
+        photonView.RPC(nameof(RPC_RequestDropAll), RpcTarget.MasterClient, ids, deathPos.x, deathPos.y);
+    }
+
+    [PunRPC]
+    private void RPC_RequestDropAll(int[] itemIds, float x, float y, PhotonMessageInfo info)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        Vector2 center = new Vector2(x, y);
+
+        for (int i = 0; i < itemIds.Length; i++)
+        {
+            ItemId itemId = (ItemId)itemIds[i];
+
+            Vector2 scatter = UnityEngine.Random.insideUnitCircle * _dropScatterRadius;
+            Vector2 pos = center + scatter;
+
+            GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
+
+            GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
+            if (net != null)
+            {
+                net.SetItemId(itemId);
+            }
+        }
+    }
+
+    private ItemId[] GetAllItemIds()
+    {
+        ItemId[] temp = new ItemId[_slots.Length];
+        int count = 0;
+
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            QuickSlot slot = _slots[i];
+
+            if (slot == null || slot.IsEmpty || slot.Data == null)
+            {
+                continue;
+            }
+
+            temp[count] = slot.Data.id;
+            count++;
+        }
+
+        if (count == 0)
+        {
+            return Array.Empty<ItemId>();
+        }
+
+        ItemId[] result = new ItemId[count];
+        for (int i = 0; i < count; i++)
+        {
+            result[i] = temp[i];
+        }
+
+        return result;
+    }
+
+    private void ClearAllSlots()
+    {
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            _slots[i].Clear();
+            RaiseSlotUpdated(i);
+        }
+
+        CurrentIndex = 0;
+        RaiseSelectedChanged();
+    }
+
+    private Vector2 GetDropPosition()
+    {
+        PlayerController player = FindLocalPlayer();
+        if (player == null)
+        {
+            return Vector2.zero;
+        }
+
+        return player.transform.position;
+    }
+
+    private PlayerController FindLocalPlayer()
+    {
+        PlayerController[] players = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+
+        foreach (PlayerController p in players)
+        {
+            PhotonView v = p.GetComponent<PhotonView>();
+
+            if (v != null && v.IsMine)
+            {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    private void RaiseSelectedChanged()
+    {
+        OnSelectedChanged?.Invoke(CurrentIndex);
+    }
+
+    private void RaiseSlotUpdated(int index)
+    {
+        OnSlotUpdated?.Invoke(index, _slots[index]);
     }
 }

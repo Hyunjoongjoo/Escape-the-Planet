@@ -388,6 +388,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5938594458624144118, guid: f4da3a5b4dbc62b479db44e182b649a7, type: 3}
+      propertyPath: sceneViewId
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7829955140011112673, guid: f4da3a5b4dbc62b479db44e182b649a7, type: 3}
       propertyPath: m_Name
       value: Player
@@ -405,6 +409,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -5945330010936449687, guid: 6185f8023c8729b43a78a8d0349be10e, type: 3}
+      propertyPath: sceneViewId
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 944575368193734227, guid: 6185f8023c8729b43a78a8d0349be10e, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.41
@@ -462,6 +470,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1572462152758525565, guid: b59848931718e2d4ebc23a15c600c3c5, type: 3}
+      propertyPath: sceneViewId
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 292313202207572370, guid: b59848931718e2d4ebc23a15c600c3c5, type: 3}
       propertyPath: m_Name
       value: Enemy3
@@ -558,6 +570,10 @@ PrefabInstance:
     - target: {fileID: 3948567942891376882, guid: 92e0d3752545aa74cb64ca86a4f09a9e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6576048968330897962, guid: 92e0d3752545aa74cb64ca86a4f09a9e, type: 3}
+      propertyPath: sceneViewId
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8313538246144434867, guid: 92e0d3752545aa74cb64ca86a4f09a9e, type: 3}
       propertyPath: m_Name

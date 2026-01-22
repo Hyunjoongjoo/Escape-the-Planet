@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 5589590512526672118}
   - component: {fileID: 1176591770057642872}
   - component: {fileID: 9193716455538939667}
+  - component: {fileID: -7212607564354083061}
+  - component: {fileID: -6986142280229496626}
   m_Layer: 0
   m_Name: GroundItem
   m_TagString: Untagged
@@ -141,3 +143,39 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GroundItem
   _data: {fileID: 0}
+--- !u!114 &-7212607564354083061
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8398640510173540544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74691f30c6beda747be4d02a90db7177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GroundItemNetwork
+  _groundItem: {fileID: 9193716455538939667}
+  _itemDatabase: {fileID: 11400000, guid: 5b31542774194be4ca11f8ae799124fd, type: 2}
+--- !u!114 &-6986142280229496626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8398640510173540544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonView
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 3
+  OwnershipTransfer: 0
+  observableSearch: 2
+  ObservedComponents: []
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0

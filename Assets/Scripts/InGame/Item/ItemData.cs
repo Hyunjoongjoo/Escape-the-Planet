@@ -18,8 +18,6 @@ public enum ItemId
 public class ItemData : ScriptableObject
 {
     public ItemId id = ItemId.NONE;
-    //string itemIdStr = itemData.id.ToString();
-    //ItemId id = (ItemId)System.Enum.Parse(typeof(ItemId), itemIdStr);
     public string itemName;
     public Sprite sprite;
     [Range(1, 1000)] public int weight = 100;

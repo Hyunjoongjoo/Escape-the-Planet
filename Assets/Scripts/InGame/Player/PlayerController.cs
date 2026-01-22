@@ -42,6 +42,7 @@ public class PlayerController : MonoBehaviour
     private Coroutine _hitRecoverCoroutine;
 
     private bool _inputEnabled = true;
+    private bool _droppedAllOnDeath = false;
 
     public static event Action OnPlayerDead;
 
@@ -181,7 +182,7 @@ public class PlayerController : MonoBehaviour
         }
         UIManager.Instance.InitPlayerUI(nickname, _model.currentHP, _model.maxHP);
     }
-   
+
     private void Update()
     {
         if (_photonView != null && !_photonView.IsMine)
@@ -341,6 +342,21 @@ public class PlayerController : MonoBehaviour
     }
     private void Die()
     {
+        if (_photonView != null && !_photonView.IsMine)
+        {
+            return;
+        }
+
+        if (_droppedAllOnDeath == false)
+        {
+            _droppedAllOnDeath = true;
+
+            if (QuickSlotManager.Instance != null)
+            {
+                QuickSlotManager.Instance.DropAllOnDeath(transform.position);
+            }
+        }
+
         _state.ChangeState(PlayerState.State.Dead);
 
         _isDead = true;

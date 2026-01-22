@@ -54,26 +54,6 @@ public class ItemDatabase : ScriptableObject
         return Get(id);
     }
 
-    //public ItemData GetRandom()
-    //{
-    //    if (_items == null || _items.Length == 0)
-    //    {
-    //        return null;
-    //    }
-
-    //    int safety = 200;
-    //    while (safety-- > 0)
-    //    {
-    //        int idx = Random.Range(0, _items.Length);
-    //        ItemData data = _items[idx];
-    //        if (data != null && data.id != ItemId.NONE)
-    //        {
-    //            return data;
-    //        }
-    //    }
-
-    //    return null;
-    //}
     public ItemData GetRandomWeighted(ItemId excludeId = ItemId.NONE)
     {
         if (_items == null || _items.Length == 0)

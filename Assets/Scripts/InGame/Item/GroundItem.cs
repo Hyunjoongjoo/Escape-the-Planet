@@ -1,16 +1,21 @@
 using UnityEngine;
+using Photon.Pun;
 
 public class GroundItem : MonoBehaviour, IInteractable
 {
     [SerializeField] private ItemData _data;
 
     private SpriteRenderer _sr;
+    private PhotonView _view;
+    private GroundItemNetwork _net;
 
     public ItemData Data => _data;
 
     private void Awake()
     {
         _sr = GetComponent<SpriteRenderer>();
+        _view = GetComponent<PhotonView>();
+        _net = GetComponent<GroundItemNetwork>();
         Apply();
     }
 
@@ -40,9 +45,14 @@ public class GroundItem : MonoBehaviour, IInteractable
     {
         bool ok = QuickSlotManager.Instance.TryPickup(_data);
 
-        if (ok)
+        if (!ok)
         {
-            Destroy(gameObject);
+            return;
+        }
+
+        if (_net != null)
+        {
+            _net.RequestPickup(PhotonNetwork.LocalPlayer.ActorNumber);
         }
     }
 

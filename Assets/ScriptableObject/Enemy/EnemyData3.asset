@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnemyData3
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   id: 3
-  prefab: {fileID: 292313202207572370, guid: b59848931718e2d4ebc23a15c600c3c5, type: 3}
+  prefabName: Lurker
   baseMoveSpeed: 6
   baseMaxHP: 30
   baseContactDamage: 10

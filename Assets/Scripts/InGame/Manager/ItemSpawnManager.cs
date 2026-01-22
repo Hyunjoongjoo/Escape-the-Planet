@@ -1,10 +1,11 @@
-using UnityEngine;
 using System.Collections.Generic;
+using Photon.Pun;
+using UnityEngine;
 
 public class ItemSpawnManager : MonoBehaviour
 {
     [SerializeField] private ItemDatabase _itemDatabase;
-    [SerializeField] private GroundItem _groundItemPrefab;
+    [SerializeField] private string _groundItemPrefabName = "GroundItem";
 
     [SerializeField] private Transform _spawnPointsRoot;
     [SerializeField] private int _minSpawnCount = 12;
@@ -25,6 +26,16 @@ public class ItemSpawnManager : MonoBehaviour
 
     private void Start()
     {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
         Spawn();
     }
 
@@ -47,7 +58,7 @@ public class ItemSpawnManager : MonoBehaviour
             return;
         }
 
-        if (_groundItemPrefab == null)
+        if (_groundItemPrefabName == null)
         {
             return;
         }
@@ -61,8 +72,6 @@ public class ItemSpawnManager : MonoBehaviour
         int spawnCount = Mathf.Clamp(randomCount, 0, _points.Count);
 
         List<ItemSpawnPoint> available = new List<ItemSpawnPoint>(_points);
-
-        int spawned = 0;
 
         for (int i = 0; i < spawnCount; i++)
         {
@@ -83,16 +92,16 @@ public class ItemSpawnManager : MonoBehaviour
 
             _lastSpawnedId = item.id;
 
-            float radius = 0f;
-
-            radius = item.spawnRadius;
-
+            float radius = item.spawnRadius;
             Vector2 spawnPos = GetRandomSpawnPosition(point.transform.position, radius);
 
-            GroundItem g = Instantiate(_groundItemPrefab, spawnPos, Quaternion.identity);
-            g.Setup(item);
+            GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, spawnPos, Quaternion.identity);
 
-            spawned++;
+            GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
+            if (net != null)
+            {
+                net.SetItemId(item.id);
+            }
         }    
     }
     private Vector2 GetRandomSpawnPosition(Vector2 center, float radius)

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnemyData1
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   id: 1
-  prefab: {fileID: 3677597617400711434, guid: 6185f8023c8729b43a78a8d0349be10e, type: 3}
+  prefabName: Chaser
   baseMoveSpeed: 6
   baseMaxHP: 30
   baseContactDamage: 10

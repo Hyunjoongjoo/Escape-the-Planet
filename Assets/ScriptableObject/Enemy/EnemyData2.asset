@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: EnemyData2
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   id: 2
-  prefab: {fileID: 8313538246144434867, guid: 92e0d3752545aa74cb64ca86a4f09a9e, type: 3}
+  prefabName: Watcher
   baseMoveSpeed: 3
   baseMaxHP: 15
   baseContactDamage: 5
