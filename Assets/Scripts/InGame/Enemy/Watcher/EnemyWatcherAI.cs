@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 public class EnemyWatcherAI : MonoBehaviour
@@ -44,6 +45,12 @@ public class EnemyWatcherAI : MonoBehaviour
 
     private void Start()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            enabled = false;
+            return;
+        }
+
         FindPlayerIfNeeded();
     }
 

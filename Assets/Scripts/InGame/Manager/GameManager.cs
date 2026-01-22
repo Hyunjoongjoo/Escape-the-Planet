@@ -1,7 +1,9 @@
 using System;
-using Photon.Pun;
-using UnityEngine;
 using System.Collections;
+using ExitGames.Client.Photon;
+using Photon.Pun;
+using Photon.Realtime;
+using UnityEngine;
 
 
 public enum GameEndType
@@ -10,17 +12,22 @@ public enum GameEndType
     Fail_TimeOver,
     Fail_PlayerDead
 }
+public enum PlayerGameState
+{
+    Alive = 0,
+    Escaped = 1,
+    Dead = 2
+}
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
 {
     public static GameManager Instance { get; private set; }
 
     [SerializeField] private float _timeLimit = 300f;
-    [SerializeField] private float _returnDelay = 2f;
-    [SerializeField] private string _roomSceneName = "Room";
 
     private float _remain;
-    private bool _isGameEnded = false;
+    private bool _isLocalEnded = false;
+    private bool _isMatchEnded = false;
 
     public float RemainTime => _remain;
     public float ElapsedMinutes => (_timeLimit - _remain) / 60f;
@@ -43,14 +50,18 @@ public class GameManager : MonoBehaviour
         _remain = _timeLimit;
     }
 
-    private void OnEnable()
+    public override void OnEnable()
     {
+        base.OnEnable();
         PlayerController.OnPlayerDead += HandlePlayerDead;
+        PhotonNetwork.AddCallbackTarget(this);
     }
 
-    private void OnDisable()
+    public override void OnDisable()
     {
+        base.OnDisable();
         PlayerController.OnPlayerDead -= HandlePlayerDead;
+        PhotonNetwork.RemoveCallbackTarget(this);
     }
 
     private void Start()
@@ -60,7 +71,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (_isGameEnded == true)
+        if (_isMatchEnded == true)
         {
             return;
         }
@@ -82,17 +93,15 @@ public class GameManager : MonoBehaviour
         {
             IsRunning = false;
             OnTimeOver?.Invoke();
-            EndGame(GameEndType.Fail_TimeOver);
+            if (PhotonNetwork.InRoom == true && PhotonNetwork.IsMasterClient == true)
+            {
+                BroadcastMatchEnd(GameEndType.Fail_TimeOver);
+            }
         }
     }
 
     public void StartTimer()
-    {
-        if (_isGameEnded == true)
-        {
-            return;
-        }
-        
+    {       
         IsRunning = true;
         OnTimeChanged?.Invoke(_remain);
     }
@@ -111,28 +120,91 @@ public class GameManager : MonoBehaviour
 
     public void EndGame(GameEndType endType)
     {
-        if (_isGameEnded == true)
+        if (_isLocalEnded == true)
         {
             return;
         }
 
-        _isGameEnded = true;
+        _isLocalEnded = true;
         IsRunning = false;
 
-        StopGameplaySystems();
         ShowEndUI(endType);
+
         HandleResult(endType);
 
-        StartCoroutine(ReturnToRoom_Coroutine());
+        UpdatePhotonState(endType);
+        if (endType == GameEndType.Fail_TimeOver)
+        {
+            return;
+        }
+        EnterSpectatorMode();
     }
 
-    private void StopGameplaySystems()
+    private void EnterSpectatorMode()
     {
-        EnemySpawnManager spawn = FindFirstObjectByType<EnemySpawnManager>();
-        if (spawn != null)
+        PlayerController player = FindFirstObjectByType<PlayerController>();
+        if (player != null)
         {
-            spawn.enabled = false;
+            player.EnterSpectatorMode();
         }
+
+        if (SpectatorCameraManager.Instance != null)
+        {
+            SpectatorCameraManager.Instance.StartSpectate();
+        }
+    }
+
+    private void BroadcastMatchEnd(GameEndType endType)
+    {
+        if (_isMatchEnded == true)
+        {
+            return;
+        }
+
+        object[] content = new object[]
+        {
+            (int)endType
+        };
+
+        RaiseEventOptions options = new RaiseEventOptions
+        {
+            Receivers = ReceiverGroup.All
+        };
+
+        PhotonNetwork.RaiseEvent(MatchEventCodes.MatchEnd, content, options, SendOptions.SendReliable);
+
+        Debug.Log($"[GameManager] Broadcast MatchEnd: {endType}");
+    }
+
+    public void OnEvent(EventData photonEvent)
+    {
+        if (photonEvent.Code != MatchEventCodes.MatchEnd)
+        {
+            return;
+        }
+
+        object[] data = photonEvent.CustomData as object[];
+        if (data == null || data.Length <= 0)
+        {
+            return;
+        }
+
+        GameEndType endType = (GameEndType)(int)data[0];
+
+        ApplyMatchEnd(endType);
+    }
+
+    private void ApplyMatchEnd(GameEndType endType)
+    {
+        if (_isMatchEnded == true)
+        {
+            return;
+        }
+
+        _isMatchEnded = true;
+        IsRunning = false;
+
+        ShowEndUI(endType);
 
         PlayerController player = FindFirstObjectByType<PlayerController>();
         if (player != null)
@@ -140,14 +212,28 @@ public class GameManager : MonoBehaviour
             player.SetInputEnabled(false);
         }
 
-        EnemyController[] enemies = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
-        for (int i = 0; i < enemies.Length; i++)
+        Debug.Log($"[GameManager] ApplyMatchEnd: {endType}");
+
+        // Room 복귀는 InGameMatchController(전원 Finished) 또는 여기서 바로 처리해도 됨
+        // 여기서는 "즉시 룸 복귀"가 더 자연스럽다면 마스터가 LoadLevel 하면 됨.
+    }
+
+   
+
+    private void UpdatePhotonState(GameEndType endType)
+    {
+        if (PhotonNetwork.InRoom == false)
         {
-            if (enemies[i] != null)
-            {
-                enemies[i].StopMove();
-                enemies[i].enabled = false;
-            }
+            return;
+        }
+
+        if (endType == GameEndType.Success)
+        {
+            PhotonPlayerStateManager.SetState(PlayerGameState.Escaped);
+        }
+        else
+        {
+            PhotonPlayerStateManager.SetState(PlayerGameState.Dead);
         }
     }
 
@@ -180,12 +266,6 @@ public class GameManager : MonoBehaviour
         Debug.Log("[GameManager] Saved on success.");
     }
 
-    private IEnumerator ReturnToRoom_Coroutine()
-    {
-        yield return new WaitForSeconds(_returnDelay);
-
-        PhotonNetwork.LoadLevel(_roomSceneName);
-    }
     private void HandlePlayerDead()
     {
         EndGame(GameEndType.Fail_PlayerDead);

@@ -1,8 +1,9 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System.Collections.Generic;
+using Photon.Pun;
 
-public class EnemySpawnManager : MonoBehaviour
+public class EnemySpawnManager : MonoBehaviourPunCallbacks
 {
     [SerializeField] private EnemyDatabase _enemyDatabase;
 
@@ -44,6 +45,16 @@ public class EnemySpawnManager : MonoBehaviour
 
     private void Update()
     {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
         if (GameManager.Instance == null)
         {
             return;
@@ -105,7 +116,12 @@ public class EnemySpawnManager : MonoBehaviour
         }
 
         EnemyData enemyData = _enemyDatabase.GetRandomWeighted(_lastSpawnedId);
-        if (enemyData == null || enemyData.prefab == null)
+        if (enemyData == null || string.IsNullOrEmpty(enemyData.prefabName))
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(enemyData.prefabName))
         {
             return;
         }
@@ -113,7 +129,7 @@ public class EnemySpawnManager : MonoBehaviour
         EnemySpawnPoint point = _points[Random.Range(0, _points.Count)];
         Vector2 spawnPos = GetRandomSpawnPosition(point.transform.position, enemyData.spawnRadius);
 
-        GameObject obj = Instantiate(enemyData.prefab, spawnPos, Quaternion.identity);
+        GameObject obj = PhotonNetwork.Instantiate(enemyData.prefabName, spawnPos, Quaternion.identity);
 
         EnemyController enemy = obj.GetComponent<EnemyController>();
         if (enemy == null)
@@ -135,7 +151,6 @@ public class EnemySpawnManager : MonoBehaviour
         }
 
         _alive.Add(enemy);
-
         _lastSpawnedId = enemyData.id;
     }
 

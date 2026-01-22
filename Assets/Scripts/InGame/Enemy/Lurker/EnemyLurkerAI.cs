@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 public class EnemyLurkerAI : MonoBehaviour
@@ -83,6 +84,11 @@ public class EnemyLurkerAI : MonoBehaviour
 
     private void Start()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            enabled = false;
+            return;
+        }
         FindPlayerIfNeeded();
         ChangeState(State.Patrol);
     }

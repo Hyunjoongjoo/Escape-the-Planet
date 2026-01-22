@@ -17,6 +17,11 @@ public class ItemDatabase : ScriptableObject
     {
         _map = new Dictionary<ItemId, ItemData>();
 
+        if (_items == null)
+        {
+            return;
+        }
+
         for (int i = 0; i < _items.Length; i++)
         {
             ItemData data = _items[i];
@@ -43,6 +48,12 @@ public class ItemDatabase : ScriptableObject
 
         return _map.TryGetValue(id, out ItemData data) ? data : null;
     }
+
+    public ItemData GetItem(ItemId id)
+    {
+        return Get(id);
+    }
+
     //public ItemData GetRandom()
     //{
     //    if (_items == null || _items.Length == 0)
@@ -126,7 +137,7 @@ public class ItemDatabase : ScriptableObject
                 return it;
             }
         }
-
+        
         return null;
     }
 }

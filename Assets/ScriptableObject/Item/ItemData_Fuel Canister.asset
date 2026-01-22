@@ -17,3 +17,4 @@ MonoBehaviour:
   sprite: {fileID: 4854655336405212241, guid: bd5e81ea88096644f9a171a13d8e177d, type: 3}
   weight: 20
   spawnRadius: 9
+  repairPoint: 3

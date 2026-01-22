@@ -7,6 +7,8 @@ public class RepairPanelUI : MonoBehaviour
     [SerializeField] private Text _repairText;
     [SerializeField] private Button _settleButton;
 
+    [SerializeField] private ItemDatabase _itemDatabase;
+
     private int _repairPercent = 0;
     private bool _isLoading = false;
 
@@ -25,16 +27,14 @@ public class RepairPanelUI : MonoBehaviour
 
     private async Task LoadRepairPercent()
     {
-        if (_isLoading)
+        if (_isLoading == true)
         {
             return;
         }
 
         _isLoading = true;
 
-        string key = SaveKeyProvider.GetPlayerKey(); // 이미 너 프로젝트에 존재
-
-        // Firebase 준비될때까지 잠깐 대기
+        //Firebase 준비될 때까지 대기
         while (FirebaseUserData.Instance != null && FirebaseUserData.Instance.IsReady == false)
         {
             await Task.Delay(100);
@@ -47,8 +47,9 @@ public class RepairPanelUI : MonoBehaviour
             return;
         }
 
-        _repairPercent = await FirebaseUserData.Instance.GetRepairPercentAsync(key);
+        string key = SaveKeyProvider.GetPlayerKey();
 
+        _repairPercent = await FirebaseUserData.Instance.GetRepairPercentAsync(key);
         RefreshText();
 
         _isLoading = false;
@@ -66,14 +67,26 @@ public class RepairPanelUI : MonoBehaviour
 
     private async void OnClickSettle()
     {
-        if (_isLoading)
+        if (_isLoading == true)
         {
+            return;
+        }
+
+        if (_itemDatabase == null)
+        {
+            Debug.LogWarning("[RepairPanelUI] ItemDatabase is null.");
             return;
         }
 
         string key = SaveKeyProvider.GetPlayerKey();
 
-        int gain = CalculateRepairGainFromQuickSlot();
+        if (SaveManager.TryLoad(key, out SaveData data) == false || data == null)
+        {
+            Debug.Log($"[RepairPanelUI] No save for: {key}");
+            return;
+        }
+
+        int gain = CalculateRepairGainFromSaveData(data);
 
         if (gain <= 0)
         {
@@ -90,59 +103,55 @@ public class RepairPanelUI : MonoBehaviour
         _repairPercent = newValue;
         RefreshText();
 
-        // 정산 후 퀵슬롯 비우기(선택)
-        ClearQuickSlot();
+        ClearSaveDataQuickSlots(data);
+        SaveManager.Save(key, data);
 
         _isLoading = false;
 
-        Debug.Log($"[RepairPanelUI] RepairPercent +{gain} -> {_repairPercent}%");
+        Debug.Log($"[RepairPanelUI] Settled repair: +{gain} -> {_repairPercent}% (SaveData cleared)");
     }
 
-    private int CalculateRepairGainFromQuickSlot()
+    private int CalculateRepairGainFromSaveData(SaveData data)
     {
-        if (QuickSlotManager.Instance == null)
+        if (data == null || data.quickSlots == null)
         {
             return 0;
         }
 
-        int count = 0;
+        int total = 0;
 
-        QuickSlot[] slots = QuickSlotManager.Instance.Slots;
-        for (int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < data.quickSlots.Length; i++)
         {
-            if (slots[i] != null && slots[i].IsEmpty == false && slots[i].Data != null)
+            ItemId itemId = data.quickSlots[i];
+
+            if (itemId == ItemId.NONE)
             {
-                count++;
+                continue;
             }
+
+            ItemData itemData = _itemDatabase.GetItem(itemId);
+            if (itemData == null)
+            {
+                Debug.LogWarning($"[RepairPanelUI] ItemData not found for: {itemId}");
+                continue;
+            }
+
+            total += Mathf.Max(0, Mathf.RoundToInt(itemData.repairPoint));
         }
 
-        // 규칙:
-        // 아이템 1개 = 수리 2%
-        int gain = count * 2;
-
-        return gain;
+        return total;
     }
 
-    private void ClearQuickSlot()
+    private void ClearSaveDataQuickSlots(SaveData data)
     {
-        if (QuickSlotManager.Instance == null)
+        if (data == null || data.quickSlots == null)
         {
             return;
         }
 
-        QuickSlot[] slots = QuickSlotManager.Instance.Slots;
-        for (int i = 0; i < slots.Length; i++)
+        for (int i = 0; i < data.quickSlots.Length; i++)
         {
-            if (slots[i] != null)
-            {
-                slots[i].Clear();
-            }
-        }
-
-        // UI 업데이트 강제
-        for (int i = 0; i < slots.Length; i++)
-        {
-            QuickSlotManager.Instance.SelectSlot(QuickSlotManager.Instance.CurrentIndex);
+            data.quickSlots[i] = ItemId.NONE;
         }
     }
 }

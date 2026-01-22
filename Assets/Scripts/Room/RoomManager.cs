@@ -26,13 +26,19 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private void Start()
     {
+        _gameStarted = false;
+
         if (PhotonNetwork.InRoom)
         {
+            PhotonPlayerStateManager.SetState(PlayerGameState.Alive);
+            SetReady(false);
             UpdateUI();
         }
     }
     public override void OnJoinedRoom()
     {
+        _gameStarted = false;
+        PhotonPlayerStateManager.SetState(PlayerGameState.Alive);
         SetReady(false);
         UpdateUI();
     }
@@ -143,7 +149,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         bool isReady = GetReady(PhotonNetwork.LocalPlayer);
 
-        //Ready면 나가기 불가
         _exitButton.interactable = !isReady;
     }
     public void OnClickLeaveRoom()

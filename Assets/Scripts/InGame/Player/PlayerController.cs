@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     private PlayerModel _model;
     private PlayerView _view;
     private PlayerState _state;
+    private PhotonView _photonView;
 
     private Rigidbody2D _rigid;
     private bool _isInvincible = false;
@@ -56,6 +57,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        _photonView = GetComponent<PhotonView>();
         _model = new PlayerModel();
         _model.Init(_baseStats);
         _model.currentWeapon = _defaultWeapon;
@@ -179,44 +181,19 @@ public class PlayerController : MonoBehaviour
         }
         UIManager.Instance.InitPlayerUI(nickname, _model.currentHP, _model.maxHP);
     }
-    private void FixedUpdate()
+   
+    private void Update()
     {
-        if (_isDead)
+        if (_photonView != null && !_photonView.IsMine)
         {
             return;
         }
-        Move();
-    }
 
-    private void Update()
-    {
         if (_isDead)
         {
             return;
         }
         UpdateAnimations();
-    }
-
-    private void Move()
-    {
-        if (_state.current == PlayerState.State.Attack ||
-            _state.current == PlayerState.State.Hit ||
-            _state.current == PlayerState.State.Dead)
-        {
-            _rigid.linearVelocity = Vector2.zero;
-            return;
-        }
-
-        _rigid.linearVelocity = _moveInput * _model.moveSpeed;
-
-        if (_moveInput.sqrMagnitude > 0.01f)
-        {
-            _state.ChangeState(PlayerState.State.Move);
-        }
-        else
-        {
-            _state.ChangeState(PlayerState.State.Idle);
-        }
     }
 
     private void UpdateAnimations()
@@ -246,6 +223,43 @@ public class PlayerController : MonoBehaviour
 
         _view.SetMove(_facing, speed01);
     }
+
+    private void FixedUpdate()
+    {
+        if (_photonView != null && !_photonView.IsMine)
+        {
+            return;
+        }
+
+        if (_isDead)
+        {
+            return;
+        }
+        Move();
+    }    
+
+    private void Move()
+    {
+        if (_state.current == PlayerState.State.Attack ||
+            _state.current == PlayerState.State.Hit ||
+            _state.current == PlayerState.State.Dead)
+        {
+            _rigid.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        _rigid.linearVelocity = _moveInput * _model.moveSpeed;
+
+        if (_moveInput.sqrMagnitude > 0.01f)
+        {
+            _state.ChangeState(PlayerState.State.Move);
+        }
+        else
+        {
+            _state.ChangeState(PlayerState.State.Idle);
+        }
+    }
+    
     public void TakeDamage(int damage)
     {
         if (_state.current == PlayerState.State.Dead)
@@ -333,7 +347,7 @@ public class PlayerController : MonoBehaviour
 
         _rigid.linearVelocity = Vector2.zero;
         _rigid.angularVelocity = 0f;
-        _rigid.bodyType = RigidbodyType2D.Static;
+        _rigid.bodyType = RigidbodyType2D.Kinematic;
 
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) 
@@ -435,6 +449,32 @@ public class PlayerController : MonoBehaviour
                 _rigid.linearVelocity = Vector2.zero;
             }
         }
+    }
+
+    public void EnterSpectatorMode()
+    {
+        SetInputEnabled(false);
+
+        _isDead = true;
+
+        _rigid.linearVelocity = Vector2.zero;
+        _rigid.angularVelocity = 0f;
+
+        _rigid.bodyType = RigidbodyType2D.Kinematic;
+
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.enabled = false;
+        }
+
+        if (_weaponHitBox != null)
+        {
+            _weaponHitBox.SetActive(false);
+        }
+
+        // 관전 표시용
+        _view.SetVisible(true);
     }
 
     private void TryInteract()

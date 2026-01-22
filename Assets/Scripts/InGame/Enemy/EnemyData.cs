@@ -11,7 +11,7 @@ public enum EnemyId
 public class EnemyData : ScriptableObject
 {
     public EnemyId id = EnemyId.NONE;
-    public GameObject prefab;
+    public string prefabName;
 
     public float baseMoveSpeed = 1.5f;
     public int baseMaxHP = 30;

@@ -76,7 +76,7 @@ public class EnemyDatabase : ScriptableObject
         for (int i = 0; i < _enemies.Length; i++)
         {
             EnemyData data = _enemies[i];
-            if (data == null || data.prefab == null)
+            if (data == null || data.prefabName == null)
             {
                 continue;
             }
@@ -95,7 +95,7 @@ public class EnemyDatabase : ScriptableObject
         for (int i = 0; i < _enemies.Length; i++)
         {
             EnemyData data = _enemies[i];
-            if (data == null || data.prefab == null)
+            if (data == null || data.prefabName == null)
             {
                 continue;
             }

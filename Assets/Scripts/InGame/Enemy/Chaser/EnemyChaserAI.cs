@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 public class EnemyChaserAI : MonoBehaviour
@@ -46,6 +47,12 @@ public class EnemyChaserAI : MonoBehaviour
     }
     private void Start()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            enabled = false;
+            return;
+        }
+
         GameObject playerObj = GameObject.FindWithTag("Player");
         if (playerObj != null)
         {

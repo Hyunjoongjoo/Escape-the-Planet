@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -31,6 +32,13 @@ public class EnemyController : MonoBehaviour
 
     private void Start()
     {
+
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            enabled = false;
+            return;
+        }
+
         if (_isInitialized == true)
         {
             return;

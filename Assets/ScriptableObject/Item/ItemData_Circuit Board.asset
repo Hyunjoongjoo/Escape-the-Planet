@@ -15,5 +15,6 @@ MonoBehaviour:
   id: 8
   itemName: "\uD68C\uB85C\uBCF4\uB4DC"
   sprite: {fileID: -1014471878319070210, guid: bd5e81ea88096644f9a171a13d8e177d, type: 3}
-  weight: 10
+  weight: 5
   spawnRadius: 9
+  repairPoint: 5
