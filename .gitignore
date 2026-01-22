@@ -124,3 +124,11 @@ Assets/Editor/**/firebase*.png
 Assets/Editor/**/firebase*.png.meta
 Assets/Editor/**/Google*.png
 Assets/Editor/**/Google*.png.meta
+
+# Firebase desktop config (generated)
+Assets/StreamingAssets/google-services-desktop.json
+Assets/StreamingAssets/google-services-desktop.json.meta
+**/google-services-desktop.json
+**/google-services.json.meta
+**/google-services-desktop.json.meta
+

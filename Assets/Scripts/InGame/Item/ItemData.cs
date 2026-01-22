@@ -24,4 +24,5 @@ public class ItemData : ScriptableObject
     public Sprite sprite;
     [Range(1, 1000)] public int weight = 100;
     public float spawnRadius = 1.2f;
+    public float repairPoint = 1;
 }
