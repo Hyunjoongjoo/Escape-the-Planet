@@ -84,6 +84,37 @@ MonoBehaviour:
   - {x: 0.5, y: -0.5, z: 0}
   - {x: 0.5, y: 0.5, z: 0}
   - {x: -0.5, y: 0.5, z: 0}
+--- !u!1 &3249562003262439395
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3113440632913484674}
+  m_Layer: 0
+  m_Name: SortPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3113440632913484674
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3249562003262439395}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.13, y: -1.2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2044130316993191334}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5981800036538844069
 GameObject:
   m_ObjectHideFlags: 0
@@ -188,6 +219,7 @@ GameObject:
   - component: {fileID: 8780993899075549341}
   - component: {fileID: 4098143409135858186}
   - component: {fileID: 2826732042960753786}
+  - component: {fileID: -5300852554894794913}
   - component: {fileID: -5736780307899455505}
   - component: {fileID: 3613344659749014547}
   - component: {fileID: -3866988062579395718}
@@ -218,6 +250,7 @@ Transform:
   - {fileID: 2751861840604399124}
   - {fileID: 7679733051502785451}
   - {fileID: 2302174091969308467}
+  - {fileID: 3113440632913484674}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5386413321278851049
@@ -364,6 +397,21 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
+--- !u!114 &-5300852554894794913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7829955140011112673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e233904983a2dc94db624fe9246ba15c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SortY
+  _pivot: {fileID: 3113440632913484674}
+  _scale: 100
+  _baseOrder: 0
 --- !u!114 &-5736780307899455505
 MonoBehaviour:
   m_ObjectHideFlags: 0

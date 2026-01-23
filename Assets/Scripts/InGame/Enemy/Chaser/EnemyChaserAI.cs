@@ -53,17 +53,20 @@ public class EnemyChaserAI : MonoBehaviour
             return;
         }
 
-        GameObject playerObj = GameObject.FindWithTag("Player");
-        if (playerObj != null)
-        {
-            _player = playerObj.transform;
-        }
-
         ChangeState(State.Patrol);
     }
 
     private void FixedUpdate()
     {
+        if (_forcedChase == false)
+        {
+            _player = FindClosestAlivePlayer();
+
+            if (_state == State.Chase && _pathChase != null)
+            {
+                _pathChase.SetTarget(_player);
+            }
+        }
 
         if (_player == null)
         {
@@ -121,6 +124,39 @@ public class EnemyChaserAI : MonoBehaviour
         {
             UpdateWander();
         }
+    }
+
+    private Transform FindClosestAlivePlayer()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+
+        float bestDist = float.MaxValue;
+        Transform best = null;
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            PlayerController player = players[i];
+            if (player == null)
+            {
+                continue;
+            }
+
+            if (player.IsDead)
+            {
+                continue;
+            }
+
+            Transform transform = player.FollowTarget;
+
+            float dist = Vector2.Distance(base.transform.position, transform.position);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                best = transform;
+            }
+        }
+
+        return best;
     }
 
     private void UpdateWander()

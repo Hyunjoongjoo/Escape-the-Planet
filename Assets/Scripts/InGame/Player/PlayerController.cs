@@ -48,6 +48,10 @@ public class PlayerController : MonoBehaviourPun
     private bool _inputEnabled = true;
     private bool _droppedAllOnDeath = false;
 
+    private Vector3 _prevNetPos;
+    private Vector2 _netVelocity;
+    private bool _netInit = false;
+
     public static event Action OnPlayerDead;
 
     public bool IsDead => _isDead;
@@ -180,6 +184,14 @@ public class PlayerController : MonoBehaviourPun
         {
             SetInputEnabled(false);
             _weaponHitBox.SetActive(false);
+
+            _rigid.bodyType = RigidbodyType2D.Kinematic;
+            _rigid.linearVelocity = Vector2.zero;
+            _rigid.angularVelocity = 0f;
+
+            _prevNetPos = transform.position;
+            _netInit = true;
+
             return;
         }
 
@@ -222,7 +234,43 @@ public class PlayerController : MonoBehaviourPun
             return;
         }
 
+        if (!photonView.IsMine)
+        {
+            UpdateNetMotion();
+        }
+
+
         UpdateAnimations();
+    }
+
+    private void UpdateNetMotion()
+    {
+        if (_netInit == false)
+        {
+            _prevNetPos = transform.position;
+            _netInit = true;
+            return;
+        }
+
+        Vector3 delta = transform.position - _prevNetPos;
+        _prevNetPos = transform.position;
+
+        float dt = Time.deltaTime;
+        if (dt <= 0f)
+        {
+            return;
+        }
+
+        _netVelocity = new Vector2(delta.x, delta.y) / dt;
+
+        if (_netVelocity.x > 0.05f)
+        {
+            _facing = 1;
+        }
+        else if (_netVelocity.x < -0.05f)
+        {
+            _facing = -1;
+        }
     }
 
     private void UpdateAnimations()
@@ -234,9 +282,19 @@ public class PlayerController : MonoBehaviourPun
             return;
         }
 
-        float speed01 = Mathf.Clamp01(_rigid.linearVelocity.magnitude / _model.moveSpeed);
+        float speed01 = 0f;
+
+        if (photonView.IsMine)
+        {
+            speed01 = Mathf.Clamp01(_rigid.linearVelocity.magnitude / _model.moveSpeed);
+        }
+        else
+        {
+            speed01 = Mathf.Clamp01(_netVelocity.magnitude / _model.moveSpeed);
+        }
+
         _view.SetMove(_facing, speed01);
-    }
+    }  
 
     private void FixedUpdate()
     {

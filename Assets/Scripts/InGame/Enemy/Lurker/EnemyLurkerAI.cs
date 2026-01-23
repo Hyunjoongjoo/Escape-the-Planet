@@ -89,30 +89,15 @@ public class EnemyLurkerAI : MonoBehaviour
             enabled = false;
             return;
         }
-        FindPlayerIfNeeded();
+
         ChangeState(State.Patrol);
-    }
-
-    private void FindPlayerIfNeeded()
-    {
-        if (_player != null)
-        {
-            return;
-        }
-
-        PlayerController player = FindFirstObjectByType<PlayerController>();
-        if (player != null)
-        {
-            _player = player.FollowTarget;
-        }
-        else
-        {
-            Debug.LogError("플레이어컨트롤러를 찾지 못함");
-        }
     }
 
     private void FixedUpdate()
     {
+
+        _player = FindClosestAlivePlayer();
+
         if (_enemyState.current == EnemyState.State.Dead)
         {
             _controller.StopMove();
@@ -159,6 +144,39 @@ public class EnemyLurkerAI : MonoBehaviour
                 UpdateFlee(dist);
                 break;
         }
+    }
+
+    private Transform FindClosestAlivePlayer()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+
+        float bestDist = float.MaxValue;
+        Transform best = null;
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            PlayerController player = players[i];
+            if (player == null)
+            {
+                continue;
+            }
+
+            if (player.IsDead)
+            {
+                continue;
+            }
+
+            Transform transform = player.FollowTarget;
+
+            float dist = Vector2.Distance(base.transform.position, transform.position);
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                best = transform;
+            }
+        }
+
+        return best;
     }
 
     private void UpdatePatrol(float dist)

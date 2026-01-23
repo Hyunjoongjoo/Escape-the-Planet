@@ -1,9 +1,10 @@
+using UnityEngine;
 using System;
 using System.Collections;
-using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
-using UnityEngine;
+using ExitGames.Client.Photon;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 
 public enum GameEndType
@@ -23,11 +24,16 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
 {
     public static GameManager Instance { get; private set; }
 
+    private const string START_TIME_KEY = "StartTime";
+
     [SerializeField] private float _timeLimit = 300f;
 
     private float _remain;
     private bool _isLocalEnded = false;
     private bool _isMatchEnded = false;
+
+    private bool _hasStartTime = false;
+    private double _startTime = 0;
 
     public float RemainTime => _remain;
     public float ElapsedMinutes => (_timeLimit - _remain) / 60f;
@@ -46,7 +52,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         }
 
         Instance = this;
-
         _remain = _timeLimit;
     }
 
@@ -81,7 +86,15 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
             return;
         }
 
-        _remain -= Time.deltaTime;
+        if (_hasStartTime == false)
+        {
+            TryInitStartTime();
+            return;
+        }
+
+        double elapsed = PhotonNetwork.Time - _startTime;
+        _remain = _timeLimit - (float)elapsed;
+
         if (_remain < 0f)
         {
             _remain = 0f;
@@ -93,7 +106,8 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         {
             IsRunning = false;
             OnTimeOver?.Invoke();
-            if (PhotonNetwork.InRoom == true && PhotonNetwork.IsMasterClient == true)
+
+            if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
             {
                 BroadcastMatchEnd(GameEndType.Fail_TimeOver);
             }
@@ -101,8 +115,9 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     }
 
     public void StartTimer()
-    {       
+    {
         IsRunning = true;
+        TryInitStartTime();
         OnTimeChanged?.Invoke(_remain);
     }
 
@@ -115,7 +130,58 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
     {
         _timeLimit = newLimit;
         _remain = _timeLimit;
+
+        _hasStartTime = false;
+        _startTime = 0;
+
+        if (PhotonNetwork.InRoom && PhotonNetwork.IsMasterClient)
+        {
+            Hashtable props = new Hashtable
+            {
+                { START_TIME_KEY, PhotonNetwork.Time }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+
         OnTimeChanged?.Invoke(_remain);
+    }
+
+    private void TryInitStartTime()
+    {
+        if (PhotonNetwork.InRoom == false)
+        {
+            return;
+        }
+
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(START_TIME_KEY, out object v))
+        {
+            _startTime = (double)v;
+            _hasStartTime = true;
+            return;
+        }
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            Hashtable props = new Hashtable
+            {
+                { START_TIME_KEY, PhotonNetwork.Time }
+            };
+            PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        }
+    }
+
+    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+    {
+        if (propertiesThatChanged == null)
+        {
+            return;
+        }
+
+        if (propertiesThatChanged.TryGetValue(START_TIME_KEY, out object v))
+        {
+            _startTime = (double)v;
+            _hasStartTime = true;
+        }
     }
 
     public void EndGame(GameEndType endType)
@@ -172,8 +238,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         };
 
         PhotonNetwork.RaiseEvent(MatchEventCodes.MatchEnd, content, options, SendOptions.SendReliable);
-
-        Debug.Log($"[GameManager] Broadcast MatchEnd: {endType}");
     }
 
     public void OnEvent(EventData photonEvent)
@@ -211,11 +275,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         {
             player.SetInputEnabled(false);
         }
-
-        Debug.Log($"[GameManager] ApplyMatchEnd: {endType}");
-
-        // Room 복귀는 InGameMatchController(전원 Finished) 또는 여기서 바로 처리해도 됨
-        // 여기서는 "즉시 룸 복귀"가 더 자연스럽다면 마스터가 LoadLevel 하면 됨.
     }
 
    
