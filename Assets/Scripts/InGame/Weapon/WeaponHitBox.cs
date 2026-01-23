@@ -15,13 +15,34 @@ public class WeaponHitBox : MonoBehaviour
 
     private void Awake()
     {
-        _col = GetComponent<BoxCollider2D>();
-        _col.isTrigger = true;
-        _col.enabled = false;
-    }
+        EnsureCollider();
 
+        if (_col != null)
+        {
+            _col.isTrigger = true;
+            _col.enabled = false;
+        }
+    }
+    private void EnsureCollider()
+    {
+        if (_col == null)
+        {
+            _col = GetComponent<BoxCollider2D>();
+        }
+    }
     public void ApplyWeapon(WeaponData weapon)
     {
+        if (weapon == null)
+        {
+            return;
+        }
+
+        EnsureCollider();
+        if (_col == null)
+        {
+            return;
+        }
+
         _damage = weapon.damage;
 
         _baseSize = weapon.hitBoxSize;
@@ -34,6 +55,12 @@ public class WeaponHitBox : MonoBehaviour
 
     public void SetActive(bool value)
     {
+        EnsureCollider();
+        if (_col == null)
+        {
+            return;
+        }
+
         _isActive = value;
         _col.enabled = value;
     }
@@ -45,6 +72,12 @@ public class WeaponHitBox : MonoBehaviour
 
     private void ApplyFacing()
     {
+        EnsureCollider();
+        if (_col == null)
+        {
+            return;
+        }
+
         Vector2 off = _baseOffset;
         off.x = Mathf.Abs(off.x) * _facing;
         _col.offset = off;

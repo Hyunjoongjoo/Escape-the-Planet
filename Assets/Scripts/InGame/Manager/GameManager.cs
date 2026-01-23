@@ -263,7 +263,6 @@ public class GameManager : MonoBehaviourPunCallbacks, IOnEventCallback
         SaveData data = QuickSlotManager.Instance.ToSaveData();
         SaveManager.Save(key, data);
 
-        Debug.Log("[GameManager] Saved on success.");
     }
 
     private void HandlePlayerDead()

@@ -1,12 +1,14 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System;
 using System.Collections;
 using Photon.Pun;
-using System;
+using Photon.Realtime;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(PlayerView))]
 [RequireComponent(typeof(PlayerState))]
+[RequireComponent(typeof(PhotonView))]
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private PlayerStats _baseStats;
@@ -61,16 +63,19 @@ public class PlayerController : MonoBehaviour
         _photonView = GetComponent<PhotonView>();
         _model = new PlayerModel();
         _model.Init(_baseStats);
-        _model.currentWeapon = _defaultWeapon;
-
-        _weaponHitBox.ApplyWeapon(_model.currentWeapon);
 
         _view = GetComponent<PlayerView>();
         _state = GetComponent<PlayerState>();
         _rigid = GetComponent<Rigidbody2D>();
+
         if (_interaction == null)
         {
             _interaction = GetComponentInChildren<PlayerInteraction>(true);
+        }
+
+        if (_weaponHitBox == null)
+        {
+            _weaponHitBox = GetComponentInChildren<WeaponHitBox>(true);
         }
     }
 
@@ -80,6 +85,7 @@ public class PlayerController : MonoBehaviour
         {
             return;
         }
+
         Vector2 input = ctx.ReadValue<Vector2>();
         _moveInput = input.normalized;
 
@@ -92,7 +98,7 @@ public class PlayerController : MonoBehaviour
             _facing = -1;
         }
 
-            _weaponHitBox.SetFacing(_facing);
+        _weaponHitBox.SetFacing(_facing);
     }
 
     public void OnAttack(InputAction.CallbackContext ctx)
@@ -143,7 +149,10 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        QuickSlotManager.Instance.SelectSlot(index);
+        if (QuickSlotManager.Instance != null)
+        {
+            QuickSlotManager.Instance.SelectSlot(index);
+        }
     }
 
     public void OnDrop(InputAction.CallbackContext ctx)
@@ -175,12 +184,59 @@ public class PlayerController : MonoBehaviour
     }
     private void Start()
     {
+        if (_photonView != null && !_photonView.IsMine)
+        {
+            SetInputEnabled(false);
+            return;
+        }
+
+        EnsureWeaponApplied();
+
         string nickname = "Player";
         if (PhotonNetwork.IsConnected && PhotonNetwork.LocalPlayer != null)
         {
             nickname = PhotonNetwork.LocalPlayer.NickName;
         }
+
         UIManager.Instance.InitPlayerUI(nickname, _model.currentHP, _model.maxHP);
+
+        StartCoroutine(BindCinemachineRoutine());
+    }
+    private void EnsureWeaponApplied()
+    {
+        if (_model.currentWeapon == null)
+        {
+            _model.currentWeapon = _defaultWeapon;
+        }
+
+        if (_model.currentWeapon == null)
+        {
+            return;
+        }
+
+        if (_weaponHitBox == null)
+        {
+            return;
+        }
+
+        _weaponHitBox.ApplyWeapon(_model.currentWeapon);
+        _weaponHitBox.SetActive(false);
+        _weaponHitBox.SetFacing(_facing);
+    }
+
+    private IEnumerator BindCinemachineRoutine()
+    {
+        yield return null;
+
+        var cam = FindFirstObjectByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsInactive.Include);
+        if (cam == null)
+        {
+            yield break;
+        }
+
+        Transform follow = FollowTarget != null ? FollowTarget : transform;
+
+        cam.Follow = follow;
     }
 
     private void Update()
@@ -194,6 +250,7 @@ public class PlayerController : MonoBehaviour
         {
             return;
         }
+
         UpdateAnimations();
     }
 
@@ -204,15 +261,6 @@ public class PlayerController : MonoBehaviour
         {
             _view.SetMove(_attackFacing, 0f);
             return;
-        }
-
-        if (_moveInput.x > 0.01f)
-        {
-            _facing = 1;
-        }
-        else if (_moveInput.x < -0.01f)
-        {
-            _facing = -1;
         }
 
         float speed01 = 0f;
@@ -236,8 +284,9 @@ public class PlayerController : MonoBehaviour
         {
             return;
         }
+
         Move();
-    }    
+    }
 
     private void Move()
     {
@@ -260,7 +309,7 @@ public class PlayerController : MonoBehaviour
             _state.ChangeState(PlayerState.State.Idle);
         }
     }
-    
+
     public void TakeDamage(int damage)
     {
         if (_state.current == PlayerState.State.Dead)
@@ -274,6 +323,7 @@ public class PlayerController : MonoBehaviour
         }
 
         _model.TakeDamage(damage);
+
         UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
 
         if (_model.IsDead())
@@ -366,8 +416,8 @@ public class PlayerController : MonoBehaviour
         _rigid.bodyType = RigidbodyType2D.Kinematic;
 
         Collider2D col = GetComponent<Collider2D>();
-        if (col != null) 
-        { 
+        if (col != null)
+        {
             col.isTrigger = true;
         }
         _moveInput = Vector2.zero;
@@ -406,7 +456,17 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
+        if (_model.currentWeapon == null || _weaponHitBox == null)
+        {
+            EnsureWeaponApplied();
+        }
+
         if (_model.currentWeapon == null)
+        {
+            return;
+        }
+
+        if (_weaponHitBox == null)
         {
             return;
         }
@@ -423,7 +483,7 @@ public class PlayerController : MonoBehaviour
         _view.PlayAttack();
 
     }
-    
+
     public void OnAttackStart()
     {
         _weaponHitBox.SetFacing(_attackFacing);
@@ -431,8 +491,8 @@ public class PlayerController : MonoBehaviour
     }
 
     public void OnAttackEnd()
-    {      
-        _weaponHitBox.SetActive(false);   
+    {
+        _weaponHitBox.SetActive(false);
     }
     public void OnAttackAnimEnd()
     {
@@ -470,12 +530,10 @@ public class PlayerController : MonoBehaviour
     public void EnterSpectatorMode()
     {
         SetInputEnabled(false);
-
         _isDead = true;
 
         _rigid.linearVelocity = Vector2.zero;
         _rigid.angularVelocity = 0f;
-
         _rigid.bodyType = RigidbodyType2D.Kinematic;
 
         Collider2D col = GetComponent<Collider2D>();
@@ -489,7 +547,6 @@ public class PlayerController : MonoBehaviour
             _weaponHitBox.SetActive(false);
         }
 
-        // 관전 표시용
         _view.SetVisible(true);
     }
 

@@ -16,24 +16,20 @@ public class PlayerSpawner : MonoBehaviour
 
     private IEnumerator SpawnRoutine()
     {
-        // 안정성: Photon / Scene 준비 한 프레임 대기
         yield return null;
 
         if (!PhotonNetwork.InRoom)
         {
-            Debug.LogWarning("[PlayerSpawner] Not in room. Abort spawn.");
             yield break;
         }
 
         if (PhotonNetwork.LocalPlayer == null)
         {
-            Debug.LogWarning("[PlayerSpawner] LocalPlayer is null. Abort spawn.");
             yield break;
         }
 
         if (HasLocalPlayer())
         {
-            Debug.Log("[PlayerSpawner] Local player already exists. Skip spawn.");
             yield break;
         }
 
@@ -44,9 +40,14 @@ public class PlayerSpawner : MonoBehaviour
     {
         PhotonView[] views = Object.FindObjectsByType<PhotonView>(FindObjectsSortMode.None);
 
-        foreach (PhotonView v in views)
+        foreach (PhotonView view in views)
         {
-            if (v.IsMine && v.CompareTag("Player"))
+            if (view == null)
+            {
+                continue;
+            }
+
+            if (view.IsMine && view.GetComponent<PlayerController>() != null)
             {
                 return true;
             }
@@ -59,9 +60,8 @@ public class PlayerSpawner : MonoBehaviour
     {
         Vector3 spawnPos = GetSpawnPosition(PhotonNetwork.LocalPlayer);
 
-        GameObject obj = PhotonNetwork.Instantiate(_playerPrefabName, spawnPos, Quaternion.identity);
-
-        Debug.Log($"[PlayerSpawner] Spawned local player: {obj.name} at {spawnPos}");
+        PhotonNetwork.Instantiate(_playerPrefabName, spawnPos, Quaternion.identity);
+        
     }
 
     private Vector3 GetSpawnPosition(Player player)

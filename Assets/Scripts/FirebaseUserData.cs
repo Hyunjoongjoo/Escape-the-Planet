@@ -51,7 +51,6 @@ public class FirebaseUserData : MonoBehaviour
         _root = FirebaseDatabase.DefaultInstance.RootReference;
 
         IsReady = true;
-        Debug.Log("[FirebaseUserData] Firebase READY");
     }
 
     private string GetUserRepairPercentPath(string playerKey)

@@ -34,7 +34,6 @@ public class RepairPanelUI : MonoBehaviour
 
         _isLoading = true;
 
-        //Firebase 준비될 때까지 대기
         while (FirebaseUserData.Instance != null && FirebaseUserData.Instance.IsReady == false)
         {
             await Task.Delay(100);
@@ -42,7 +41,6 @@ public class RepairPanelUI : MonoBehaviour
 
         if (FirebaseUserData.Instance == null)
         {
-            Debug.LogError("[RepairPanelUI] FirebaseUserData.Instance is null.");
             _isLoading = false;
             return;
         }
@@ -74,7 +72,6 @@ public class RepairPanelUI : MonoBehaviour
 
         if (_itemDatabase == null)
         {
-            Debug.LogWarning("[RepairPanelUI] ItemDatabase is null.");
             return;
         }
 
@@ -82,7 +79,6 @@ public class RepairPanelUI : MonoBehaviour
 
         if (SaveManager.TryLoad(key, out SaveData data) == false || data == null)
         {
-            Debug.Log($"[RepairPanelUI] No save for: {key}");
             return;
         }
 
@@ -90,7 +86,6 @@ public class RepairPanelUI : MonoBehaviour
 
         if (gain <= 0)
         {
-            Debug.Log("[RepairPanelUI] No items to settle.");
             return;
         }
 
@@ -107,8 +102,6 @@ public class RepairPanelUI : MonoBehaviour
         SaveManager.Save(key, data);
 
         _isLoading = false;
-
-        Debug.Log($"[RepairPanelUI] Settled repair: +{gain} -> {_repairPercent}% (SaveData cleared)");
     }
 
     private int CalculateRepairGainFromSaveData(SaveData data)
@@ -132,7 +125,6 @@ public class RepairPanelUI : MonoBehaviour
             ItemData itemData = _itemDatabase.GetItem(itemId);
             if (itemData == null)
             {
-                Debug.LogWarning($"[RepairPanelUI] ItemData not found for: {itemId}");
                 continue;
             }
 

@@ -76,14 +76,26 @@ public class SpectatorCameraManager : MonoBehaviour
     {
         if (_nextAction != null && _nextAction.action != null)
         {
-            if (enable) { _nextAction.action.Enable(); }
-            else { _nextAction.action.Disable(); }
+            if (enable) 
+            { 
+                _nextAction.action.Enable(); 
+            }
+            else 
+            { 
+                _nextAction.action.Disable(); 
+            }
         }
 
         if (_prevAction != null && _prevAction.action != null)
         {
-            if (enable) { _prevAction.action.Enable(); }
-            else { _prevAction.action.Disable(); }
+            if (enable) 
+            { 
+                _prevAction.action.Enable(); 
+            }
+            else 
+            { 
+                _prevAction.action.Disable(); 
+            }
         }
     }
 
@@ -129,7 +141,6 @@ public class SpectatorCameraManager : MonoBehaviour
     {
         if (_targets.Count == 0)
         {
-            Debug.Log("[SpectatorCameraManager] No targets.");
             return;
         }
 
@@ -178,7 +189,6 @@ public class SpectatorCameraManager : MonoBehaviour
     {
         if (_cam == null)
         {
-            Debug.LogWarning("[SpectatorCameraManager] CinemachineCamera not set.");
             return;
         }
 
@@ -193,11 +203,28 @@ public class SpectatorCameraManager : MonoBehaviour
             return;
         }
 
-        Transform follow = target.FollowTarget != null ? target.FollowTarget : target.transform;
+        Transform follow = target.FollowTarget;
+        if (follow == null)
+        {
+            follow = target.transform;
+        }
 
         _cam.Follow = follow;
         _cam.LookAt = follow;
+    }
+    public void ForceFollow(Transform follow)
+    {
+        if (_cam == null)
+        {
+            return;
+        }
 
-        Debug.Log($"[SpectatorCameraManager] Spectate Target: {target.name} ({_currentIndex + 1}/{_targets.Count})");
+        if (follow == null)
+        {
+            return;
+        }
+
+        _cam.Follow = follow;
+        _cam.LookAt = follow;
     }
 }
