@@ -62,7 +62,7 @@ public class EnemyController : MonoBehaviour
         if (collision.collider.CompareTag("Player"))
         {
             PlayerController player = collision.collider.GetComponent<PlayerController>();
-            player?.TakeDamage(_model.contactDamage);
+            player?.TakeDamageByEnemy(_model.contactDamage);
 
             _nextDamageTime = Time.time + _damageInterval;
         }

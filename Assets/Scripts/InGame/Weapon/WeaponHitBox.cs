@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Collections.Generic;
+using Photon.Pun;
 
 [RequireComponent(typeof(BoxCollider2D))]
 public class WeaponHitBox : MonoBehaviour
@@ -13,15 +15,17 @@ public class WeaponHitBox : MonoBehaviour
 
     private int _facing = 1;
 
+    private PhotonView _ownerView;
+
+    private readonly HashSet<int> _hitTargets = new HashSet<int>();
+
     private void Awake()
     {
-        EnsureCollider();
+        _col = GetComponent<BoxCollider2D>();
+        _col.isTrigger = true;
+        _col.enabled = false;
 
-        if (_col != null)
-        {
-            _col.isTrigger = true;
-            _col.enabled = false;
-        }
+        _ownerView = GetComponentInParent<PhotonView>();
     }
     private void EnsureCollider()
     {
@@ -37,32 +41,32 @@ public class WeaponHitBox : MonoBehaviour
             return;
         }
 
-        EnsureCollider();
-        if (_col == null)
-        {
-            return;
-        }
-
         _damage = weapon.damage;
 
         _baseSize = weapon.hitBoxSize;
         _baseOffset = weapon.hitBoxOffset;
 
-        _col.size = _baseSize;
+        if (_col != null)
+        {
+            _col.size = _baseSize;
+        }
 
         ApplyFacing();
     }
 
     public void SetActive(bool value)
     {
-        EnsureCollider();
-        if (_col == null)
+        _isActive = value;
+
+        if (_col != null)
         {
-            return;
+            _col.enabled = value;
         }
 
-        _isActive = value;
-        _col.enabled = value;
+        if (value)
+        {
+            _hitTargets.Clear();
+        }
     }
     public void SetFacing(int facing)
     {
@@ -72,7 +76,6 @@ public class WeaponHitBox : MonoBehaviour
 
     private void ApplyFacing()
     {
-        EnsureCollider();
         if (_col == null)
         {
             return;
@@ -90,12 +93,43 @@ public class WeaponHitBox : MonoBehaviour
             return;
         }
 
-        if (other.TryGetComponent(out EnemyController enemy) == false)
+        if (_ownerView != null && _ownerView.IsMine == false)
         {
             return;
         }
 
-        enemy.TakeDamage(_damage);
+        if (other.TryGetComponent(out EnemyController enemy))
+        {
+            enemy.TakeDamage(_damage);
+            return;
+        }
+
+        PlayerController player = other.GetComponentInParent<PlayerController>();
+        if (player == null)
+        {
+            return;
+        }
+
+        PhotonView targetView = player.GetComponent<PhotonView>();
+        if (targetView == null || _ownerView == null)
+        {
+            return;
+        }
+
+        if (targetView.ViewID == _ownerView.ViewID)
+        {
+            return;
+        }
+
+        if (_hitTargets.Contains(targetView.ViewID))
+        {
+            return;
+        }
+
+        _hitTargets.Add(targetView.ViewID);
+
+        player.RequestDamageFromOther(_damage, _ownerView.ViewID);
     }
-    
 }
+    
+

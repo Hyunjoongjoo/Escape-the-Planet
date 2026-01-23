@@ -9,7 +9,7 @@ using Photon.Realtime;
 [RequireComponent(typeof(PlayerView))]
 [RequireComponent(typeof(PlayerState))]
 [RequireComponent(typeof(PhotonView))]
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviourPun
 {
     [SerializeField] private PlayerStats _baseStats;
     [SerializeField] private float _hitStunTime = 0.2f;
@@ -26,10 +26,12 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private bool _isDead = false;
 
+    [SerializeField] private float _hitFxCooldown = 0.08f;
+    private float _nextHitFxTime = 0f;
+
     private PlayerModel _model;
     private PlayerView _view;
     private PlayerState _state;
-    private PhotonView _photonView;
 
     private Rigidbody2D _rigid;
     private bool _isInvincible = false;
@@ -50,17 +52,10 @@ public class PlayerController : MonoBehaviour
 
     public bool IsDead => _isDead;
 
-    public Transform FollowTarget
-    {
-        get
-        {
-            return _followTarget != null ? _followTarget : transform;
-        }
-    }
+    public Transform FollowTarget => _followTarget != null ? _followTarget : transform;
 
     private void Awake()
     {
-        _photonView = GetComponent<PhotonView>();
         _model = new PlayerModel();
         _model.Init(_baseStats);
 
@@ -149,10 +144,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (QuickSlotManager.Instance != null)
-        {
-            QuickSlotManager.Instance.SelectSlot(index);
-        }
+        QuickSlotManager.Instance.SelectSlot(index);
     }
 
     public void OnDrop(InputAction.CallbackContext ctx)
@@ -184,20 +176,16 @@ public class PlayerController : MonoBehaviour
     }
     private void Start()
     {
-        if (_photonView != null && !_photonView.IsMine)
+        if (!photonView.IsMine)
         {
             SetInputEnabled(false);
+            _weaponHitBox.SetActive(false);
             return;
         }
 
         EnsureWeaponApplied();
 
-        string nickname = "Player";
-        if (PhotonNetwork.IsConnected && PhotonNetwork.LocalPlayer != null)
-        {
-            nickname = PhotonNetwork.LocalPlayer.NickName;
-        }
-
+        string nickname = PhotonNetwork.LocalPlayer.NickName;
         UIManager.Instance.InitPlayerUI(nickname, _model.currentHP, _model.maxHP);
 
         StartCoroutine(BindCinemachineRoutine());
@@ -207,16 +195,6 @@ public class PlayerController : MonoBehaviour
         if (_model.currentWeapon == null)
         {
             _model.currentWeapon = _defaultWeapon;
-        }
-
-        if (_model.currentWeapon == null)
-        {
-            return;
-        }
-
-        if (_weaponHitBox == null)
-        {
-            return;
         }
 
         _weaponHitBox.ApplyWeapon(_model.currentWeapon);
@@ -234,18 +212,11 @@ public class PlayerController : MonoBehaviour
             yield break;
         }
 
-        Transform follow = FollowTarget != null ? FollowTarget : transform;
-
-        cam.Follow = follow;
+        cam.Follow = FollowTarget;
     }
 
     private void Update()
     {
-        if (_photonView != null && !_photonView.IsMine)
-        {
-            return;
-        }
-
         if (_isDead)
         {
             return;
@@ -263,19 +234,13 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        float speed01 = 0f;
-
-        if (_model.moveSpeed > 0f)
-        {
-            speed01 = Mathf.Clamp01(_rigid.linearVelocity.magnitude / _model.moveSpeed);
-        }
-
+        float speed01 = Mathf.Clamp01(_rigid.linearVelocity.magnitude / _model.moveSpeed);
         _view.SetMove(_facing, speed01);
     }
 
     private void FixedUpdate()
     {
-        if (_photonView != null && !_photonView.IsMine)
+        if (!photonView.IsMine)
         {
             return;
         }
@@ -310,44 +275,16 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int damage)
+    public void TakeDamageByEnemy(int damage)
     {
-        if (_state.current == PlayerState.State.Dead)
+        if (!photonView.IsMine)
         {
             return;
         }
 
-        if (_isInvincible == true)
-        {
-            return;
-        }
+        photonView.RPC(nameof(RPC_PlayHit), RpcTarget.All);
 
-        _model.TakeDamage(damage);
-
-        UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
-
-        if (_model.IsDead())
-        {
-            Die();
-            return;
-        }
-
-        _state.ChangeState(PlayerState.State.Hit);
-        _view.PlayHit();
-
-        _weaponHitBox.SetActive(false);
-
-        if (_hitRecoverCoroutine != null)
-        {
-            StopCoroutine(_hitRecoverCoroutine);
-        }
-        _hitRecoverCoroutine = StartCoroutine(HitRecoverRoutine());
-
-        if (_invincibleCoroutine != null)
-        {
-            StopCoroutine(_invincibleCoroutine);
-        }
-        _invincibleCoroutine = StartCoroutine(InvincibleRoutine());
+        TakeDamage_OwnerOnly(damage);
     }
     private IEnumerator HitRecoverRoutine()
     {
@@ -392,7 +329,7 @@ public class PlayerController : MonoBehaviour
     }
     private void Die()
     {
-        if (_photonView != null && !_photonView.IsMine)
+        if (!photonView.IsMine)
         {
             return;
         }
@@ -400,11 +337,7 @@ public class PlayerController : MonoBehaviour
         if (_droppedAllOnDeath == false)
         {
             _droppedAllOnDeath = true;
-
-            if (QuickSlotManager.Instance != null)
-            {
-                QuickSlotManager.Instance.DropAllOnDeath(transform.position);
-            }
+            QuickSlotManager.Instance.DropAllOnDeath(transform.position);
         }
 
         _state.ChangeState(PlayerState.State.Dead);
@@ -416,10 +349,8 @@ public class PlayerController : MonoBehaviour
         _rigid.bodyType = RigidbodyType2D.Kinematic;
 
         Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
-        {
-            col.isTrigger = true;
-        }
+        col.isTrigger = true;
+
         _moveInput = Vector2.zero;
 
         if (_hitRecoverCoroutine != null)
@@ -441,6 +372,11 @@ public class PlayerController : MonoBehaviour
     }
     private void TryAttack()
     {
+        if (!photonView.IsMine)
+        {
+            return;
+        }
+
         if (_state.current == PlayerState.State.Dead)
         {
             return;
@@ -456,48 +392,65 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (_model.currentWeapon == null || _weaponHitBox == null)
-        {
-            EnsureWeaponApplied();
-        }
-
         if (_model.currentWeapon == null)
         {
-            return;
-        }
-
-        if (_weaponHitBox == null)
-        {
-            return;
+            EnsureWeaponApplied();
         }
 
         _rigid.linearVelocity = Vector2.zero;
 
         _attackFacing = _facing;
-
         _nextAttackTime = Time.time + _model.currentWeapon.cooldown;
 
-        _weaponHitBox.SetFacing(_facing);
+        photonView.RPC(nameof(RPC_PlayAttack), RpcTarget.All, _attackFacing);
+    }
+
+    [PunRPC]
+    private void RPC_PlayAttack(int facing)
+    {
+        _attackFacing = (facing >= 0) ? 1 : -1;
+        _facing = _attackFacing;
+
+        if (_weaponHitBox != null)
+        {
+            _weaponHitBox.SetFacing(_attackFacing);
+            _weaponHitBox.SetActive(false);
+        }
 
         _state.ChangeState(PlayerState.State.Attack);
         _view.PlayAttack();
-
     }
 
     public void OnAttackStart()
     {
+        if (!photonView.IsMine)
+        {
+            return;
+        }
+
         _weaponHitBox.SetFacing(_attackFacing);
         _weaponHitBox.SetActive(true);
     }
 
     public void OnAttackEnd()
     {
+        if (!photonView.IsMine)
+        {
+            return;
+        }
+
         _weaponHitBox.SetActive(false);
     }
     public void OnAttackAnimEnd()
     {
         if (_state.current != PlayerState.State.Attack)
         {
+            return;
+        }
+
+        if (!photonView.IsMine)
+        {
+            _state.ChangeState(PlayerState.State.Idle);
             return;
         }
 
@@ -508,8 +461,87 @@ public class PlayerController : MonoBehaviour
         else
         {
             _state.ChangeState(PlayerState.State.Idle);
-
         }
+    }
+
+    public void RequestDamageFromOther(int damage, int attackerViewId)
+    {
+        photonView.RPC(nameof(RPC_RequestDamage), RpcTarget.All, photonView.ViewID, damage, attackerViewId);
+    }
+
+    [PunRPC]
+    private void RPC_RequestDamage(int targetViewId, int damage, int attackerViewId)
+    {
+        PhotonView target = PhotonView.Find(targetViewId);
+        PlayerController player = target.GetComponent<PlayerController>();
+
+        player.RPC_PlayHit();
+
+        if (!target.IsMine)
+        {
+            return;
+        }
+
+        player.TakeDamage_OwnerOnly(damage);
+    }
+
+    [PunRPC]
+    private void RPC_PlayHit()
+    {
+        if (_state.current == PlayerState.State.Dead)
+        {
+            return;
+        }
+
+        if (Time.time < _nextHitFxTime)
+        {
+            return;
+        }
+
+        _nextHitFxTime = Time.time + _hitFxCooldown;
+
+        _state.ChangeState(PlayerState.State.Hit);
+        _view.PlayHit();
+        _weaponHitBox.SetActive(false);
+    }
+
+    private void TakeDamage_OwnerOnly(int damage)
+    {
+        if (!photonView.IsMine)
+        {
+            return;
+        }
+
+        if (_state.current == PlayerState.State.Dead)
+        {
+            return;
+        }
+
+        if (_isInvincible)
+        {
+            return;
+        }
+
+        _model.TakeDamage(damage);
+        UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
+
+        if (_model.IsDead())
+        {
+            Die();
+            return;
+        }
+
+        if (_hitRecoverCoroutine != null)
+        {
+            StopCoroutine(_hitRecoverCoroutine);
+        }
+        _hitRecoverCoroutine = StartCoroutine(HitRecoverRoutine());
+
+        if (_invincibleCoroutine != null)
+        {
+            StopCoroutine(_invincibleCoroutine);
+        }
+        _invincibleCoroutine = StartCoroutine(InvincibleRoutine());
     }
 
     public void SetInputEnabled(bool enabled)
@@ -519,11 +551,7 @@ public class PlayerController : MonoBehaviour
         if (_inputEnabled == false)
         {
             _moveInput = Vector2.zero;
-
-            if (_rigid != null)
-            {
-                _rigid.linearVelocity = Vector2.zero;
-            }
+            _rigid.linearVelocity = Vector2.zero;
         }
     }
 
@@ -537,41 +565,20 @@ public class PlayerController : MonoBehaviour
         _rigid.bodyType = RigidbodyType2D.Kinematic;
 
         Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
-        {
-            col.enabled = false;
-        }
+        col.enabled = false;
 
-        if (_weaponHitBox != null)
-        {
-            _weaponHitBox.SetActive(false);
-        }
+        _weaponHitBox.SetActive(false);
 
         _view.SetVisible(true);
     }
 
     private void TryInteract()
     {
-        if (_interaction == null)
-        {
-            return;
-        }
-
         _interaction.TryInteract(gameObject);
     }
 
     private void TryDrop()
     {
-        if (QuickSlotManager.Instance == null)
-        {
-            return;
-        }
-
-        if (_groundItemPrefab == null)
-        {
-            return;
-        }
-
         if (QuickSlotManager.Instance.TryDropCurrent(out ItemData dropped) == false)
         {
             return;
@@ -579,7 +586,7 @@ public class PlayerController : MonoBehaviour
 
         Vector3 dropPos = transform.position + new Vector3(_facing * _dropDistance, 0f, 0f);
 
-        GroundItem gi = Instantiate(_groundItemPrefab, dropPos, Quaternion.identity);
-        gi.Setup(dropped);
+        GroundItem item = Instantiate(_groundItemPrefab, dropPos, Quaternion.identity);
+        item.Setup(dropped);
     }
 }
