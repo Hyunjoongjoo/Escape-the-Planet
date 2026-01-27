@@ -60,10 +60,7 @@ public class PlayerSpawner : MonoBehaviour
     {
         Vector3 spawnPos = GetSpawnPosition(PhotonNetwork.LocalPlayer);
 
-        GameObject player = PhotonNetwork.Instantiate(_playerPrefabName, spawnPos, Quaternion.identity);
-
-        player.transform.SetParent(InGameWorldController.Instance.WorldRoot.transform, true);
-        
+        GameObject player = PhotonNetwork.Instantiate(_playerPrefabName, spawnPos, Quaternion.identity);     
     }
 
     private Vector3 GetSpawnPosition(Player player)

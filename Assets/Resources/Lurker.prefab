@@ -258,7 +258,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLurkerAI
   _player: {fileID: 0}
   _detectRange: 7
-  _hideRange: 9
+  _hideRange: 10
   _wanderMoveTimeMin: 0.5
   _wanderMoveTimeMax: 1.2
   _wanderIdleTimeMin: 0.6
@@ -274,7 +274,7 @@ MonoBehaviour:
   _minFleeTime: 1.2
   _revealRange: 8
   _fullRevealRange: 6
-  _revealAlpha: 0.15
+  _revealAlpha: 0.4
   _fleeStartAlpha: 0.6
   _fleeFadeDuration: 0.05
   _sprite: {fileID: 4827499228775436516}
@@ -297,6 +297,7 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
+  - {fileID: 5409565594470372409}
   - {fileID: -2559274494825647890}
   - {fileID: 5822319048059045177}
   sceneViewId: 0

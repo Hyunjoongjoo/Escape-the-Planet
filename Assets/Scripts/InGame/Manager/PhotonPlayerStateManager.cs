@@ -74,6 +74,17 @@ public static class PhotonPlayerStateManager
         return false;
     }
 
+    public static void ResetDayFlags()
+    {
+        Hashtable table = new Hashtable
+    {
+        { MatchKeys.WasDeadThisDay, false },
+        { MatchKeys.NextDayHpRatio, 1f }
+    };
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(table);
+    }
+
     public static void SetNextDayHpRatio(Player target, float ratio)
     {
         if (target == null || !PhotonNetwork.IsMasterClient)

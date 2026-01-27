@@ -16,10 +16,11 @@ public class ExitPoint : MonoBehaviourPunCallbacks, IInteractable
 
         PhotonPlayerLocationManager.SetLocation(PlayerLocation.Room);
 
-        InGameWorldController.Instance.HideWorld();
+        interactor.SetActive(false);
+
         UIManager.Instance.SetRoomPhase();
     }
-
+    
     public string GetPromptKey()
     {
         return "Space";

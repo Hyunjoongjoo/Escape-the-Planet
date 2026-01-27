@@ -70,7 +70,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         if (NetworkRelay.Instance == null)
         {
-            Debug.LogError("RoomNetworkRelay not found.");
             return;
         }
 
@@ -113,8 +112,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        InGameWorldController.Instance.ShowWorld();
-        UIManager.Instance.SetInGamePhase();
+        GameManager.Instance.EnterFactory_Local();
     }
 
     public void OnClickReady()
@@ -215,25 +213,22 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private void ApplyCurrentDayState()
     {
         if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-            MatchKeys.DayState, out object stateValue))
-        {
-            InGameWorldController.Instance.HideWorld();
-            UIManager.Instance.SetRoomPhase();
-            return;
-        }
+        MatchKeys.DayState, out object stateValue))
+    {
+        UIManager.Instance.SetRoomPhase();
+        return;
+    }
 
-        DayState state = (DayState)(int)stateValue;
+    DayState state = (DayState)(int)stateValue;
 
-        if (state == DayState.Running)
-        {
-            InGameWorldController.Instance.ShowWorld();
-            UIManager.Instance.SetInGamePhase();
-        }
-        else
-        {
-            InGameWorldController.Instance.HideWorld();
-            UIManager.Instance.SetRoomPhase();
-        }
+    if (state == DayState.Running)
+    {
+        UIManager.Instance.SetInGamePhase();
+    }
+    else
+    {
+        UIManager.Instance.SetRoomPhase();
+    }
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable changedProps)

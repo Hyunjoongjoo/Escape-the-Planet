@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyView))]
 [RequireComponent(typeof(EnemyState))]
 [RequireComponent(typeof(PhotonView))]
-public class EnemyController : MonoBehaviourPun
+public class EnemyController : MonoBehaviourPun, IPunObservable
 {
     [SerializeField] private EnemyData _data;
     [SerializeField] private float _damageInterval = 0.5f;
@@ -33,20 +33,14 @@ public class EnemyController : MonoBehaviourPun
 
     private void Start()
     {
-
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            enabled = false;
-            return;
-        }
-
-        if (_isInitialized == true)
+        if (_isInitialized)
         {
             return;
         }
 
         _model.Init(_data);
     }
+
     private void FixedUpdate()
     {
         if (!PhotonNetwork.IsMasterClient)
@@ -86,6 +80,7 @@ public class EnemyController : MonoBehaviourPun
         if (collision.collider.CompareTag("Player"))
         {
             PlayerController player = collision.collider.GetComponent<PlayerController>();
+
             if (player != null)
             {
                 player.TakeDamageByEnemy(_model.contactDamage);
@@ -101,8 +96,8 @@ public class EnemyController : MonoBehaviourPun
 
         _model = new EnemyModel();
         _model.Init(_data);
-
         _model.ApplySpawnGrowth(elapsedMinutes);
+
         _isInitialized = true;
     }
 
@@ -132,17 +127,6 @@ public class EnemyController : MonoBehaviourPun
         {
             Die_Master();
         }
-    }
-
-    [PunRPC]
-    private void RPC_PlayHit()
-    {
-        if (_state.current == EnemyState.State.Dead)
-        {
-            return;
-        }
-
-        _view.PlayHit();
     }
 
     public void ApplyExternalMove(Vector2 dir01, float speedMultiplier = 1f)
@@ -192,6 +176,17 @@ public class EnemyController : MonoBehaviourPun
     }
 
     [PunRPC]
+    private void RPC_PlayHit()
+    {
+        if (_state.current == EnemyState.State.Dead)
+        {
+            return;
+        }
+
+        _view.PlayHit();
+    }
+
+    [PunRPC]
     private void RPC_PlayDead()
     {
         ChaserPathChase pathAI = GetComponent<ChaserPathChase>();
@@ -205,5 +200,19 @@ public class EnemyController : MonoBehaviourPun
 
         _rigid.linearVelocity = Vector2.zero;
         _rigid.simulated = false;
+    }
+
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(transform.position);
+            stream.SendNext(_rigid.linearVelocity);
+        }
+        else
+        {
+            transform.position = (Vector2)stream.ReceiveNext();
+            _rigid.linearVelocity = (Vector2)stream.ReceiveNext();
+        }
     }
 }

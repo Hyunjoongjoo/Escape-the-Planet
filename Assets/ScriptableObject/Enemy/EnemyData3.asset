@@ -20,5 +20,5 @@ MonoBehaviour:
   hpGrowthPerMinute: 0.1
   damageGrowthPerMinute: 0.08
   speedGrowthPerMinute: 0.03
-  weight: 35
+  weight: 40
   spawnRadius: 9

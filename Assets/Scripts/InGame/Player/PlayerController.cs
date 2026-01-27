@@ -473,6 +473,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
         _view.SetDead(true);
         OnPlayerDead?.Invoke();
+        SpectatorCameraManager.Instance?.StartSpectate();
     }
 
     private void TryAttack()

@@ -4,9 +4,9 @@ public class InGameWorldController : MonoBehaviour
 {
     public static InGameWorldController Instance { get; private set; }
 
-    [SerializeField] private GameObject _worldRoot;
+    //[SerializeField] private GameObject _worldRoot;
 
-    public GameObject WorldRoot => _worldRoot;
+    //public GameObject WorldRoot => _worldRoot;
 
     private void Awake()
     {
@@ -21,11 +21,9 @@ public class InGameWorldController : MonoBehaviour
 
     public void ShowWorld()
     {
-        _worldRoot.SetActive(true);
     }
 
     public void HideWorld()
     {
-        _worldRoot.SetActive(false);
     }
 }

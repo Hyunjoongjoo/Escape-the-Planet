@@ -5,14 +5,14 @@ public class EnemyLurkerAI : MonoBehaviour
 {
     [SerializeField] private Transform _player;
 
-    [SerializeField] private float _detectRange = 6f;
+    [SerializeField] private float _detectRange = 7f;
     [SerializeField] private float _hideRange = 10f;
 
-    [SerializeField] private float _wanderMoveTimeMin = 0.6f;
-    [SerializeField] private float _wanderMoveTimeMax = 1.5f;
-    [SerializeField] private float _wanderIdleTimeMin = 0.25f;
-    [SerializeField] private float _wanderIdleTimeMax = 0.9f;
-    [SerializeField] private float _wanderSpeedMultiplier = 0.5f;
+    [SerializeField] private float _wanderMoveTimeMin = 0.5f;
+    [SerializeField] private float _wanderMoveTimeMax = 1.2f;
+    [SerializeField] private float _wanderIdleTimeMin = 0.6f;
+    [SerializeField] private float _wanderIdleTimeMax = 1.4f;
+    [SerializeField] private float _wanderSpeedMultiplier = 0.25f;
 
     [SerializeField] private float _wanderObstacleRayDist = 0.6f;
     [SerializeField] private LayerMask _blockMask;
@@ -21,11 +21,11 @@ public class EnemyLurkerAI : MonoBehaviour
     [SerializeField] private float _hideTimeMax = 1.2f;
 
     [SerializeField] private float _fleeSpeedMultiplier = 1.4f;
-    [SerializeField] private float _minFleeTime = 1.0f;
+    [SerializeField] private float _minFleeTime = 1.2f;
 
-    [SerializeField] private float _revealRange = 12f;
-    [SerializeField] private float _fullRevealRange = 7f;
-    [SerializeField, Range(0f, 1f)] private float _revealAlpha = 0.2f;
+    [SerializeField] private float _revealRange = 8f;
+    [SerializeField] private float _fullRevealRange = 6f;
+    [SerializeField, Range(0f, 1f)] private float _revealAlpha = 0.4f;
 
     [SerializeField, Range(0f, 1f)] private float _fleeStartAlpha = 0.6f;
     [SerializeField] private float _fleeFadeDuration = 0.05f;
@@ -332,6 +332,12 @@ public class EnemyLurkerAI : MonoBehaviour
             return;
         }
 
+        if (dist <= _fullRevealRange)
+        {
+            SetAlpha(1f);
+            return; // 어떤 상태든 여기서 확정
+        }
+
         if (_state == State.Hidden)
         {
             SetAlpha(0f);
@@ -364,8 +370,6 @@ public class EnemyLurkerAI : MonoBehaviour
             SetAlpha(_revealAlpha);
             return;
         }
-
-        SetAlpha(1f);
     }
 
     public void OnHit()

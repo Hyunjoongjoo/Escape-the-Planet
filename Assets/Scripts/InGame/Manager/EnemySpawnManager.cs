@@ -170,8 +170,6 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             Quaternion.identity
         );
 
-        spawnedObject.transform.SetParent(InGameWorldController.Instance.WorldRoot.transform, true);
-
         EnemyController enemy = spawnedObject.GetComponent<EnemyController>();
         if (enemy == null)
         {

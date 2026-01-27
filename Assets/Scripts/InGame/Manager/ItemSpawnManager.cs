@@ -105,11 +105,6 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
 
             _spawnedItems.Add(spawnedObject);
 
-            spawnedObject.transform.SetParent(
-                InGameWorldController.Instance.WorldRoot.transform,
-                true
-            );
-
             GroundItemNetwork net = spawnedObject.GetComponent<GroundItemNetwork>();
             if (net != null)
             {
