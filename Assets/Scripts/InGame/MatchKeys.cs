@@ -30,4 +30,6 @@ public static class MatchKeys
 
     public const string WasDeadThisDay = "WasDead";
     public const string NextDayHpRatio = "NextHp";
+
+    public const string PlayerState = "State";
 }

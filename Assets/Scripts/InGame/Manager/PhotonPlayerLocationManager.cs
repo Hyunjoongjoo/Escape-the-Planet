@@ -15,23 +15,48 @@ public static class PhotonPlayerLocationManager
             return;
         }
 
-        Hashtable table = new Hashtable();
-        table[LOC_KEY] = (int)location;
+        Hashtable table = new Hashtable
+        {
+            { LOC_KEY, (int)location }
+        };
+
         PhotonNetwork.LocalPlayer.SetCustomProperties(table);
+    }
+
+    public static void SetLocation(Player target, PlayerLocation location)
+    {
+        if (target == null || !PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        Hashtable table = new Hashtable
+        {
+            { LOC_KEY, (int)location }
+        };
+
+        target.SetCustomProperties(table);
     }
 
     public static PlayerLocation GetLocation(Player player)
     {
-        if (player == null)
-        {
-            return PlayerLocation.Room;
-        }
-
-        if (player.CustomProperties != null && player.CustomProperties.TryGetValue(LOC_KEY, out object value))
+        if (player != null &&
+            player.CustomProperties != null &&
+            player.CustomProperties.TryGetValue(LOC_KEY, out object value))
         {
             return (PlayerLocation)(int)value;
         }
 
         return PlayerLocation.Room;
+    }
+
+    public static bool IsPlayerInGame(Player player)
+    {
+        return GetLocation(player) == PlayerLocation.InGame;
+    }
+
+    public static bool IsPlayerInRoom(Player player)
+    {
+        return GetLocation(player) == PlayerLocation.Room;
     }
 }

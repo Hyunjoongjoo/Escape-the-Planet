@@ -431,8 +431,9 @@ MonoBehaviour:
   _defaultWeapon: {fileID: 11400000, guid: e33a3a823a07922459f8b2faf0159427, type: 2}
   _followTarget: {fileID: 2044130316993191334}
   _interaction: {fileID: 3237113970098252198}
-  _groundItemPrefab: {fileID: 9193716455538939667, guid: 2023f9c4615366f46afa9960ca112802, type: 3}
+  _groundItemPrefabName: GroundItem
   _dropDistance: 0.7
+  _dropScatterRadius: 1
   _isDead: 0
   _hitFxCooldown: 0.08
 --- !u!114 &3613344659749014547

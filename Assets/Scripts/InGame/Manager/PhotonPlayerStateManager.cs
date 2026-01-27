@@ -1,13 +1,11 @@
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
-using static UnityEngine.Rendering.DebugUI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public static class PhotonPlayerStateManager
 {
-    public const string STATE_KEY = "State";
-
+    private const string STATE_KEY = MatchKeys.PlayerState;
     private const string WAS_DEAD_KEY = MatchKeys.WasDeadThisDay;
     private const string NEXT_HP_KEY = MatchKeys.NextDayHpRatio;
 
@@ -101,4 +99,18 @@ public static class PhotonPlayerStateManager
         return 1f;
     }
 
+    public static bool AreAllPlayersDead()
+    {
+        Player[] players = PhotonNetwork.PlayerList;
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (GetState(players[i]) == PlayerGameState.Alive)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

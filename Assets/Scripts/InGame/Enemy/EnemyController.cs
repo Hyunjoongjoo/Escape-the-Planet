@@ -4,7 +4,8 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(EnemyView))]
 [RequireComponent(typeof(EnemyState))]
-public class EnemyController : MonoBehaviour
+[RequireComponent(typeof(PhotonView))]
+public class EnemyController : MonoBehaviourPun
 {
     [SerializeField] private EnemyData _data;
     [SerializeField] private float _damageInterval = 0.5f;
@@ -46,9 +47,32 @@ public class EnemyController : MonoBehaviour
 
         _model.Init(_data);
     }
+    private void FixedUpdate()
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayState, out object stateValue))
+        {
+            return;
+        }
+
+        if ((DayState)(int)stateValue != DayState.Running)
+        {
+            _rigid.linearVelocity = Vector2.zero;
+            return;
+        }
+    }
 
     private void OnCollisionStay2D(Collision2D collision)
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
         if (_state.current == EnemyState.State.Dead)
         {
             return;
@@ -62,7 +86,10 @@ public class EnemyController : MonoBehaviour
         if (collision.collider.CompareTag("Player"))
         {
             PlayerController player = collision.collider.GetComponent<PlayerController>();
-            player?.TakeDamageByEnemy(_model.contactDamage);
+            if (player != null)
+            {
+                player.TakeDamageByEnemy(_model.contactDamage);
+            }
 
             _nextDamageTime = Time.time + _damageInterval;
         }
@@ -79,15 +106,21 @@ public class EnemyController : MonoBehaviour
         _isInitialized = true;
     }
 
-    public void TakeDamage(int dmg)
+    public void TakeDamage(int damage)
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
         if (_state.current == EnemyState.State.Dead)
         {
             return;
         }
 
-        _model.TakeDamage(dmg);
-        _view.PlayHit();
+        _model.TakeDamage(damage);
+
+        photonView.RPC(nameof(RPC_PlayHit), RpcTarget.All);
 
         EnemyLurkerAI lurker = GetComponent<EnemyLurkerAI>();
         if (lurker != null)
@@ -97,8 +130,19 @@ public class EnemyController : MonoBehaviour
 
         if (_model.IsDead())
         {
-            Die();
+            Die_Master();
         }
+    }
+
+    [PunRPC]
+    private void RPC_PlayHit()
+    {
+        if (_state.current == EnemyState.State.Dead)
+        {
+            return;
+        }
+
+        _view.PlayHit();
     }
 
     public void ApplyExternalMove(Vector2 dir01, float speedMultiplier = 1f)
@@ -133,10 +177,23 @@ public class EnemyController : MonoBehaviour
         _rigid.linearVelocity = Vector2.zero;
     }
 
-    private void Die()
+    private void Die_Master()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
         _state.ChangeState(EnemyState.State.Dead);
 
+        photonView.RPC(nameof(RPC_PlayDead), RpcTarget.All);
+
+        PhotonNetwork.Destroy(gameObject);
+    }
+
+    [PunRPC]
+    private void RPC_PlayDead()
+    {
         ChaserPathChase pathAI = GetComponent<ChaserPathChase>();
         if (pathAI != null)
         {
@@ -148,7 +205,5 @@ public class EnemyController : MonoBehaviour
 
         _rigid.linearVelocity = Vector2.zero;
         _rigid.simulated = false;
-
-        Destroy(gameObject, 1.5f);
     }
 }

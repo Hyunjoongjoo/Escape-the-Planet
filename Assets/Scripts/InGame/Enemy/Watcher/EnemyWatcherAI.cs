@@ -54,6 +54,24 @@ public class EnemyWatcherAI : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                MatchKeys.DayState, out object stateValue))
+        {
+            return;
+        }
+
+        if ((DayState)(int)stateValue != DayState.Running)
+        {
+            _rigid.linearVelocity = Vector2.zero;
+            _view.SetMove(Vector2.zero, 0f);
+            return;
+        }
+
         if (_enemyState.current == EnemyState.State.Dead)
         {
             _rigid.linearVelocity = Vector2.zero;
@@ -65,8 +83,7 @@ public class EnemyWatcherAI : MonoBehaviour
 
         if (_player == null)
         {
-            _rigid.linearVelocity = Vector2.zero;
-            _view.SetMove(Vector2.zero, 0f);
+            ResetWatchState();
             return;
         }
 
@@ -84,6 +101,7 @@ public class EnemyWatcherAI : MonoBehaviour
         {
             _watching = true;
             _watchTimer = 0f;
+            _called = false;
         }
 
         if (_watching && dist >= _cancelRange)
@@ -109,7 +127,6 @@ public class EnemyWatcherAI : MonoBehaviour
         }
 
         Vector2 dirToPlayer = ((Vector2)_player.position - _rigid.position).normalized;
-
         _view.SetMove(dirToPlayer, 0f);
 
         float speed = _controller.MoveSpeed * _moveSpeedMultiplier;

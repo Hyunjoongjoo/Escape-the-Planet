@@ -6,13 +6,11 @@ using Photon.Pun;
 public class EnemySpawnManager : MonoBehaviourPunCallbacks
 {
     [SerializeField] private EnemyDatabase _enemyDatabase;
-
     [SerializeField] private Transform _spawnPointsRoot;
 
     [SerializeField] private int _maxAlive = 8;
 
     [SerializeField] private float _startInterval = 12f;
-
     [SerializeField] private float _endInterval = 5f;
 
     [SerializeField] private LayerMask _blockedMask;
@@ -22,7 +20,7 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
     private readonly List<EnemySpawnPoint> _points = new List<EnemySpawnPoint>();
     private readonly List<EnemyController> _alive = new List<EnemyController>();
 
-    private float _time;
+    private float _spawnTimer = 0f;
     private EnemyId _lastSpawnedId = EnemyId.NONE;
 
     private bool _spawnStartedThisDay = false;
@@ -47,11 +45,6 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
 
     private void Update()
     {
-        if (!PhotonNetwork.InRoom)
-        {
-            return;
-        }
-
         if (!PhotonNetwork.IsMasterClient)
         {
             return;
@@ -80,36 +73,51 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
         }
 
         float interval = GetSpawnInterval();
-        _time += Time.deltaTime;
+        _spawnTimer += Time.deltaTime;
 
-        if (_time >= interval)
+        if (_spawnTimer >= interval)
         {
-            _time = 0f;
+            _spawnTimer = 0f;
             SpawnOne();
         }
     }
 
     public void StartDay()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
         if (_spawnStartedThisDay)
         {
             return;
         }
 
         _spawnStartedThisDay = true;
-        _time = 0f;
+        _spawnTimer = 0f;
         _lastSpawnedId = EnemyId.NONE;
     }
 
     public void ResetForNextDay()
     {
-        _spawnStartedThisDay = false;
-
-        for (int i = _alive.Count - 1; i >= 0; i--)
+        if (!PhotonNetwork.IsMasterClient)
         {
-            if (_alive[i] != null)
+            return;
+        }
+
+        _spawnStartedThisDay = false;
+        _spawnTimer = 0f;
+        _lastSpawnedId = EnemyId.NONE;
+
+        EnemyController[] enemies =
+            UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+
+        for (int i = 0; i < enemies.Length; i++)
+        {
+            if (enemies[i] != null)
             {
-                PhotonNetwork.Destroy(_alive[i].gameObject);
+                PhotonNetwork.Destroy(enemies[i].gameObject);
             }
         }
 

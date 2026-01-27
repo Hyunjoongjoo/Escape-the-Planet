@@ -1,8 +1,7 @@
 using UnityEngine;
 using System;
-using Photon.Pun;
 
-public class QuickSlotManager : MonoBehaviourPun
+public class QuickSlotManager : MonoBehaviour
 {
     public static QuickSlotManager Instance { get; private set; }
 
@@ -10,10 +9,6 @@ public class QuickSlotManager : MonoBehaviourPun
     public event Action<int, QuickSlot> OnSlotUpdated;
 
     [SerializeField] private QuickSlot[] _slots = new QuickSlot[5];
-
-    [SerializeField] private string _groundItemPrefabName = "GroundItem";
-    [SerializeField] private float _dropScatterRadius = 1.0f;
-
 
     public int CurrentIndex { get; private set; } = 0;
     public QuickSlot[] Slots => _slots;
@@ -95,6 +90,102 @@ public class QuickSlotManager : MonoBehaviourPun
         return true;
     }
 
+    public bool HasEmptySlot()
+    {
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            if (_slots[i] != null && _slots[i].IsEmpty)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // CHANGED: 드롭은 네트워크 요청만 PlayerController에 위임
+    public void DropSelectedItem()
+    {
+        if (TryDropCurrent(out ItemData dropped) == false)
+        {
+            return;
+        }
+
+        PlayerController localPlayer = FindLocalPlayer();
+        if (localPlayer == null)
+        {
+            TryPickup(dropped);
+            return;
+        }
+
+        localPlayer.RequestDropItem(dropped.id);
+    }
+
+    public void DropAllOnDeath(Vector2 deathPos)
+    {
+        ItemId[] items = GetAllItemIds();
+        if (items == null || items.Length == 0)
+        {
+            return;
+        }
+
+        ClearAllSlots();
+
+        PlayerController localPlayer = FindLocalPlayer();
+        if (localPlayer == null)
+        {
+            return;
+        }
+
+        localPlayer.RequestDropAll(items, deathPos);
+    }
+
+    private ItemId[] GetAllItemIds()
+    {
+        ItemId[] temp = new ItemId[_slots.Length];
+        int count = 0;
+
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            QuickSlot slot = _slots[i];
+
+            if (slot == null || slot.IsEmpty || slot.Data == null)
+            {
+                continue;
+            }
+
+            temp[count] = slot.Data.id;
+            count++;
+        }
+
+        if (count == 0)
+        {
+            return Array.Empty<ItemId>();
+        }
+
+        ItemId[] result = new ItemId[count];
+        for (int i = 0; i < count; i++)
+        {
+            result[i] = temp[i];
+        }
+
+        return result;
+    }
+
+    public void ClearAllSlots()
+    {
+        for (int i = 0; i < _slots.Length; i++)
+        {
+            _slots[i].Clear();
+            RaiseSlotUpdated(i);
+        }
+
+        CurrentIndex = 0;
+        RaiseSelectedChanged();
+
+        SaveManager.Save(SaveKeyProvider.GetPlayerKey(), ToSaveData());
+    }
+
     public SaveData ToSaveData()
     {
         SaveData data = new SaveData();
@@ -142,183 +233,16 @@ public class QuickSlotManager : MonoBehaviourPun
         RaiseSelectedChanged();
     }
 
-    public void DropSelectedItem()
-    {
-        ItemData data = GetSelectedItemData();
-        if (data == null)
-        {
-            return;
-        }
-
-        RemoveSelectedItem();
-
-        Vector2 dropPos = GetDropPosition();
-        photonView.RPC(nameof(RPC_RequestDrop), RpcTarget.MasterClient, (int)data.id, dropPos.x, dropPos.y);
-    }
-
-    [PunRPC]
-    private void RPC_RequestDrop(int itemId, float x, float y, PhotonMessageInfo info)
-    {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            return;
-        }
-
-        Vector2 pos = new Vector2(x, y);
-
-        GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
-
-        GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
-        if (net != null)
-        {
-            net.SetItemId((ItemId)itemId);
-        }
-    }
-
-    private ItemData GetSelectedItemData()
-    {
-        if (CurrentIndex < 0 || CurrentIndex >= _slots.Length)
-        {
-            return null;
-        }
-
-        QuickSlot slot = _slots[CurrentIndex];
-        if (slot == null || slot.IsEmpty)
-        {
-            return null;
-        }
-
-        return slot.Data;
-    }
-
-    private void RemoveSelectedItem()
-    {
-        if (CurrentIndex < 0 || CurrentIndex >= _slots.Length)
-        {
-            return;
-        }
-
-        _slots[CurrentIndex].Clear();
-        RaiseSlotUpdated(CurrentIndex);
-    }
-
-    public void DropAllOnDeath(Vector2 deathPos)
-    {
-        ItemId[] items = GetAllItemIds();
-        if (items == null || items.Length == 0)
-        {
-            return;
-        }
-
-        ClearAllSlots();
-
-        int[] ids = new int[items.Length];
-        for (int i = 0; i < items.Length; i++)
-        {
-            ids[i] = (int)items[i];
-        }
-
-        photonView.RPC(nameof(RPC_RequestDropAll), RpcTarget.MasterClient, ids, deathPos.x, deathPos.y);
-    }
-
-    [PunRPC]
-    private void RPC_RequestDropAll(int[] itemIds, float x, float y, PhotonMessageInfo info)
-    {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            return;
-        }
-
-        Vector2 center = new Vector2(x, y);
-
-        for (int i = 0; i < itemIds.Length; i++)
-        {
-            ItemId itemId = (ItemId)itemIds[i];
-
-            Vector2 scatter = UnityEngine.Random.insideUnitCircle * _dropScatterRadius;
-            Vector2 pos = center + scatter;
-
-            GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
-
-            GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
-            if (net != null)
-            {
-                net.SetItemId(itemId);
-            }
-        }
-    }
-
-    private ItemId[] GetAllItemIds()
-    {
-        ItemId[] temp = new ItemId[_slots.Length];
-        int count = 0;
-
-        for (int i = 0; i < _slots.Length; i++)
-        {
-            QuickSlot slot = _slots[i];
-
-            if (slot == null || slot.IsEmpty || slot.Data == null)
-            {
-                continue;
-            }
-
-            temp[count] = slot.Data.id;
-            count++;
-        }
-
-        if (count == 0)
-        {
-            return Array.Empty<ItemId>();
-        }
-
-        ItemId[] result = new ItemId[count];
-        for (int i = 0; i < count; i++)
-        {
-            result[i] = temp[i];
-        }
-
-        return result;
-    }
-
-    public void ClearAllSlots()
-    {
-        for (int i = 0; i < _slots.Length; i++)
-        {
-            _slots[i].Clear();
-            RaiseSlotUpdated(i);
-        }
-
-        CurrentIndex = 0;
-        RaiseSelectedChanged();
-
-        SaveManager.Save(
-            SaveKeyProvider.GetPlayerKey(),
-            ToSaveData()
-        );
-    }
-
-    private Vector2 GetDropPosition()
-    {
-        PlayerController player = FindLocalPlayer();
-        if (player == null)
-        {
-            return Vector2.zero;
-        }
-
-        return player.transform.position;
-    }
-
     private PlayerController FindLocalPlayer()
     {
         PlayerController[] players = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
 
-        foreach (PlayerController p in players)
+        foreach (PlayerController player in players)
         {
-            PhotonView v = p.GetComponent<PhotonView>();
-
-            if (v != null && v.IsMine)
+            Photon.Pun.PhotonView view = player.GetComponent<Photon.Pun.PhotonView>();
+            if (view != null && view.IsMine)
             {
-                return p;
+                return player;
             }
         }
 

@@ -21,8 +21,9 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     [SerializeField] private Transform _followTarget;
     [SerializeField] private PlayerInteraction _interaction;
 
-    [SerializeField] private GroundItem _groundItemPrefab;
+    [SerializeField] private string _groundItemPrefabName = "GroundItem";
     [SerializeField] private float _dropDistance = 0.7f;
+    [SerializeField] private float _dropScatterRadius = 1.0f;
 
     [SerializeField] private bool _isDead = false;
 
@@ -57,7 +58,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     public static event Action OnPlayerDead;
 
     public bool IsDead => _isDead;
-
     public Transform FollowTarget => _followTarget != null ? _followTarget : transform;
 
     private void Awake()
@@ -82,6 +82,11 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     public void OnMove(InputAction.CallbackContext ctx)
     {
+        if (_isDead)
+        {
+            return;
+        }
+
         if (_inputEnabled == false)
         {
             return;
@@ -180,6 +185,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
         return -1;
     }
+
     private void Start()
     {
         if (photonView.IsMine && PhotonNetwork.InRoom)
@@ -211,6 +217,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
         StartCoroutine(BindCinemachineRoutine());
     }
+
     private void EnsureWeaponApplied()
     {
         if (_model.currentWeapon == null)
@@ -259,16 +266,20 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         if (!photonView.IsMine)
         {
             UpdateNetMotion();
-
             _facing = _netFacing;
         }
-
 
         UpdateAnimations();
     }
 
     private void UpdateNetMotion()
     {
+        if (_isDead)
+        {
+            _netVelocity = Vector2.zero;
+            return;
+        }
+
         if (_netInit == false)
         {
             _prevNetPos = transform.position;
@@ -290,6 +301,11 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     private void UpdateAnimations()
     {
+        if (_isDead)
+        {
+            _view.SetDead(true);
+            return;
+        }
 
         if (_state.current == PlayerState.State.Attack)
         {
@@ -309,7 +325,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         }
 
         _view.SetMove(_facing, speed01);
-    }  
+    }
 
     private void FixedUpdate()
     {
@@ -350,7 +366,17 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     public void TakeDamageByEnemy(int damage)
     {
+        if (_isDead)
+        {
+            return;
+        }
+
         if (!photonView.IsMine)
+        {
+            return;
+        }
+
+        if (_isInvincible)
         {
             return;
         }
@@ -359,6 +385,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
         TakeDamage_OwnerOnly(damage);
     }
+
     private IEnumerator HitRecoverRoutine()
     {
         yield return new WaitForSeconds(_hitStunTime);
@@ -382,6 +409,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
         _hitRecoverCoroutine = null;
     }
+
     private IEnumerator InvincibleRoutine()
     {
         _isInvincible = true;
@@ -400,6 +428,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         _isInvincible = false;
         _invincibleCoroutine = null;
     }
+
     private void Die()
     {
         if (!photonView.IsMine)
@@ -445,8 +474,14 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         _view.SetDead(true);
         OnPlayerDead?.Invoke();
     }
+
     private void TryAttack()
     {
+        if (_isDead)
+        {
+            return;
+        }
+
         if (!photonView.IsMine)
         {
             return;
@@ -483,6 +518,11 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     [PunRPC]
     private void RPC_PlayAttack(int facing)
     {
+        if (_isDead)
+        {
+            return;
+        }
+
         _attackFacing = (facing >= 0) ? 1 : -1;
         _facing = _attackFacing;
 
@@ -516,8 +556,14 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
         _weaponHitBox.SetActive(false);
     }
+
     public void OnAttackAnimEnd()
     {
+        if (_isDead)
+        {
+            return;
+        }
+
         if (_state.current != PlayerState.State.Attack)
         {
             return;
@@ -550,12 +596,22 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         PhotonView target = PhotonView.Find(targetViewId);
         PlayerController player = target.GetComponent<PlayerController>();
 
-        player.RPC_PlayHit();
-
-        if (!target.IsMine)
+        if (target.IsMine == false)
         {
             return;
         }
+
+        if (player._isDead)
+        {
+            return;
+        }
+
+        if (player._isInvincible)
+        {
+            return;
+        }
+
+        player.photonView.RPC(nameof(RPC_PlayHit), RpcTarget.All);
 
         player.TakeDamage_OwnerOnly(damage);
     }
@@ -563,6 +619,16 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     [PunRPC]
     private void RPC_PlayHit()
     {
+        if (_isDead)
+        {
+            return;
+        }
+
+        if (_isInvincible)
+        {
+            return;
+        }
+
         if (_state.current == PlayerState.State.Dead)
         {
             return;
@@ -582,7 +648,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     private void TakeDamage_OwnerOnly(int damage)
     {
-        if (!photonView.IsMine)
+        if (photonView.IsMine == false)
         {
             return;
         }
@@ -645,6 +711,8 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         _weaponHitBox.SetActive(false);
 
         _view.SetVisible(true);
+
+        SpectatorCameraManager.Instance?.StartSpectate();
     }
 
     private void TryInteract()
@@ -654,16 +722,94 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     private void TryDrop()
     {
-        if (QuickSlotManager.Instance.TryDropCurrent(out ItemData dropped) == false)
+        if (!photonView.IsMine)
+        {
+            return;
+        }
+
+        QuickSlotManager.Instance.DropSelectedItem();
+    }
+
+    public void RequestDropItem(ItemId itemId)
+    {
+        if (!photonView.IsMine)
         {
             return;
         }
 
         Vector3 dropPos = transform.position + new Vector3(_facing * _dropDistance, 0f, 0f);
 
-        GroundItem item = Instantiate(_groundItemPrefab, dropPos, Quaternion.identity);
-        item.Setup(dropped);
+        photonView.RPC(
+            nameof(RPC_RequestDropItem),
+            RpcTarget.MasterClient,
+            (int)itemId,
+            dropPos.x,
+            dropPos.y
+        );
     }
+
+    [PunRPC]
+    private void RPC_RequestDropItem(int itemId, float x, float y, PhotonMessageInfo info)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        Vector2 pos = new Vector2(x, y);
+
+        GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
+
+        GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
+        if (net != null)
+        {
+            net.SetItemId((ItemId)itemId);
+        }
+    }
+
+    public void RequestDropAll(ItemId[] itemIds, Vector2 center)
+    {
+        if (!photonView.IsMine)
+        {
+            return;
+        }
+
+        int[] ids = new int[itemIds.Length];
+        for (int i = 0; i < itemIds.Length; i++)
+        {
+            ids[i] = (int)itemIds[i];
+        }
+
+        photonView.RPC(nameof(RPC_RequestDropAll), RpcTarget.MasterClient, ids, center.x, center.y);
+    }
+
+    [PunRPC]
+    private void RPC_RequestDropAll(int[] itemIds, float x, float y, PhotonMessageInfo info)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        Vector2 center = new Vector2(x, y);
+
+        for (int i = 0; i < itemIds.Length; i++)
+        {
+            ItemId itemId = (ItemId)itemIds[i];
+
+            Vector2 scatter = UnityEngine.Random.insideUnitCircle * _dropScatterRadius;
+            Vector2 pos = center + scatter;
+
+            GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
+
+            GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
+            if (net != null)
+            {
+                net.SetItemId(itemId);
+            }
+        }
+    }
+
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)

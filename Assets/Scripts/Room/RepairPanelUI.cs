@@ -20,9 +20,9 @@ public class RepairPanelUI : MonoBehaviour
         }
     }
 
-    private async void Start()
+    private void Start()
     {
-        await LoadRepairPercent();
+        _ = LoadRepairPercent();
     }
 
     private async Task LoadRepairPercent()

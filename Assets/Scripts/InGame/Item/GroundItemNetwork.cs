@@ -1,10 +1,13 @@
-using UnityEngine;
 using Photon.Pun;
+using Photon.Realtime;
+using UnityEngine;
 
 public class GroundItemNetwork : MonoBehaviourPun
 {
     [SerializeField] private GroundItem _groundItem;
     [SerializeField] private ItemDatabase _itemDatabase;
+
+    private bool _pickedUp = false;
 
     private void Awake()
     {
@@ -12,11 +15,13 @@ public class GroundItemNetwork : MonoBehaviourPun
         {
             _groundItem = GetComponent<GroundItem>();
         }
+
+        _pickedUp = false;
     }
 
     public void SetItemId(ItemId itemId)
     {
-        if (!photonView.IsMine)
+        if (!PhotonNetwork.IsMasterClient)
         {
             return;
         }
@@ -43,6 +48,7 @@ public class GroundItemNetwork : MonoBehaviourPun
             _groundItem.Setup(data);
         }
     }
+
     public void RequestPickup(int actorNumber)
     {
         photonView.RPC(nameof(RPC_RequestPickup), RpcTarget.MasterClient, actorNumber);
@@ -51,16 +57,46 @@ public class GroundItemNetwork : MonoBehaviourPun
     [PunRPC]
     private void RPC_RequestPickup(int actorNumber, PhotonMessageInfo info)
     {
-        if (info.Sender == null || info.Sender.ActorNumber != actorNumber)
-        {
-            return;
-        }
-
         if (!PhotonNetwork.IsMasterClient)
         {
             return;
         }
 
+        if (info.Sender == null || info.Sender.ActorNumber != actorNumber)
+        {
+            return;
+        }
+
+        if (_pickedUp)
+        {
+            return;
+        }
+
+        _pickedUp = true;
+
+        photonView.RPC(nameof(RPC_PickupApproved), RpcTarget.All, actorNumber);
+
         PhotonNetwork.Destroy(gameObject);
+    }
+
+    [PunRPC]
+    private void RPC_PickupApproved(int actorNumber)
+    {
+        if (PhotonNetwork.LocalPlayer == null)
+        {
+            return;
+        }
+
+        if (PhotonNetwork.LocalPlayer.ActorNumber != actorNumber)
+        {
+            return;
+        }
+
+        if (_groundItem == null || _groundItem.Data == null)
+        {
+            return;
+        }
+
+        QuickSlotManager.Instance.TryPickup(_groundItem.Data);
     }
 }

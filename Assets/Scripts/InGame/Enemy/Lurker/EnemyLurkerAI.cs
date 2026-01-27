@@ -96,6 +96,24 @@ public class EnemyLurkerAI : MonoBehaviour
     private void FixedUpdate()
     {
 
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                MatchKeys.DayState, out object stateValue))
+        {
+            return;
+        }
+
+        if ((DayState)(int)stateValue != DayState.Running)
+        {
+            _controller.StopMove();
+            SetAlpha(0f);
+            return;
+        }
+
         _player = FindClosestAlivePlayer();
 
         if (_enemyState.current == EnemyState.State.Dead)
@@ -118,8 +136,8 @@ public class EnemyLurkerAI : MonoBehaviour
             return;
         }
 
-        PlayerController pc = _player.GetComponentInParent<PlayerController>();
-        if (pc != null && pc.IsDead)
+        PlayerController player = _player.GetComponentInParent<PlayerController>();
+        if (player != null && player.IsDead)
         {
             HandlePlayerDead();
             return;

@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.InputManagerEntry;
 
 public class UIManager : MonoBehaviour
 {
@@ -13,6 +12,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Text _hpText;
     [SerializeField] private Text _playerNameText;
     [SerializeField] private Text _timeText;
+
     [SerializeField] private GameObject _gameEndPanel;
     [SerializeField] private Text _gameEndText;
 
@@ -23,34 +23,25 @@ public class UIManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
     }
 
-    private void OnEnable()
+    private void Start()
     {
-        GameManager.OnGameManagerReady += Bind;
-
         if (GameManager.Instance != null)
         {
-            Bind(GameManager.Instance);
+            GameManager.Instance.OnTimeChanged += HandleTimeChanged;
+            HandleTimeChanged(GameManager.Instance.RemainTime);
         }
     }
+
     private void OnDisable()
     {
-        GameManager.OnGameManagerReady -= Bind;
-
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnTimeChanged -= HandleTimeChanged;
         }
-    }
-
-    private void Bind(GameManager manager)
-    {
-        manager.OnTimeChanged -= HandleTimeChanged;
-        manager.OnTimeChanged += HandleTimeChanged;
-
-        HandleTimeChanged(manager.RemainTime);
     }
 
     public void SetRoomPhase()
@@ -64,6 +55,11 @@ public class UIManager : MonoBehaviour
         {
             _inGameUIRoot.SetActive(false);
         }
+
+        if (_gameEndPanel != null)
+        {
+            _gameEndPanel.SetActive(false);
+        }
     }
 
     public void SetInGamePhase()
@@ -71,13 +67,16 @@ public class UIManager : MonoBehaviour
 
         if (_roomUIRoot == null || _inGameUIRoot == null)
         {
-            Debug.LogError("UI Root not assigned in UIManager");
             return;
         }
 
         _roomUIRoot.SetActive(false);
         _inGameUIRoot.SetActive(true);
 
+        if (_gameEndPanel != null)
+        {
+            _gameEndPanel.SetActive(false);
+        }
     }
 
     private void HandleTimeChanged(float remain)
@@ -108,19 +107,12 @@ public class UIManager : MonoBehaviour
 
     public void ShowGameEndPanel(GameEndType endType)
     {
-        if (_gameEndPanel != null)
-        {
-            if (endType == GameEndType.Success)
-            {
-                return;
-            }
-            _gameEndPanel.SetActive(true);
-        }
-
-        if (_gameEndText == null)
+        if (_gameEndPanel == null || _gameEndText == null)
         {
             return;
         }
+
+        _gameEndPanel.SetActive(true);
 
         switch (endType)
         {

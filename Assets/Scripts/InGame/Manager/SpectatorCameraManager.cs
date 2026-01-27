@@ -58,7 +58,7 @@ public class SpectatorCameraManager : MonoBehaviour
         _isSpectating = true;
 
         RefreshTargets();
-        FocusToAliveOrFirst();
+        FocusToFirstAlive();
 
         EnableSpectatorInput(true);
     }
@@ -133,25 +133,20 @@ public class SpectatorCameraManager : MonoBehaviour
                 continue;
             }
 
+            if (players[i].IsDead)
+            {
+                continue;
+            }
+
             _targets.Add(players[i]);
         }
     }
 
-    private void FocusToAliveOrFirst()
+    private void FocusToFirstAlive()
     {
         if (_targets.Count == 0)
         {
             return;
-        }
-
-        for (int i = 0; i < _targets.Count; i++)
-        {
-            if (_targets[i] != null && _targets[i].IsDead == false)
-            {
-                _currentIndex = i;
-                ApplyCameraToCurrent();
-                return;
-            }
         }
 
         _currentIndex = 0;
@@ -187,12 +182,7 @@ public class SpectatorCameraManager : MonoBehaviour
 
     private void ApplyCameraToCurrent()
     {
-        if (_cam == null)
-        {
-            return;
-        }
-
-        if (_targets.Count == 0)
+        if (_cam == null || _targets.Count == 0)
         {
             return;
         }
@@ -203,23 +193,16 @@ public class SpectatorCameraManager : MonoBehaviour
             return;
         }
 
-        Transform follow = target.FollowTarget;
-        if (follow == null)
-        {
-            follow = target.transform;
-        }
+        Transform follow = target.FollowTarget != null
+            ? target.FollowTarget
+            : target.transform;
 
         _cam.Follow = follow;
         _cam.LookAt = follow;
     }
     public void ForceFollow(Transform follow)
     {
-        if (_cam == null)
-        {
-            return;
-        }
-
-        if (follow == null)
+        if (_cam == null || follow == null)
         {
             return;
         }

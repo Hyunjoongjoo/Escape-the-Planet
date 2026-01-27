@@ -6,7 +6,6 @@ public class GroundItem : MonoBehaviour, IInteractable
     [SerializeField] private ItemData _data;
 
     private SpriteRenderer _sr;
-    private PhotonView _view;
     private GroundItemNetwork _net;
 
     public ItemData Data => _data;
@@ -14,7 +13,6 @@ public class GroundItem : MonoBehaviour, IInteractable
     private void Awake()
     {
         _sr = GetComponent<SpriteRenderer>();
-        _view = GetComponent<PhotonView>();
         _net = GetComponent<GroundItemNetwork>();
         Apply();
     }
@@ -43,17 +41,22 @@ public class GroundItem : MonoBehaviour, IInteractable
 
     public void Interact(GameObject interactor)
     {
-        bool ok = QuickSlotManager.Instance.TryPickup(_data);
-
-        if (!ok)
+        if (_data == null)
         {
             return;
         }
 
-        if (_net != null)
+        if (_net == null)
         {
-            _net.RequestPickup(PhotonNetwork.LocalPlayer.ActorNumber);
+            return;
         }
+
+        if (!QuickSlotManager.Instance.HasEmptySlot())
+        {
+            return;
+        }
+
+        _net.RequestPickup(PhotonNetwork.LocalPlayer.ActorNumber);
     }
 
     public string GetPromptKey()

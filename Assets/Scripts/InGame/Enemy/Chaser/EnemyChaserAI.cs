@@ -58,6 +58,23 @@ public class EnemyChaserAI : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                MatchKeys.DayState, out object stateValue))
+        {
+            return;
+        }
+
+        if ((DayState)(int)stateValue != DayState.Running)
+        {
+            _enemy.StopMove();
+            return;
+        }
+
         if (_forcedChase == false)
         {
             _player = FindClosestAlivePlayer();

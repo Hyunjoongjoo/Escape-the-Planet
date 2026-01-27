@@ -18,6 +18,7 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
     private bool _spawnedThisDay = false;
 
     private readonly List<ItemSpawnPoint> _points = new List<ItemSpawnPoint>();
+    private readonly List<GameObject> _spawnedItems = new List<GameObject>();
 
     private ItemId _lastSpawnedId = ItemId.NONE;
 
@@ -50,15 +51,25 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        _spawnedThisDay = true;
-
-        if (_itemDatabase == null || string.IsNullOrEmpty(_groundItemPrefabName) || _points.Count == 0)
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayState, out object stateValue))
         {
             return;
         }
 
-        int randomCount = Random.Range(_minSpawnCount, _maxSpawnCount + 1);
-        int spawnCount = Mathf.Clamp(randomCount, 0, _points.Count);
+        if ((DayState)(int)stateValue != DayState.Running)
+        {
+            return;
+        }
+
+        _spawnedThisDay = true;
+
+        if (_itemDatabase == null || _points.Count == 0)
+        {
+            return;
+        }
+
+        int spawnCount = Random.Range(_minSpawnCount, _maxSpawnCount + 1);
+        spawnCount = Mathf.Clamp(spawnCount, 0, _points.Count);
 
         List<ItemSpawnPoint> available = new List<ItemSpawnPoint>(_points);
 
@@ -69,9 +80,9 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
                 break;
             }
 
-            int pointIndex = Random.Range(0, available.Count);
-            ItemSpawnPoint point = available[pointIndex];
-            available.RemoveAt(pointIndex);
+            int index = Random.Range(0, available.Count);
+            ItemSpawnPoint point = available[index];
+            available.RemoveAt(index);
 
             ItemData item = _itemDatabase.GetRandomWeighted(_lastSpawnedId);
             if (item == null)
@@ -92,12 +103,17 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
                 Quaternion.identity
             );
 
-            spawnedObject.transform.SetParent(InGameWorldController.Instance.WorldRoot.transform, true);
+            _spawnedItems.Add(spawnedObject);
 
-            GroundItemNetwork network = spawnedObject.GetComponent<GroundItemNetwork>();
-            if (network != null)
+            spawnedObject.transform.SetParent(
+                InGameWorldController.Instance.WorldRoot.transform,
+                true
+            );
+
+            GroundItemNetwork net = spawnedObject.GetComponent<GroundItemNetwork>();
+            if (net != null)
             {
-                network.SetItemId(item.id);
+                net.SetItemId(item.id);
             }
         }
     }
@@ -128,12 +144,24 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
     }
     public void ResetForNextDay()
     {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
         _spawnedThisDay = false;
         _lastSpawnedId = ItemId.NONE;
 
-        foreach (Transform child in transform)
+        GroundItemNetwork[] allItems = UnityEngine.Object.FindObjectsByType<GroundItemNetwork>(FindObjectsSortMode.None);
+
+        for (int i = 0; i < allItems.Length; i++)
         {
-            PhotonNetwork.Destroy(child.gameObject);
+            if (allItems[i] != null)
+            {
+                PhotonNetwork.Destroy(allItems[i].gameObject);
+            }
         }
+
+        _spawnedItems.Clear();
     }
 }

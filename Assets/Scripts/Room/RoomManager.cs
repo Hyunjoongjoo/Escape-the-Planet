@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System;
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
@@ -26,8 +24,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
     [SerializeField] private Button _enterFactoryButton;
     [SerializeField] private Button _endDayButton;
 
-    [SerializeField] private float _dayDuration = 300f;
-
     private void Start()
     {
         if (!PhotonNetwork.InRoom)
@@ -41,18 +37,27 @@ public class RoomManager : MonoBehaviourPunCallbacks
         SetReady(false);
         UpdateUI();
         UpdateButtons();
+
+        ApplyCurrentDayState();
     }
 
-    public void OnClickReady()
+    public override void OnJoinedRoom()
     {
-        bool current = GetReady(PhotonNetwork.LocalPlayer);
-        SetReady(!current);
+        base.OnJoinedRoom();
+        StartCoroutine(RefreshUIAfterJoin());
+    }
+
+    private IEnumerator RefreshUIAfterJoin()
+    {
+        yield return null;
         UpdateUI();
+        UpdateButtons();
+        ApplyCurrentDayState();
     }
 
     public void OnClickStartDay()
     {
-        if (IsDayRunning())
+        if (!PhotonNetwork.InRoom)
         {
             return;
         }
@@ -63,22 +68,29 @@ public class RoomManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        Hashtable props = new Hashtable
+        if (NetworkRelay.Instance == null)
         {
-            { MatchKeys.DayState, (int)DayState.Running },
-            { MatchKeys.DayStartTime, PhotonNetwork.Time },
-            { MatchKeys.DayDuration, _dayDuration }
-        };
+            Debug.LogError("RoomNetworkRelay not found.");
+            return;
+        }
 
-        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+        NetworkRelay.Instance.RequestStartDay();
+    }
 
-        GameManager.Instance.OnDayStart();
+    public void OnClickEndDay()
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
 
-        InGameWorldController.Instance.ShowWorld();
+        if (NetworkRelay.Instance == null)
+        {
+            Debug.LogError("RoomNetworkRelay not found.");
+            return;
+        }
 
-        UIManager.Instance.SetInGamePhase();
-
-        UpdateButtons();
+        NetworkRelay.Instance.RequestEndDay(DayEndReason.ManualEnd);
     }
 
     public void OnClickEnterFactory()
@@ -89,7 +101,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
 
         if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-                MatchKeys.DayState, out object stateValue))
+            MatchKeys.DayState, out object stateValue))
         {
             return;
         }
@@ -102,29 +114,14 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
 
         InGameWorldController.Instance.ShowWorld();
-
         UIManager.Instance.SetInGamePhase();
     }
 
-    public void OnClickEndDay()
+    public void OnClickReady()
     {
-        if (!PhotonNetwork.InRoom)
-        {
-            return;
-        }
-
-        GameManager.Instance.OnDayEnd();
-
-        Hashtable props = new Hashtable
-        {
-            { MatchKeys.DayState, (int)DayState.Ending }
-        };
-
-        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
-
-        _chatManager?.AddSystemMessage("하루를 종료합니다.");
-
-        UpdateButtons();
+        bool current = GetReady(PhotonNetwork.LocalPlayer);
+        SetReady(!current);
+        UpdateUI();
     }
 
     private void SetReady(bool value)
@@ -194,7 +191,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         bool isDayRunning = false;
 
         if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-                MatchKeys.DayState, out object stateValue))
+            MatchKeys.DayState, out object stateValue))
         {
             isDayRunning = (DayState)(int)stateValue == DayState.Running;
         }
@@ -215,15 +212,28 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    private bool IsDayRunning()
+    private void ApplyCurrentDayState()
     {
-        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-                MatchKeys.DayState, out object stateValue))
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+            MatchKeys.DayState, out object stateValue))
         {
-            return (DayState)(int)stateValue == DayState.Running;
+            InGameWorldController.Instance.HideWorld();
+            UIManager.Instance.SetRoomPhase();
+            return;
         }
 
-        return false;
+        DayState state = (DayState)(int)stateValue;
+
+        if (state == DayState.Running)
+        {
+            InGameWorldController.Instance.ShowWorld();
+            UIManager.Instance.SetInGamePhase();
+        }
+        else
+        {
+            InGameWorldController.Instance.HideWorld();
+            UIManager.Instance.SetRoomPhase();
+        }
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable changedProps)
@@ -233,19 +243,10 @@ public class RoomManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        if (changedProps.TryGetValue(MatchKeys.DayState, out object value))
+        if (changedProps.ContainsKey(MatchKeys.DayState))
         {
-            DayState state = (DayState)(int)value;
-
-            if (state == DayState.Running)
-            {
-                UpdateButtons();
-            }
-
-            if (state == DayState.Ending)
-            {
-                UpdateButtons();
-            }
+            ApplyCurrentDayState();
+            UpdateButtons();
         }
     }
 
