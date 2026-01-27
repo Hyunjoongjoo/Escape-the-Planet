@@ -25,6 +25,8 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
     private float _time;
     private EnemyId _lastSpawnedId = EnemyId.NONE;
 
+    private bool _spawnStartedThisDay = false;
+
     private void Awake()
     {
         CachePoints();
@@ -65,6 +67,11 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             return;
         }
 
+        if (_spawnStartedThisDay == false)
+        {
+            return;
+        }
+
         CleanupAlive();
 
         if (_alive.Count >= _maxAlive)
@@ -80,6 +87,33 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             _time = 0f;
             SpawnOne();
         }
+    }
+
+    public void StartDay()
+    {
+        if (_spawnStartedThisDay)
+        {
+            return;
+        }
+
+        _spawnStartedThisDay = true;
+        _time = 0f;
+        _lastSpawnedId = EnemyId.NONE;
+    }
+
+    public void ResetForNextDay()
+    {
+        _spawnStartedThisDay = false;
+
+        for (int i = _alive.Count - 1; i >= 0; i--)
+        {
+            if (_alive[i] != null)
+            {
+                PhotonNetwork.Destroy(_alive[i].gameObject);
+            }
+        }
+
+        _alive.Clear();
     }
 
     private void CleanupAlive()
@@ -105,12 +139,7 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
 
     private void SpawnOne()
     {
-        if (_enemyDatabase == null)
-        {
-            return;
-        }
-
-        if (_points.Count == 0)
+        if (_enemyDatabase == null || _points.Count == 0)
         {
             return;
         }
@@ -121,34 +150,27 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        if (string.IsNullOrEmpty(enemyData.prefabName))
-        {
-            return;
-        }
-
         EnemySpawnPoint point = _points[Random.Range(0, _points.Count)];
-        Vector2 spawnPos = GetRandomSpawnPosition(point.transform.position, enemyData.spawnRadius);
+        Vector2 spawnPosition = GetRandomSpawnPosition(
+            point.transform.position,
+            enemyData.spawnRadius
+        );
 
-        GameObject obj = PhotonNetwork.Instantiate(enemyData.prefabName, spawnPos, Quaternion.identity);
+        GameObject spawnedObject = PhotonNetwork.Instantiate(
+            enemyData.prefabName,
+            spawnPosition,
+            Quaternion.identity
+        );
 
-        EnemyController enemy = obj.GetComponent<EnemyController>();
+        spawnedObject.transform.SetParent(InGameWorldController.Instance.WorldRoot.transform, true);
+
+        EnemyController enemy = spawnedObject.GetComponent<EnemyController>();
         if (enemy == null)
         {
             return;
         }
 
-        float elapsedMinutes = GameManager.Instance.ElapsedMinutes;
-        enemy.Init(enemyData, elapsedMinutes);
-
-        ChaserPathChase chaser = obj.GetComponent<ChaserPathChase>();
-        if (chaser != null)
-        {
-            PlayerController player = Object.FindAnyObjectByType<PlayerController>();
-            if (player != null)
-            {
-                chaser.SetTarget(player.transform);
-            }
-        }
+        enemy.Init(enemyData, GameManager.Instance.RemainTime / 60f);
 
         _alive.Add(enemy);
         _lastSpawnedId = enemyData.id;

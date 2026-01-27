@@ -9,7 +9,7 @@ using Photon.Realtime;
 [RequireComponent(typeof(PlayerView))]
 [RequireComponent(typeof(PlayerState))]
 [RequireComponent(typeof(PhotonView))]
-public class PlayerController : MonoBehaviourPun
+public class PlayerController : MonoBehaviourPun, IPunObservable
 {
     [SerializeField] private PlayerStats _baseStats;
     [SerializeField] private float _hitStunTime = 0.2f;
@@ -51,6 +51,8 @@ public class PlayerController : MonoBehaviourPun
     private Vector3 _prevNetPos;
     private Vector2 _netVelocity;
     private bool _netInit = false;
+
+    private int _netFacing = 1;
 
     public static event Action OnPlayerDead;
 
@@ -180,6 +182,11 @@ public class PlayerController : MonoBehaviourPun
     }
     private void Start()
     {
+        if (photonView.IsMine && PhotonNetwork.InRoom)
+        {
+            PhotonPlayerLocationManager.SetLocation(PlayerLocation.InGame);
+        }
+
         if (!photonView.IsMine)
         {
             SetInputEnabled(false);
@@ -197,6 +204,8 @@ public class PlayerController : MonoBehaviourPun
 
         EnsureWeaponApplied();
 
+        ApplyNextDayHpRule_Local();
+
         string nickname = PhotonNetwork.LocalPlayer.NickName;
         UIManager.Instance.InitPlayerUI(nickname, _model.currentHP, _model.maxHP);
 
@@ -212,6 +221,19 @@ public class PlayerController : MonoBehaviourPun
         _weaponHitBox.ApplyWeapon(_model.currentWeapon);
         _weaponHitBox.SetActive(false);
         _weaponHitBox.SetFacing(_facing);
+    }
+
+    private void ApplyNextDayHpRule_Local()
+    {
+        float ratio = PhotonPlayerStateManager.GetNextDayHpRatio(PhotonNetwork.LocalPlayer);
+
+        int hp = Mathf.RoundToInt(_model.maxHP * ratio);
+        if (hp < 1)
+        {
+            hp = 1;
+        }
+
+        _model.currentHP = hp;
     }
 
     private IEnumerator BindCinemachineRoutine()
@@ -237,6 +259,8 @@ public class PlayerController : MonoBehaviourPun
         if (!photonView.IsMine)
         {
             UpdateNetMotion();
+
+            _facing = _netFacing;
         }
 
 
@@ -262,15 +286,6 @@ public class PlayerController : MonoBehaviourPun
         }
 
         _netVelocity = new Vector2(delta.x, delta.y) / dt;
-
-        if (_netVelocity.x > 0.05f)
-        {
-            _facing = 1;
-        }
-        else if (_netVelocity.x < -0.05f)
-        {
-            _facing = -1;
-        }
     }
 
     private void UpdateAnimations()
@@ -424,6 +439,8 @@ public class PlayerController : MonoBehaviourPun
         }
 
         _weaponHitBox.SetActive(false);
+
+        PhotonPlayerStateManager.SetWasDeadThisDay(true);
 
         _view.SetDead(true);
         OnPlayerDead?.Invoke();
@@ -646,5 +663,16 @@ public class PlayerController : MonoBehaviourPun
 
         GroundItem item = Instantiate(_groundItemPrefab, dropPos, Quaternion.identity);
         item.Setup(dropped);
+    }
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(_facing);
+        }
+        else
+        {
+            _netFacing = (int)stream.ReceiveNext();
+        }
     }
 }

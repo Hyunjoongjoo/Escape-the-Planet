@@ -1,16 +1,23 @@
-using UnityEngine;
 using Photon.Pun;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ExitPoint : MonoBehaviourPunCallbacks, IInteractable
 {
     public void Interact(GameObject interactor)
     {
-        if (GameManager.Instance == null)
+        string key = SaveKeyProvider.GetPlayerKey();
+
+        if (QuickSlotManager.Instance != null)
         {
-            return;
+            SaveData data = QuickSlotManager.Instance.ToSaveData();
+            SaveManager.Save(key, data);
         }
 
-        GameManager.Instance.EndGame(GameEndType.Success);
+        PhotonPlayerLocationManager.SetLocation(PlayerLocation.Room);
+
+        InGameWorldController.Instance.HideWorld();
+        UIManager.Instance.SetRoomPhase();
     }
 
     public string GetPromptKey()
@@ -20,6 +27,6 @@ public class ExitPoint : MonoBehaviourPunCallbacks, IInteractable
 
     public string GetPromptHint()
     {
-        return "Exit";
+        return "Return";
     }
 }

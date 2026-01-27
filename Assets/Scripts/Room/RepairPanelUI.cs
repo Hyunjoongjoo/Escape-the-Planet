@@ -83,14 +83,12 @@ public class RepairPanelUI : MonoBehaviour
         }
 
         int gain = CalculateRepairGainFromSaveData(data);
-
         if (gain <= 0)
         {
             return;
         }
 
         int newValue = Mathf.Clamp(_repairPercent + gain, 0, 100);
-
         _isLoading = true;
 
         await FirebaseUserData.Instance.SetRepairPercentAsync(key, newValue);
@@ -100,6 +98,11 @@ public class RepairPanelUI : MonoBehaviour
 
         ClearSaveDataQuickSlots(data);
         SaveManager.Save(key, data);
+
+        if (QuickSlotManager.Instance != null)
+        {
+            QuickSlotManager.Instance.ClearAllSlots(); 
+        }
 
         _isLoading = false;
     }

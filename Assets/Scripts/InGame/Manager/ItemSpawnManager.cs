@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
-public class ItemSpawnManager : MonoBehaviour
+public class ItemSpawnManager : MonoBehaviourPunCallbacks
 {
     [SerializeField] private ItemDatabase _itemDatabase;
     [SerializeField] private string _groundItemPrefabName = "GroundItem";
@@ -15,6 +15,8 @@ public class ItemSpawnManager : MonoBehaviour
     [SerializeField] private float _checkRadius = 0.25f;
     [SerializeField] private int _tryCount = 12;
 
+    private bool _spawnedThisDay = false;
+
     private readonly List<ItemSpawnPoint> _points = new List<ItemSpawnPoint>();
 
     private ItemId _lastSpawnedId = ItemId.NONE;
@@ -22,21 +24,6 @@ public class ItemSpawnManager : MonoBehaviour
     private void Awake()
     {
         CacheSpawnPoints();
-    }
-
-    private void Start()
-    {
-        if (!PhotonNetwork.InRoom)
-        {
-            return;
-        }
-
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            return;
-        }
-
-        Spawn();
     }
 
     private void CacheSpawnPoints()
@@ -53,17 +40,19 @@ public class ItemSpawnManager : MonoBehaviour
 
     public void Spawn()
     {
-        if (_itemDatabase == null)
+        if (!PhotonNetwork.IsMasterClient)
         {
             return;
         }
 
-        if (_groundItemPrefabName == null)
+        if (_spawnedThisDay)
         {
             return;
         }
 
-        if (_points.Count == 0)
+        _spawnedThisDay = true;
+
+        if (_itemDatabase == null || string.IsNullOrEmpty(_groundItemPrefabName) || _points.Count == 0)
         {
             return;
         }
@@ -80,9 +69,9 @@ public class ItemSpawnManager : MonoBehaviour
                 break;
             }
 
-            int pointIdx = Random.Range(0, available.Count);
-            ItemSpawnPoint point = available[pointIdx];
-            available.RemoveAt(pointIdx);
+            int pointIndex = Random.Range(0, available.Count);
+            ItemSpawnPoint point = available[pointIndex];
+            available.RemoveAt(pointIndex);
 
             ItemData item = _itemDatabase.GetRandomWeighted(_lastSpawnedId);
             if (item == null)
@@ -92,17 +81,25 @@ public class ItemSpawnManager : MonoBehaviour
 
             _lastSpawnedId = item.id;
 
-            float radius = item.spawnRadius;
-            Vector2 spawnPos = GetRandomSpawnPosition(point.transform.position, radius);
+            Vector2 spawnPosition = GetRandomSpawnPosition(
+                point.transform.position,
+                item.spawnRadius
+            );
 
-            GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, spawnPos, Quaternion.identity);
+            GameObject spawnedObject = PhotonNetwork.Instantiate(
+                _groundItemPrefabName,
+                spawnPosition,
+                Quaternion.identity
+            );
 
-            GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
-            if (net != null)
+            spawnedObject.transform.SetParent(InGameWorldController.Instance.WorldRoot.transform, true);
+
+            GroundItemNetwork network = spawnedObject.GetComponent<GroundItemNetwork>();
+            if (network != null)
             {
-                net.SetItemId(item.id);
+                network.SetItemId(item.id);
             }
-        }    
+        }
     }
     private Vector2 GetRandomSpawnPosition(Vector2 center, float radius)
     {
@@ -128,5 +125,15 @@ public class ItemSpawnManager : MonoBehaviour
         }
 
         return center;
+    }
+    public void ResetForNextDay()
+    {
+        _spawnedThisDay = false;
+        _lastSpawnedId = ItemId.NONE;
+
+        foreach (Transform child in transform)
+        {
+            PhotonNetwork.Destroy(child.gameObject);
+        }
     }
 }

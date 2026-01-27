@@ -20,9 +20,9 @@ public class QuickSlotManager : MonoBehaviourPun
 
     private void Awake()
     {
-        if (Instance != null)
+        if (Instance != null && Instance != this)
         {
-            UnityEngine.Object.Destroy(gameObject);
+            Destroy(gameObject);
             return;
         }
 
@@ -280,7 +280,7 @@ public class QuickSlotManager : MonoBehaviourPun
         return result;
     }
 
-    private void ClearAllSlots()
+    public void ClearAllSlots()
     {
         for (int i = 0; i < _slots.Length; i++)
         {
@@ -290,6 +290,11 @@ public class QuickSlotManager : MonoBehaviourPun
 
         CurrentIndex = 0;
         RaiseSelectedChanged();
+
+        SaveManager.Save(
+            SaveKeyProvider.GetPlayerKey(),
+            ToSaveData()
+        );
     }
 
     private Vector2 GetDropPosition()

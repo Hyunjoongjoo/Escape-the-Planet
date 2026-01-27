@@ -1,105 +1,169 @@
+using System.Collections;
+using System.Collections.Generic;
+using System;
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class RoomManager : MonoBehaviourPunCallbacks
 {
     [System.Serializable]
     public class PlayerSlot
     {
-        public GameObject root;
         public Text nickText;
         public Text readyText;
     }
 
     [SerializeField] private PlayerSlot[] _slots;
     [SerializeField] private ChatManager _chatManager;
+
     [SerializeField] private Button _exitButton;
+    [SerializeField] private Button _startDayButton;
+    [SerializeField] private Button _enterFactoryButton;
+    [SerializeField] private Button _endDayButton;
 
-    private const string READY_KEY = "Ready";
-
-    private bool _gameStarted = false;
-
+    [SerializeField] private float _dayDuration = 300f;
 
     private void Start()
     {
-        _gameStarted = false;
-
-        if (PhotonNetwork.InRoom)
+        if (!PhotonNetwork.InRoom)
         {
-            PhotonPlayerStateManager.SetState(PlayerGameState.Alive);
-            SetReady(false);
-            UpdateUI();
+            return;
         }
-    }
-    public override void OnJoinedRoom()
-    {
-        _gameStarted = false;
+
+        PhotonPlayerLocationManager.SetLocation(PlayerLocation.Room);
         PhotonPlayerStateManager.SetState(PlayerGameState.Alive);
+
         SetReady(false);
         UpdateUI();
+        UpdateButtons();
     }
-    //방장이 바뀔때
-    public override void OnMasterClientSwitched(Player newMasterClient)
-    {
-        UpdateUI();
-        CheckAutoStart();
-    }
+
     public void OnClickReady()
     {
         bool current = GetReady(PhotonNetwork.LocalPlayer);
-        bool next = !current;
+        SetReady(!current);
+        UpdateUI();
+    }
 
-        SetReady(next);
-        UpdateExitButton();
-
-        if (next)
+    public void OnClickStartDay()
+    {
+        if (IsDayRunning())
         {
-            _chatManager?.AddSystemMessage("준비 중에는 나가기 버튼이 비활성화됩니다.\n나가려면 준비를 해제하세요.");
+            return;
         }
+
+        if (!IsAllPlayersReady())
+        {
+            _chatManager?.AddSystemMessage("아직 준비되지 않은 플레이어가 있습니다.");
+            return;
+        }
+
+        Hashtable props = new Hashtable
+        {
+            { MatchKeys.DayState, (int)DayState.Running },
+            { MatchKeys.DayStartTime, PhotonNetwork.Time },
+            { MatchKeys.DayDuration, _dayDuration }
+        };
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+
+        GameManager.Instance.OnDayStart();
+
+        InGameWorldController.Instance.ShowWorld();
+
+        UIManager.Instance.SetInGamePhase();
+
+        UpdateButtons();
+    }
+
+    public void OnClickEnterFactory()
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                MatchKeys.DayState, out object stateValue))
+        {
+            return;
+        }
+
+        DayState state = (DayState)(int)stateValue;
+
+        if (state != DayState.Running)
+        {
+            return;
+        }
+
+        InGameWorldController.Instance.ShowWorld();
+
+        UIManager.Instance.SetInGamePhase();
+    }
+
+    public void OnClickEndDay()
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        GameManager.Instance.OnDayEnd();
+
+        Hashtable props = new Hashtable
+        {
+            { MatchKeys.DayState, (int)DayState.Ending }
+        };
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+
+        _chatManager?.AddSystemMessage("하루를 종료합니다.");
+
+        UpdateButtons();
     }
 
     private void SetReady(bool value)
     {
-        Hashtable table = new Hashtable();
-        table[READY_KEY] = value;
+        Hashtable table = new Hashtable
+        {
+            { MatchKeys.Ready, value }
+        };
+
         PhotonNetwork.LocalPlayer.SetCustomProperties(table);
     }
 
     private bool GetReady(Player player)
     {
-        if (player.CustomProperties.TryGetValue(READY_KEY, out object value))
+        if (player != null &&
+            player.CustomProperties != null &&
+            player.CustomProperties.TryGetValue(MatchKeys.Ready, out object value))
         {
             return (bool)value;
         }
 
         return false;
     }
-    private void CheckAutoStart()
+
+    private bool IsAllPlayersReady()
     {
-        if (_gameStarted)
-        {
-            return;
-        }
+        Player[] players = PhotonNetwork.PlayerList;
 
-        if (!PhotonNetwork.IsMasterClient)
+        for (int i = 0; i < players.Length; i++)
         {
-            return;
-        }
-
-        foreach (Player player in PhotonNetwork.PlayerList)
-        {
-            if (!GetReady(player))
+            if (!GetReady(players[i]))
             {
-                return;
+                return false;
             }
         }
-        _gameStarted = true;
-        PhotonNetwork.LoadLevel("InGame");
+
+        return true;
     }
+
     private void UpdateUI()
     {
         Player[] players = PhotonNetwork.PlayerList;
@@ -118,8 +182,71 @@ public class RoomManager : MonoBehaviourPunCallbacks
                 _slots[i].readyText.text = GetReady(player) ? "준비 완료" : "준비 안됨";
             }
         }
-        UpdateExitButton();
 
+        if (_exitButton != null)
+        {
+            _exitButton.interactable = !GetReady(PhotonNetwork.LocalPlayer);
+        }
+    }
+
+    private void UpdateButtons()
+    {
+        bool isDayRunning = false;
+
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                MatchKeys.DayState, out object stateValue))
+        {
+            isDayRunning = (DayState)(int)stateValue == DayState.Running;
+        }
+
+        if (_startDayButton != null)
+        {
+            _startDayButton.interactable = !isDayRunning;
+        }
+
+        if (_enterFactoryButton != null)
+        {
+            _enterFactoryButton.interactable = isDayRunning;
+        }
+
+        if (_endDayButton != null)
+        {
+            _endDayButton.interactable = isDayRunning;
+        }
+    }
+
+    private bool IsDayRunning()
+    {
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+                MatchKeys.DayState, out object stateValue))
+        {
+            return (DayState)(int)stateValue == DayState.Running;
+        }
+
+        return false;
+    }
+
+    public override void OnRoomPropertiesUpdate(Hashtable changedProps)
+    {
+        if (changedProps == null)
+        {
+            return;
+        }
+
+        if (changedProps.TryGetValue(MatchKeys.DayState, out object value))
+        {
+            DayState state = (DayState)(int)value;
+
+            if (state == DayState.Running)
+            {
+                UpdateButtons();
+            }
+
+            if (state == DayState.Ending)
+            {
+                UpdateButtons();
+            }
+        }
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
@@ -134,23 +261,12 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
     {
-        if (changedProps.ContainsKey(READY_KEY))
+        if (changedProps.ContainsKey(MatchKeys.Ready))
         {
             UpdateUI();
-            CheckAutoStart();
         }
     }
-    private void UpdateExitButton()
-    {
-        if (_exitButton == null)
-        {
-            return;
-        }
 
-        bool isReady = GetReady(PhotonNetwork.LocalPlayer);
-
-        _exitButton.interactable = !isReady;
-    }
     public void OnClickLeaveRoom()
     {
         PhotonNetwork.LeaveRoom();
@@ -161,4 +277,3 @@ public class RoomManager : MonoBehaviourPunCallbacks
         SceneManager.LoadScene("Lobby");
     }
 }
-
