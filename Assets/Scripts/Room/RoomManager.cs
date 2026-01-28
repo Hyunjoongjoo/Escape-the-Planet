@@ -44,6 +44,12 @@ public class RoomManager : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
+        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+        if (spawner != null)
+        {
+            spawner.SpawnLocalPlayer();
+        }
+
         StartCoroutine(RefreshUIAfterJoin());
     }
 
@@ -85,7 +91,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         if (NetworkRelay.Instance == null)
         {
-            Debug.LogError("RoomNetworkRelay not found.");
             return;
         }
 
@@ -99,8 +104,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-            MatchKeys.DayState, out object stateValue))
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayState, out object stateValue))
         {
             return;
         }
@@ -112,7 +116,58 @@ public class RoomManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        GameManager.Instance.EnterFactory_Local();
+        EnterFactory_Local();
+    }
+
+    private void EnterFactory_Local()
+    {
+        PlayerController player = FindLocalPlayer();
+        if (player == null)
+        {
+            return;
+        }
+
+        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+        if (spawner == null)
+        {
+            return;
+        }
+
+        Vector3 spawnPos = spawner.GetSpawnPosition(PhotonNetwork.LocalPlayer);
+
+        player.transform.position = spawnPos;
+        player.SetInGameMode();
+
+        UIManager.Instance.SetInGamePhase();
+    }
+
+    private PlayerController FindLocalPlayer()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] != null && players[i].photonView.IsMine)
+            {
+                PlayerController player = players[i];
+                if (player == null)
+                {
+                    continue;
+                }
+
+                if (player.photonView == null)
+                {
+                    continue;
+                }
+
+                if (player.photonView.IsMine)
+                {
+                    return player;
+                }
+            }
+        }
+
+        return null;
     }
 
     public void OnClickReady()
@@ -186,34 +241,36 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private void UpdateButtons()
     {
-        bool isDayRunning = false;
+        DayState state = DayState.Idle;
 
-        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-            MatchKeys.DayState, out object stateValue))
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayState, out object stateValue))
         {
-            isDayRunning = (DayState)(int)stateValue == DayState.Running;
+            state = (DayState)(int)stateValue;
         }
+
+        bool canStart = state == DayState.Idle;
+        bool canEnter = state == DayState.Running;
+        bool canEnd = state == DayState.Running;
 
         if (_startDayButton != null)
         {
-            _startDayButton.interactable = !isDayRunning;
+            _startDayButton.interactable = canStart;
         }
 
         if (_enterFactoryButton != null)
         {
-            _enterFactoryButton.interactable = isDayRunning;
+            _enterFactoryButton.interactable = canEnter;
         }
 
         if (_endDayButton != null)
         {
-            _endDayButton.interactable = isDayRunning;
+            _endDayButton.interactable = canEnd;
         }
     }
 
     private void ApplyCurrentDayState()
     {
-        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-        MatchKeys.DayState, out object stateValue))
+        if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayState, out object stateValue))
     {
         UIManager.Instance.SetRoomPhase();
         return;

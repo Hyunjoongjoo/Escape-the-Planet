@@ -138,6 +138,11 @@ public class SpectatorCameraManager : MonoBehaviour
                 continue;
             }
 
+            if (players[i].gameObject.activeInHierarchy == false)
+            {
+                continue;
+            }
+
             _targets.Add(players[i]);
         }
     }

@@ -10,13 +10,13 @@ GameObject:
   m_Component:
   - component: {fileID: 2302174091969308467}
   - component: {fileID: 8785108241397600553}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Spot Light 2D
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2302174091969308467
 Transform:
   m_ObjectHideFlags: 0
@@ -93,7 +93,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3113440632913484674}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: SortPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -227,7 +227,7 @@ GameObject:
   - component: {fileID: 5938594458624144118}
   - component: {fileID: 1467218777967422401}
   - component: {fileID: 8101518630096613775}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -434,6 +434,9 @@ MonoBehaviour:
   _groundItemPrefabName: GroundItem
   _dropDistance: 0.7
   _dropScatterRadius: 1
+  _softBlockRadius: 0.6
+  _softBlockStrength: 0.5
+  _playerInput: {fileID: 0}
   _isDead: 0
   _hitFxCooldown: 0.08
 --- !u!114 &3613344659749014547
@@ -764,7 +767,7 @@ GameObject:
   - component: {fileID: 7679733051502785451}
   - component: {fileID: 3237113970098252198}
   - component: {fileID: 9193845152024329346}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Interaction
   m_TagString: Untagged
   m_Icon: {fileID: 0}

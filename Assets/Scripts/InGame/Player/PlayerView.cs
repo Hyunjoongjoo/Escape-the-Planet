@@ -45,4 +45,11 @@ public class PlayerView : MonoBehaviour
             _sprite.enabled = value;
         }
     }
+    public void ForceResetAnimator()
+    {
+        _anim.Rebind();
+        _anim.Update(0f);
+        _anim.Play("IdleAndRun", 0, 0f);
+        _anim.Update(0f);
+    }
 }

@@ -16,7 +16,7 @@ public class ExitPoint : MonoBehaviourPunCallbacks, IInteractable
 
         PhotonPlayerLocationManager.SetLocation(PlayerLocation.Room);
 
-        interactor.SetActive(false);
+        GameManager.Instance?.ForceReturnToRoom();
 
         UIManager.Instance.SetRoomPhase();
     }

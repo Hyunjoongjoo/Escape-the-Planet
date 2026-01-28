@@ -3,37 +3,41 @@ using System.Collections;
 using Photon.Pun;
 using Photon.Realtime;
 
-public class PlayerSpawner : MonoBehaviour
+public class PlayerSpawner : MonoBehaviourPunCallbacks
 {
     [SerializeField] private string _playerPrefabName = "Player";
 
     [SerializeField] private Transform[] _spawnPoints;
 
-    private void Start()
+    public PlayerController SpawnLocalPlayer()
     {
-        StartCoroutine(SpawnRoutine());
-    }
-
-    private IEnumerator SpawnRoutine()
-    {
-        yield return null;
-
         if (!PhotonNetwork.InRoom)
         {
-            yield break;
+            return null;
         }
 
         if (PhotonNetwork.LocalPlayer == null)
         {
-            yield break;
+            return null; ;
         }
 
         if (HasLocalPlayer())
         {
-            yield break;
+            return null;
         }
 
-        SpawnLocalPlayer();
+        Vector3 spawnPos = GetSpawnPosition(PhotonNetwork.LocalPlayer);
+
+        GameObject player = PhotonNetwork.Instantiate(_playerPrefabName, spawnPos, Quaternion.identity);
+
+        PlayerController controller = player.GetComponent<PlayerController>();
+
+        if (controller != null)
+        {
+            controller.SetRoomMode();
+        }
+
+        return controller;
     }
 
     private bool HasLocalPlayer()
@@ -52,18 +56,9 @@ public class PlayerSpawner : MonoBehaviour
                 return true;
             }
         }
-
         return false;
     }
-
-    private void SpawnLocalPlayer()
-    {
-        Vector3 spawnPos = GetSpawnPosition(PhotonNetwork.LocalPlayer);
-
-        GameObject player = PhotonNetwork.Instantiate(_playerPrefabName, spawnPos, Quaternion.identity);     
-    }
-
-    private Vector3 GetSpawnPosition(Player player)
+    public Vector3 GetSpawnPosition(Player player)
     {
         if (_spawnPoints == null || _spawnPoints.Length == 0)
         {

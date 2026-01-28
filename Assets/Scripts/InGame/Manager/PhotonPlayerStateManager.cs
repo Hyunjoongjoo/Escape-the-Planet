@@ -43,7 +43,10 @@ public static class PhotonPlayerStateManager
     {
         if (player != null && player.CustomProperties != null && player.CustomProperties.TryGetValue(STATE_KEY, out object value))
         {
-            return (PlayerGameState)(int)value;
+            if (value is int intValue)
+            {
+                return (PlayerGameState)intValue;
+            }
         }
 
         return PlayerGameState.Alive;
@@ -58,7 +61,7 @@ public static class PhotonPlayerStateManager
 
         Hashtable table = new Hashtable
         {
-            { WAS_DEAD_KEY, value ? 1 : 0 }
+            { WAS_DEAD_KEY, value }
         };
 
         PhotonNetwork.LocalPlayer.SetCustomProperties(table);
@@ -68,7 +71,20 @@ public static class PhotonPlayerStateManager
     {
         if (player != null && player.CustomProperties != null && player.CustomProperties.TryGetValue(WAS_DEAD_KEY, out object value))
         {
-            return ((int)value) == 1;
+            if (value is bool boolValue)
+            {
+                return boolValue;
+            }
+
+            if (value is int intValue)
+            {
+                return intValue == 1;
+            }
+
+            if (value is byte byteValue)
+            {
+                return byteValue == 1;
+            }
         }
 
         return false;
@@ -76,11 +92,16 @@ public static class PhotonPlayerStateManager
 
     public static void ResetDayFlags()
     {
+        if (PhotonNetwork.LocalPlayer == null)
+        {
+            return;
+        }
+
         Hashtable table = new Hashtable
-    {
-        { MatchKeys.WasDeadThisDay, false },
-        { MatchKeys.NextDayHpRatio, 1f }
-    };
+        {
+            { MatchKeys.WasDeadThisDay, false },
+            { MatchKeys.NextDayHpRatio, 1f }
+        };
 
         PhotonNetwork.LocalPlayer.SetCustomProperties(table);
     }
@@ -104,7 +125,15 @@ public static class PhotonPlayerStateManager
     {
         if (player != null && player.CustomProperties != null && player.CustomProperties.TryGetValue(NEXT_HP_KEY, out object value))
         {
-            return (float)value;
+            if (value is float floatValue)
+            {
+                return floatValue;
+            }
+
+            if (value is double doubleValue)
+            {
+                return (float)doubleValue;
+            }
         }
 
         return 1f;

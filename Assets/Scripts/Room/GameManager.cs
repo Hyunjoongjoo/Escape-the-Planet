@@ -1,8 +1,9 @@
-using UnityEngine;
 using System;
 using System.Collections;
-using Photon.Pun;
 using ExitGames.Client.Photon;
+using Photon.Pun;
+using Photon.Realtime;
+using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public enum GameEndType
@@ -25,8 +26,16 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     [SerializeField] private float _defaultDayDuration = 300f;
 
+    [SerializeField] private float _endingDuration = 3f;
+
     private float _remainTime;
     private double _dayStartNetworkTime;
+
+    private DayState _cachedState = DayState.Idle;
+    private DayEndReason _cachedEndReason = DayEndReason.TimeOver;
+    private double _cachedEndingUntil = 0.0;
+
+    private PlayerController _cachedLocalPlayer;
 
     public float RemainTime => _remainTime;
     public bool IsRunning { get; private set; }
@@ -44,26 +53,6 @@ public class GameManager : MonoBehaviourPunCallbacks
         Instance = this;
     }
 
-    private void Start()
-    {
-        StartCoroutine(HidePlayersAfterSpawn());
-    }
-
-    private IEnumerator HidePlayersAfterSpawn()
-    {
-        yield return null;
-
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-        for (int i = 0; i < players.Length; i++)
-        {
-            if (players[i] != null)
-            {
-                players[i].gameObject.SetActive(false);
-            }
-        }
-    }
-
     private void Update()
     {
         if (!PhotonNetwork.InRoom)
@@ -71,85 +60,64 @@ public class GameManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        if (IsRunning == false)
+        if (_cachedState == DayState.Running)
         {
-            return;
-        }
+            double elapsed = PhotonNetwork.Time - _dayStartNetworkTime;
+            _remainTime = Mathf.Max(0f, _defaultDayDuration - (float)elapsed);
 
-        double elapsed = PhotonNetwork.Time - _dayStartNetworkTime;
-        _remainTime = Mathf.Max(0f, _defaultDayDuration - (float)elapsed);
+            OnTimeChanged?.Invoke(_remainTime);
 
-        OnTimeChanged?.Invoke(_remainTime);
-
-        if (_remainTime <= 0f && PhotonNetwork.IsMasterClient)
-        {
-            EndDay_Master(DayEndReason.TimeOver);
-        }
-    }
-
-    private void EnterInGame_Local()
-    {
-        PlayerController[] players =
-            FindObjectsByType<PlayerController>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-
-        PlayerController localPlayer = null;
-
-        for (int i = 0; i < players.Length; i++)
-        {
-            if (players[i] != null &&
-                players[i].photonView != null &&
-                players[i].photonView.IsMine)
+            if (_remainTime <= 0f && PhotonNetwork.IsMasterClient)
             {
-                localPlayer = players[i];
-                break;
+                EndDay_Master(DayEndReason.TimeOver);
+            }
+
+            if (PhotonNetwork.IsMasterClient && PhotonPlayerStateManager.AreAllPlayersDead())
+            {
+                EndDay_Master(DayEndReason.AllDead);
             }
         }
 
-        if (localPlayer != null)
+        if (_cachedState == DayState.Ending && PhotonNetwork.IsMasterClient && _cachedEndingUntil > 0.0 && PhotonNetwork.Time >= _cachedEndingUntil)
         {
-            localPlayer.gameObject.SetActive(true);
-            localPlayer.SetInputEnabled(true);
+            SetDayState_Master(DayState.Idle, _cachedEndReason);
         }
-
-        UIManager.Instance.SetInGamePhase();
-    }
-
-    public void EnterFactory_Local()
-    {
-        EnterInGame_Local();
     }
 
     public void StartDay_Master()
     {
-        if (!PhotonNetwork.IsMasterClient)
+        if (!PhotonNetwork.IsMasterClient || _cachedState != DayState.Idle)
         {
             return;
         }
 
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
+        Hashtable props = new Hashtable
         {
-            { MatchKeys.DayState, (int)DayState.Running },
             { MatchKeys.DayStartTime, PhotonNetwork.Time },
-            { MatchKeys.DayDuration, _defaultDayDuration }
-        });
+            { MatchKeys.DayDuration, _defaultDayDuration },
+            { MatchKeys.EndingUntil, 0.0 },
+            { MatchKeys.DayState, (int)DayState.Running }
+        };
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
     }
 
     public void EndDay_Master(DayEndReason reason)
     {
-        if (!PhotonNetwork.IsMasterClient)
+        if (!PhotonNetwork.IsMasterClient || _cachedState != DayState.Running)
         {
             return;
         }
 
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
+        Hashtable props = new Hashtable
         {
-            { MatchKeys.DayState, (int)DayState.Ending },
-            { MatchKeys.DayEndReason, (int)reason }
-        });
-    }
+            { MatchKeys.DayEndReason, (int)reason },
+            { MatchKeys.EndingUntil, PhotonNetwork.Time + _endingDuration },
+            { MatchKeys.DayState, (int)DayState.Ending }
+        };
 
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+    }
     public override void OnRoomPropertiesUpdate(Hashtable changedProps)
     {
         if (changedProps == null)
@@ -157,95 +125,296 @@ public class GameManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        if (changedProps.TryGetValue(MatchKeys.DayState, out object stateValue))
+        if (changedProps.TryGetValue(MatchKeys.DayStartTime, out object start))
         {
-            DayState state = (DayState)(int)stateValue;
+            _dayStartNetworkTime = (double)start;
+        }
 
-            RefreshTiming();
+        if (changedProps.TryGetValue(MatchKeys.DayDuration, out object duration))
+        {
+            _defaultDayDuration = Convert.ToSingle(duration);
+        }
 
-            if (state == DayState.Running)
+        if (changedProps.TryGetValue(MatchKeys.DayEndReason, out object reason))
+        {
+            _cachedEndReason = (DayEndReason)(int)reason;
+        }
+
+        if (changedProps.TryGetValue(MatchKeys.EndingUntil, out object ending))
+        {
+            _cachedEndingUntil = (double)ending;
+        }
+
+        if (changedProps.TryGetValue(MatchKeys.DayState, out object state))
+        {
+            DayState newState = (DayState)(int)state;
+
+            if (newState != _cachedState)
             {
-                HandleDayStarted();
+                _cachedState = newState;
+                ApplyState_Local(newState);
             }
-            else if (state == DayState.Ending)
+        }
+    }
+
+    private void ApplyState_Local(DayState state)
+    {
+        if (state == DayState.Idle)
+        {
+            SetAllPlayersRoomMode();
+
+            UIManager.Instance.SetRoomPhase();
+            SpectatorCameraManager.Instance?.StopSpectate();
+
+            return;
+        }
+
+        if (state == DayState.Running)
+        {
+            SetAllPlayersInGameMode();
+
+            _remainTime = _defaultDayDuration;
+
+            UIManager.Instance.SetInGamePhase();
+
+            ActivateAndResetLocalPlayer();
+
+            PhotonPlayerStateManager.ResetDayFlags();
+
+            if (PhotonNetwork.IsMasterClient)
             {
-                HandleDayEnded();
+                FindFirstObjectByType<ItemSpawnManager>()?.Spawn();
+                FindFirstObjectByType<EnemySpawnManager>()?.StartDay();
+            }
+
+            return;
+        }
+
+        if (state == DayState.Ending)
+        {
+            SetAllPlayersRoomMode();
+
+            UIManager.Instance.ShowGameEndPanel(ConvertEndType(_cachedEndReason));
+
+            HandleInventoryByDayEndReason(_cachedEndReason);
+
+            ApplyRepairPenalty(_cachedEndReason);
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ApplyNextDayHpRules_Master(_cachedEndReason);
+                FindFirstObjectByType<ItemSpawnManager>()?.ResetForNextDay();
+                FindFirstObjectByType<EnemySpawnManager>()?.ResetForNextDay();
+            }
+        }
+    }
+
+    private async void ApplyRepairPenalty(DayEndReason reason)
+    {
+        if (FirebaseUserData.Instance == null)
+        {
+            return;
+        }
+
+        int penalty = 0;
+
+        if (reason == DayEndReason.ManualEnd)
+        {
+            penalty = 2;
+        }
+        else if (reason == DayEndReason.TimeOver)
+        {
+            penalty = 5;
+        }
+        else if (reason == DayEndReason.AllDead)
+        {
+            penalty = 10;
+        }
+
+        if (penalty <= 0)
+        {
+            return;
+        }
+
+        string key = SaveKeyProvider.GetPlayerKey();
+
+        int current = await FirebaseUserData.Instance.GetRepairPercentAsync(key);
+
+        int next = Mathf.Clamp(current - penalty, 0, 100);
+
+        await FirebaseUserData.Instance.SetRepairPercentAsync(key, next);
+
+        Debug.Log($"Repair penalty applied: -{penalty}% ¡æ {next}%");
+
+        FindFirstObjectByType<RepairPanelUI>()?.RefreshFromServer();
+    }
+
+    private void HandleInventoryByDayEndReason(DayEndReason reason)
+    {
+        if (reason == DayEndReason.TimeOver || reason == DayEndReason.AllDead)
+        {
+            QuickSlotManager.Instance.ClearAllSlots();
+        }
+
+    }
+
+    private void ActivateAndResetLocalPlayer()
+    {
+        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+        if (spawner == null)
+        {
+            return;
+        }
+
+        PlayerController localPlayer = FindLocalPlayer();
+
+        if (localPlayer == null)
+        {
+            localPlayer = spawner.SpawnLocalPlayer();
+            if (localPlayer == null)
+            {
+                return;
+            }
+
+            _cachedLocalPlayer = localPlayer;
+        }   
+        ApplyPlayerStartState(localPlayer);
+    }
+
+    private void ApplyPlayerStartState(PlayerController localPlayer)
+    {
+        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
+        if (spawner == null)
+        {
+            return;
+        }
+
+        Vector3 spawnPos = spawner.GetSpawnPosition(PhotonNetwork.LocalPlayer);
+        localPlayer.transform.position = spawnPos;
+
+        float hpRatio = PhotonPlayerStateManager.GetNextDayHpRatio(PhotonNetwork.LocalPlayer);
+
+        localPlayer.ResetForNewDay(hpRatio);
+        localPlayer.SetInGameMode();
+
+        SpectatorCameraManager.Instance?.StopSpectate();
+        SpectatorCameraManager.Instance?.ForceFollow(localPlayer.FollowTarget);
+    }
+
+    private PlayerController FindLocalPlayer()
+    {
+        if (_cachedLocalPlayer != null)
+        {
+            if (_cachedLocalPlayer.gameObject != null)
+            {
+                return _cachedLocalPlayer;
+            }
+
+            _cachedLocalPlayer = null;
+        }
+
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            PlayerController player = players[i];
+
+            if (player == null)
+            {
+                continue;
+            }
+
+            if (player.photonView == null)
+            {
+                continue;
+            }
+
+            if (player.photonView.IsMine)
+            {
+                _cachedLocalPlayer = player;
+                return player;
             }
         }
 
-        if (changedProps.TryGetValue(MatchKeys.DayStartTime, out object startValue))
-        {
-            _dayStartNetworkTime = (double)startValue;
-        }
-
-        if (changedProps.TryGetValue(MatchKeys.DayDuration, out object durationValue))
-        {
-            _defaultDayDuration = (float)durationValue;
-        }
+        return null;
     }
 
-    private void RefreshTiming()
+    private void SetAllPlayersRoomMode()
     {
-        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayStartTime, out object startValue))
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
         {
-            _dayStartNetworkTime = (double)startValue;
-        }
-
-        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayDuration, out object durationValue))
-        {
-            _defaultDayDuration = (float)durationValue;
-        }
-    }
-
-    private void HandleDayStarted()
-    {
-        IsRunning = true;
-        _remainTime = _defaultDayDuration;
-
-        EnterInGame_Local();
-
-        PhotonPlayerStateManager.ResetDayFlags();
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            FindFirstObjectByType<ItemSpawnManager>()?.Spawn();
-            FindFirstObjectByType<EnemySpawnManager>()?.StartDay();
-        }
-    }
-
-    private void HandleDayEnded()
-    {
-        IsRunning = false;
-
-        if (PhotonNetwork.IsMasterClient)
-        {
-            FindFirstObjectByType<ItemSpawnManager>()?.ResetForNextDay();
-            FindFirstObjectByType<EnemySpawnManager>()?.ResetForNextDay();
-
-            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
+            if (players[i] != null)
             {
-                { MatchKeys.DayState, (int)DayState.Idle }
-            });
+                players[i].SetRoomMode();
+            }
         }
-
-        UIManager.Instance.SetRoomPhase();
     }
 
-    private void LateUpdate()
+    private void ApplyNextDayHpRules_Master(DayEndReason reason)
+    {
+        Player[] players = PhotonNetwork.PlayerList;
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            Player player = players[i];
+
+            float ratio = 1f;
+
+            if (reason == DayEndReason.TimeOver)
+            {
+                ratio = 0.5f;
+            }
+            else if (reason == DayEndReason.AllDead)
+            {
+                ratio = 0.25f;
+            }
+
+            if (PhotonPlayerStateManager.GetWasDeadThisDay(player))
+            {
+                ratio *= 0.5f;
+            }
+
+            PhotonPlayerStateManager.SetNextDayHpRatio(player, ratio);
+            PhotonPlayerStateManager.SetState(player, PlayerGameState.Alive);
+        }
+    }
+
+    private GameEndType ConvertEndType(DayEndReason reason)
+    {
+        return reason == DayEndReason.TimeOver ? GameEndType.Fail_TimeOver : GameEndType.Fail_PlayerDead;
+    }
+
+    private void SetDayState_Master(DayState state, DayEndReason reason)
     {
         if (!PhotonNetwork.IsMasterClient)
         {
             return;
         }
 
-        if (IsRunning == false)
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
         {
-            return;
-        }
+            { MatchKeys.DayEndReason, (int)reason },
+            { MatchKeys.EndingUntil, 0.0 },
+            { MatchKeys.DayState, (int)state }
+        });
+    }
 
-        if (PhotonPlayerStateManager.AreAllPlayersDead())
+    private void SetAllPlayersInGameMode()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
         {
-            EndDay_Master(DayEndReason.AllDead);
+            if (players[i] != null)
+            {
+                players[i].SetInGameMode();
+            }
         }
+    }
+    public void ForceReturnToRoom()
+    {
+        SetAllPlayersRoomMode();
     }
 }

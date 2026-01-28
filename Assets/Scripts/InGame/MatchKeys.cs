@@ -25,6 +25,8 @@ public static class MatchKeys
     public const string DayDuration = "DayDuration";
     public const string DayEndReason = "DayEndReason";
 
+    public const string EndingUntil = "EndingUntil";
+
     public const string Ready = "Ready";
     public const string Loc = "Loc";
 

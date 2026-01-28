@@ -149,4 +149,14 @@ public class RepairPanelUI : MonoBehaviour
             data.quickSlots[i] = ItemId.NONE;
         }
     }
+
+    public async void RefreshFromServer()
+    {
+        if (_isLoading)
+        {
+            return;
+        }
+
+        await LoadRepairPercent();
+    }
 }
