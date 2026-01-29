@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
@@ -11,10 +12,16 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Slider _hpSlider;
     [SerializeField] private Text _hpText;
     [SerializeField] private Text _playerNameText;
+
+    [SerializeField] private GameObject _gameTimePanel;
     [SerializeField] private Text _timeText;
 
     [SerializeField] private GameObject _gameEndPanel;
     [SerializeField] private Text _gameEndText;
+
+    [SerializeField] private float _gameEndShowTime = 2.5f;
+
+    private Coroutine _gameEndRoutine;
 
     private void Awake()
     {
@@ -32,7 +39,7 @@ public class UIManager : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnTimeChanged += HandleTimeChanged;
-            HandleTimeChanged(GameManager.Instance.RemainTime);
+            GameManager.Instance.OnGameEndTriggered += HandleGameEnd;
         }
     }
 
@@ -41,42 +48,21 @@ public class UIManager : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.OnTimeChanged -= HandleTimeChanged;
+            GameManager.Instance.OnGameEndTriggered -= HandleGameEnd;
         }
     }
 
     public void SetRoomPhase()
     {
-        if (_roomUIRoot != null)
-        {
-            _roomUIRoot.SetActive(true);
-        }
-
-        if (_inGameUIRoot != null)
-        {
-            _inGameUIRoot.SetActive(false);
-        }
-
-        if (_gameEndPanel != null)
-        {
-            _gameEndPanel.SetActive(false);
-        }
+        _roomUIRoot.SetActive(true);
+        _inGameUIRoot.SetActive(false);
     }
 
     public void SetInGamePhase()
     {
 
-        if (_roomUIRoot == null || _inGameUIRoot == null)
-        {
-            return;
-        }
-
         _roomUIRoot.SetActive(false);
         _inGameUIRoot.SetActive(true);
-
-        if (_gameEndPanel != null)
-        {
-            _gameEndPanel.SetActive(false);
-        }
     }
 
     private void HandleTimeChanged(float remain)
@@ -91,7 +77,7 @@ public class UIManager : MonoBehaviour
 
         _timeText.text = $"{min:00}:{sec:00}";
     }
-    public void InitPlayerUI(string playerName, int currentHP, int maxHP)
+    public void InitPlayerUI(string playerName, float currentHP, float maxHP)
     {
         _playerNameText.text = playerName;
         _hpSlider.maxValue = maxHP;
@@ -99,30 +85,86 @@ public class UIManager : MonoBehaviour
         _hpText.text = $"{currentHP} / {maxHP}";
     }
 
-    public void UpdateHP(int currentHP, int maxHP)
+    public void UpdateHP(float currentHP, float maxHP)
     {
         _hpSlider.value = currentHP;
         _hpText.text = $"{currentHP} / {maxHP}";
     }
 
-    public void ShowGameEndPanel(GameEndType endType)
+    private void HandleGameEnd(GameEndType type)
     {
-        if (_gameEndPanel == null || _gameEndText == null)
+        if (_gameEndRoutine != null)
         {
-            return;
+            StopCoroutine(_gameEndRoutine);
         }
 
+        _gameEndRoutine = StartCoroutine(GameEndRoutine(type));
+    }
+
+    private IEnumerator GameEndRoutine(GameEndType type)
+    {
         _gameEndPanel.SetActive(true);
 
-        switch (endType)
+        switch (type)
         {
+            case GameEndType.Success:
+                _gameEndText.text = "Success";
+                break;
             case GameEndType.Fail_TimeOver:
                 _gameEndText.text = "TIME OVER";
                 break;
-
             case GameEndType.Fail_PlayerDead:
                 _gameEndText.text = "YOU DIED";
                 break;
+        }
+
+        PlayerController local = FindLocalPlayer();
+        if (local != null)
+        {
+            local.SetInputEnabled(false);
+        }
+
+        yield return new WaitForSeconds(_gameEndShowTime);
+
+        _gameEndPanel.SetActive(false);
+
+        if (local != null && GameManager.Instance != null)
+        {
+            if (GameManager.Instance.RemainTime > 0f)
+            {
+                local.SetInputEnabled(true);
+            }
+        }
+    }
+
+    private PlayerController FindLocalPlayer()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] != null && players[i].photonView.IsMine)
+            {
+                return players[i];
+            }
+        }
+
+        return null;
+    }
+
+    public void ShowTimer()
+    {
+        if (_gameTimePanel != null)
+        {
+            _gameTimePanel.SetActive(true);
+        }
+    }
+
+    public void HideTimer()
+    {
+        if (_gameTimePanel != null)
+        {
+            _gameTimePanel.SetActive(false);
         }
     }
 }

@@ -16,4 +16,13 @@ public class EnemyState : MonoBehaviour
     {
         current = next;
     }
+    public void SetRemoteState(State next)
+    {
+        if (current == State.Dead)
+        {
+            return;
+        }
+
+        current = next;
+    }
 }

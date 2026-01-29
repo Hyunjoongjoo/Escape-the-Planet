@@ -27,13 +27,7 @@ public class WeaponHitBox : MonoBehaviour
 
         _ownerView = GetComponentInParent<PhotonView>();
     }
-    private void EnsureCollider()
-    {
-        if (_col == null)
-        {
-            _col = GetComponent<BoxCollider2D>();
-        }
-    }
+
     public void ApplyWeapon(WeaponData weapon)
     {
         if (weapon == null)
@@ -68,6 +62,7 @@ public class WeaponHitBox : MonoBehaviour
             _hitTargets.Clear();
         }
     }
+
     public void SetFacing(int facing)
     {
         _facing = (facing >= 0) ? 1 : -1;
@@ -93,25 +88,39 @@ public class WeaponHitBox : MonoBehaviour
             return;
         }
 
-        if (_ownerView != null && _ownerView.IsMine == false)
+        if (_ownerView == null || _ownerView.IsMine == false)
         {
             return;
         }
 
         if (other.TryGetComponent(out EnemyController enemy))
         {
-            enemy.TakeDamage(_damage);
+            PhotonView enemyView = enemy.photonView;
+            if (enemyView == null)
+            {
+                return;
+            }
+
+            if (_hitTargets.Contains(enemyView.ViewID))
+            {
+                return;
+            }
+
+            _hitTargets.Add(enemyView.ViewID);
+
+            enemyView.RPC("RPC_RequestDamage", RpcTarget.MasterClient, _damage);
+
             return;
         }
 
-        PlayerController player = other.GetComponentInParent<PlayerController>();
-        if (player == null)
+        PlayerController targetPlayer = other.GetComponentInParent<PlayerController>();
+        if (targetPlayer == null)
         {
             return;
         }
 
-        PhotonView targetView = player.GetComponent<PhotonView>();
-        if (targetView == null || _ownerView == null)
+        PhotonView targetView = targetPlayer.photonView;
+        if (targetView == null)
         {
             return;
         }
@@ -128,8 +137,6 @@ public class WeaponHitBox : MonoBehaviour
 
         _hitTargets.Add(targetView.ViewID);
 
-        player.RequestDamageFromOther(_damage, _ownerView.ViewID);
+        targetPlayer.RequestDamageFromOther(_damage, _ownerView.ViewID);
     }
 }
-    
-

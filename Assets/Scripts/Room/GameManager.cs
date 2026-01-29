@@ -24,9 +24,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] private float _defaultDayDuration = 300f;
+    [SerializeField] private float _defaultDayDuration = 600f;
 
-    [SerializeField] private float _endingDuration = 3f;
+    [SerializeField] private float _endingDuration = 5f;
 
     private float _remainTime;
     private double _dayStartNetworkTime;
@@ -38,9 +38,11 @@ public class GameManager : MonoBehaviourPunCallbacks
     private PlayerController _cachedLocalPlayer;
 
     public float RemainTime => _remainTime;
+    public float DefaultDayDuration => _defaultDayDuration;
     public bool IsRunning { get; private set; }
 
     public event Action<float> OnTimeChanged;
+    public event Action<GameEndType> OnGameEndTriggered;
 
     private void Awake()
     {
@@ -161,24 +163,23 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         if (state == DayState.Idle)
         {
+            IsRunning = false;
             SetAllPlayersRoomMode();
-
             UIManager.Instance.SetRoomPhase();
             SpectatorCameraManager.Instance?.StopSpectate();
-
             return;
         }
 
         if (state == DayState.Running)
         {
+            IsRunning = true;
             SetAllPlayersInGameMode();
-
             _remainTime = _defaultDayDuration;
-
             UIManager.Instance.SetInGamePhase();
+            UIManager.Instance.ShowTimer();
 
+            ResetAllPlayersForNewDay_AllClients();
             ActivateAndResetLocalPlayer();
-
             PhotonPlayerStateManager.ResetDayFlags();
 
             if (PhotonNetwork.IsMasterClient)
@@ -192,12 +193,14 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (state == DayState.Ending)
         {
+            IsRunning = false;
+            OnGameEndTriggered?.Invoke(ConvertEndType(_cachedEndReason));
+
             SetAllPlayersRoomMode();
 
-            UIManager.Instance.ShowGameEndPanel(ConvertEndType(_cachedEndReason));
+            UIManager.Instance.HideTimer();
 
             HandleInventoryByDayEndReason(_cachedEndReason);
-
             ApplyRepairPenalty(_cachedEndReason);
 
             if (PhotonNetwork.IsMasterClient)
@@ -206,6 +209,22 @@ public class GameManager : MonoBehaviourPunCallbacks
                 FindFirstObjectByType<ItemSpawnManager>()?.ResetForNextDay();
                 FindFirstObjectByType<EnemySpawnManager>()?.ResetForNextDay();
             }
+        }
+    }
+
+    private void ResetAllPlayersForNewDay_AllClients()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            PlayerController player = players[i];
+            if (player == null)
+            {
+                continue;
+            }
+
+            player.ResetForNewDay(1f);
         }
     }
 
@@ -383,7 +402,16 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private GameEndType ConvertEndType(DayEndReason reason)
     {
-        return reason == DayEndReason.TimeOver ? GameEndType.Fail_TimeOver : GameEndType.Fail_PlayerDead;
+        switch (reason)
+        {
+            case DayEndReason.TimeOver:
+                return GameEndType.Fail_TimeOver;
+            case DayEndReason.AllDead:
+                return GameEndType.Fail_PlayerDead;
+            case DayEndReason.ManualEnd:
+            default:
+                return GameEndType.Success;
+        }
     }
 
     private void SetDayState_Master(DayState state, DayEndReason reason)

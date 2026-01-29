@@ -20,8 +20,7 @@ GameObject:
   - component: {fileID: 6382597744313503650}
   - component: {fileID: 8141405357572836501}
   - component: {fileID: -5945330010936449687}
-  - component: {fileID: -8099228464058533668}
-  - component: {fileID: -1198515073992123932}
+  - component: {fileID: -4133239758274957484}
   m_Layer: 0
   m_Name: Chaser
   m_TagString: Enemy
@@ -244,7 +243,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   _data: {fileID: 11400000, guid: f4540e269ef5de9459ee5a947660decc, type: 2}
-  _damageInterval: 0.5
+  _contactInterval: 0.4
+  _destroyDelay: 1
 --- !u!114 &6382597744313503650
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -262,11 +262,8 @@ MonoBehaviour:
   _maxExpand: 2500
   _repathCellThreshold: 2
   _waypointReachDist: 0.3
-  _isForced: 0
   _fallbackSpeedMultiplier: 1
   _goalFixRadius: 4
-  _forcedSearchRadius: 10
-  _forcedSearchSamples: 60
   _agentRadius: 0.45
   _lookAhead: 0.6
 --- !u!114 &8141405357572836501
@@ -307,12 +304,12 @@ MonoBehaviour:
   OwnershipTransfer: 0
   observableSearch: 2
   ObservedComponents:
-  - {fileID: -8099228464058533668}
-  - {fileID: -1198515073992123932}
+  - {fileID: 7086554905837338611}
+  - {fileID: -4133239758274957484}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &-8099228464058533668
+--- !u!114 &-4133239758274957484
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -326,10 +323,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonTransformViewClassic
   m_PositionModel:
     SynchronizeEnabled: 1
-    TeleportEnabled: 1
-    TeleportIfDistanceGreaterThan: 3
-    InterpolateOption: 2
-    InterpolateMoveTowardsSpeed: 1
+    TeleportEnabled: 0
+    TeleportIfDistanceGreaterThan: 0
+    InterpolateOption: 1
+    InterpolateMoveTowardsSpeed: 12
     InterpolateLerpSpeed: 1
     ExtrapolateOption: 0
     ExtrapolateSpeed: 1
@@ -345,33 +342,6 @@ MonoBehaviour:
     InterpolateOption: 0
     InterpolateMoveTowardsSpeed: 1
     InterpolateLerpSpeed: 0
---- !u!114 &-1198515073992123932
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3677597617400711434}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b8c4a61274f60b4ea5fb4299cfdbf14, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PhotonUnityNetworking::Photon.Pun.PhotonAnimatorView
-  ShowLayerWeightsInspector: 1
-  ShowParameterInspector: 1
-  m_SynchronizeParameters:
-  - Type: 1
-    SynchronizeType: 1
-    Name: Speed
-  - Type: 9
-    SynchronizeType: 0
-    Name: Hit
-  - Type: 4
-    SynchronizeType: 1
-    Name: IsDead
-  m_SynchronizeLayers:
-  - SynchronizeType: 0
-    LayerIndex: 0
 --- !u!1 &7166320063955877642
 GameObject:
   m_ObjectHideFlags: 0

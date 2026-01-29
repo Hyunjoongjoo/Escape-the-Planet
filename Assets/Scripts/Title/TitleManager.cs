@@ -58,6 +58,9 @@ public class TitleManager : MonoBehaviourPunCallbacks
         PhotonNetwork.PhotonServerSettings.AppSettings.UseNameServer = true;
         PhotonNetwork.PhotonServerSettings.AppSettings.FixedRegion = "kr";
 
+        PhotonNetwork.SendRate = 40;
+        PhotonNetwork.SerializationRate = 20;
+
         Debug.Log("ø¨∞·¡ﬂ");
         _connectionStatusText.text = "Connecting...";
         PhotonNetwork.ConnectUsingSettings();

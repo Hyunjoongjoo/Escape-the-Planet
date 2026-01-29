@@ -4,8 +4,8 @@ using UnityEngine;
 public class PlayerModel
 {
     public float moveSpeed;
-    public int maxHP;
-    public int currentHP;
+    public float maxHP;
+    public float currentHP;
     public float attackPower;
     public WeaponData currentWeapon;
 

@@ -38,6 +38,7 @@ public class EnemyModel
         moveSpeed = Mathf.Max(0.1f, moveSpeed * spdMul);
 
         currentHP = maxHP;
+        Debug.Log($"SPAWN FINAL DAMAGE = {contactDamage}");
     }
 
     public void TakeDamage(int dmg)

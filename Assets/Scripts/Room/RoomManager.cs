@@ -44,11 +44,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
     public override void OnJoinedRoom()
     {
         base.OnJoinedRoom();
-        PlayerSpawner spawner = FindFirstObjectByType<PlayerSpawner>();
-        if (spawner != null)
-        {
-            spawner.SpawnLocalPlayer();
-        }
 
         StartCoroutine(RefreshUIAfterJoin());
     }

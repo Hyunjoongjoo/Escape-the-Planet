@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: PlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStats
   baseMoveSpeed: 10
-  baseMaxHP: 10
+  baseMaxHP: 100
   baseAttackPower: 10
   baseInteractRange: 1.2

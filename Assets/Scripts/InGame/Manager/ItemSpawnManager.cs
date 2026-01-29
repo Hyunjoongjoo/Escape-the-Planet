@@ -97,7 +97,7 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
                 item.spawnRadius
             );
 
-            GameObject spawnedObject = PhotonNetwork.Instantiate(
+            GameObject spawnedObject = PhotonNetwork.InstantiateRoomObject(
                 _groundItemPrefabName,
                 spawnPosition,
                 Quaternion.identity

@@ -8,10 +8,10 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
     [SerializeField] private EnemyDatabase _enemyDatabase;
     [SerializeField] private Transform _spawnPointsRoot;
 
-    [SerializeField] private int _maxAlive = 8;
+    [SerializeField] private int _maxAlive = 20;
 
-    [SerializeField] private float _startInterval = 12f;
-    [SerializeField] private float _endInterval = 5f;
+    [SerializeField] private float _startInterval = 15f;
+    [SerializeField] private float _endInterval = 4.5f;
 
     [SerializeField] private LayerMask _blockedMask;
     [SerializeField] private float _checkRadius = 0.3f;
@@ -97,6 +97,8 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
         _spawnStartedThisDay = true;
         _spawnTimer = 0f;
         _lastSpawnedId = EnemyId.NONE;
+
+        _alive.Clear();
     }
 
     public void ResetForNextDay()
@@ -164,7 +166,7 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             enemyData.spawnRadius
         );
 
-        GameObject spawnedObject = PhotonNetwork.Instantiate(
+        GameObject spawnedObject = PhotonNetwork.InstantiateRoomObject(
             enemyData.prefabName,
             spawnPosition,
             Quaternion.identity
@@ -176,8 +178,9 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        enemy.Init(enemyData, GameManager.Instance.RemainTime / 60f);
-
+        //enemy.Init(enemyData, GameManager.Instance.RemainTime / 60f);
+        float elapsedMinutes = (GameManager.Instance.DefaultDayDuration - GameManager.Instance.RemainTime) / 60f;
+        enemy.Init(enemyData, elapsedMinutes);
         _alive.Add(enemy);
         _lastSpawnedId = enemyData.id;
     }

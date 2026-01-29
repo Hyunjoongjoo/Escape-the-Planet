@@ -9,7 +9,7 @@ using Photon.Realtime;
 [RequireComponent(typeof(PlayerView))]
 [RequireComponent(typeof(PlayerState))]
 [RequireComponent(typeof(PhotonView))]
-public class PlayerController : MonoBehaviourPun, IPunObservable
+public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 {
     [SerializeField] private PlayerStats _baseStats;
     [SerializeField] private float _hitStunTime = 0.2f;
@@ -54,11 +54,13 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     private bool _inputEnabled = true;
     private bool _droppedAllOnDeath = false;
 
-    private Vector3 _prevNetPos;
-    private Vector2 _netVelocity;
-    private bool _netInit = false;
+    private Vector3 _remotePrevPos;
+    private float _remoteSpeed01 = 0f;
+    private bool _remoteInit = false;
 
     private int _netFacing = 1;
+
+    private bool _netIsDead = false;
 
     public static event Action OnPlayerDead;
 
@@ -88,6 +90,18 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         {
             _weaponHitBox = GetComponentInChildren<WeaponHitBox>(true);
         }
+    }
+
+    public override void OnEnable()
+    {
+        base.OnEnable();
+        PlayerRegistry.Instance?.Register(this);
+    }
+
+    public override void OnDisable()
+    {
+        PlayerRegistry.Instance?.Unregister(this);
+        base.OnDisable();
     }
 
     public void OnMove(InputAction.CallbackContext ctx)
@@ -160,6 +174,11 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     private void Start()
     {
+        if (PlayerRegistry.Instance != null)
+        {
+            PlayerRegistry.Instance.Register(this);
+        }
+
         if (photonView.IsMine && PhotonNetwork.InRoom)
         {
             PhotonPlayerLocationManager.SetLocation(PlayerLocation.InGame);
@@ -179,8 +198,9 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
             _rigid.linearVelocity = Vector2.zero;
             _rigid.angularVelocity = 0f;
 
-            _prevNetPos = transform.position;
-            _netInit = true;
+            _remotePrevPos = transform.position;
+            _remoteInit = true;
+            _remoteSpeed01 = 0f;
 
             return;
         }
@@ -198,6 +218,14 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         UIManager.Instance.InitPlayerUI(nickname, _model.currentHP, _model.maxHP);
 
         StartCoroutine(BindCinemachineRoutine());
+    }
+
+    private void OnDestroy()
+    {
+        if (PlayerRegistry.Instance != null)
+        {
+            PlayerRegistry.Instance.Unregister(this);
+        }
     }
 
     private void EnsureWeaponApplied()
@@ -240,39 +268,98 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     private void Update()
     {
-        if (_isDead) { return; }
         if (!photonView.IsMine)
         {
-            UpdateNetMotion();
+            ApplyRemoteDeadSync();
+            UpdateRemoteAnimSpeed();
             _facing = _netFacing;
+        }
+
+        if (_isDead)
+        {
+            _view.SetDead(true);
+            return;
         }
 
         UpdateAnimations();
     }
 
-    private void UpdateNetMotion()
+    private void ApplyRemoteDeadSync()
+    {
+        if (photonView.IsMine)
+        {
+            return;
+        }
+
+        if (_netIsDead && !_isDead)
+        {
+            _isDead = true;
+            _state.ChangeState(PlayerState.State.Dead);
+            _view.SetDead(true);
+
+            if (_weaponHitBox != null)
+            {
+                _weaponHitBox.SetActive(false);
+            }
+
+            if (_rigid != null)
+            {
+                _rigid.linearVelocity = Vector2.zero;
+                _rigid.bodyType = RigidbodyType2D.Kinematic;
+            }
+
+            Collider2D col = GetComponent<Collider2D>();
+            if (col != null)
+            {
+                col.isTrigger = true;
+            }
+        }
+    }
+
+    private void UpdateRemoteAnimSpeed()
     {
         if (_isDead)
         {
-            _netVelocity = Vector2.zero;
+            _remoteSpeed01 = 0f;
             return;
         }
 
-        if (_netInit == false)
+        if (_remoteInit == false)
         {
-            _prevNetPos = transform.position;
-            _netInit = true;
+            _remotePrevPos = transform.position;
+            _remoteInit = true;
+            _remoteSpeed01 = 0f;
             return;
         }
 
-        Vector3 delta = transform.position - _prevNetPos;
-        _prevNetPos = transform.position;
+        Vector3 currentPos = transform.position;
+        Vector3 delta = currentPos - _remotePrevPos;
+        _remotePrevPos = currentPos;
 
         float dt = Time.deltaTime;
+        if (dt <= 0f)
+        {
+            _remoteSpeed01 = 0f;
+            return;
+        }
 
-        if (dt <= 0f) { return; }
+        float snapDist = 0.9f;
+        if (delta.sqrMagnitude > snapDist * snapDist)
+        {
+            _remoteSpeed01 = 0f;
+            return;
+        }
 
-        _netVelocity = new Vector2(delta.x, delta.y) / dt;
+        float speed = delta.magnitude / dt;
+
+        if (_model != null && _model.moveSpeed > 0f)
+        {
+            _remoteSpeed01 = Mathf.Clamp01(speed / _model.moveSpeed);
+        }
+        else
+        {
+            _remoteSpeed01 = 0f;
+        }
     }
 
     private void UpdateAnimations()
@@ -297,7 +384,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         }
         else
         {
-            speed01 = Mathf.Clamp01(_netVelocity.magnitude / _model.moveSpeed);
+            speed01 = _remoteSpeed01;
         }
 
         _view.SetMove(_facing, speed01);
@@ -309,16 +396,12 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         if (_isDead) { return; }
 
         Move();
-
         ResolveSoftPlayerBlock();
     }
 
     private void ResolveSoftPlayerBlock()
     {
-        Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(
-            transform.position,
-            _softBlockRadius
-        );
+        Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(transform.position, _softBlockRadius);
 
         for (int i = 0; i < hitPlayers.Length; i++)
         {
@@ -342,7 +425,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
                 float pushAmount = _softBlockRadius - distance;
 
                 Vector2 pushDirection = difference.normalized;
-
                 Vector2 push = pushDirection * pushAmount * _softBlockStrength;
 
                 transform.position += (Vector3)push;
@@ -370,14 +452,22 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         }
     }
 
-    public void TakeDamageByEnemy(int damage)
+    public void ApplyDamage_FromMaster(int damage)
     {
-        if (_isDead) { return; }
         if (!photonView.IsMine) { return; }
+        if (_isDead) { return; }
         if (_isInvincible) { return; }
 
         photonView.RPC(nameof(RPC_PlayHit), RpcTarget.All);
+        TakeDamage_OwnerOnly(damage);
+    }
 
+    public void RequestTakeDamage(int damage)
+    {
+        if (_isDead) { return; }
+        if (_isInvincible) { return; }
+
+        photonView.RPC(nameof(RPC_PlayHit), RpcTarget.All);
         TakeDamage_OwnerOnly(damage);
     }
 
@@ -441,7 +531,10 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         _rigid.bodyType = RigidbodyType2D.Kinematic;
 
         Collider2D col = GetComponent<Collider2D>();
-        col.isTrigger = true;
+        if (col != null)
+        {
+            col.isTrigger = true;
+        }
 
         _weaponHitBox.SetActive(false);
 
@@ -517,6 +610,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
     {
         if (_isDead) { return; }
         if (_state.current != PlayerState.State.Attack) { return; }
+
         if (!photonView.IsMine)
         {
             _state.ChangeState(PlayerState.State.Idle);
@@ -535,22 +629,52 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
     public void RequestDamageFromOther(int damage, int attackerViewId)
     {
-        photonView.RPC(nameof(RPC_RequestDamage), RpcTarget.All, photonView.ViewID, damage, attackerViewId);
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        photonView.RPC(
+            nameof(RPC_RequestDamageToMaster),
+            RpcTarget.MasterClient,
+            photonView.ViewID,
+            damage,
+            attackerViewId
+        );
     }
 
     [PunRPC]
-    private void RPC_RequestDamage(int targetViewId, int damage, int attackerViewId)
+    private void RPC_RequestDamageToMaster(int targetViewId, int damage, int attackerViewId, PhotonMessageInfo info)
     {
-        PhotonView target = PhotonView.Find(targetViewId);
-        PlayerController player = target.GetComponent<PlayerController>();
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
 
-        if (target.IsMine == false) { return; }
-        if (player._isDead) { return; }
-        if (player._isInvincible) { return; }
+        PhotonView targetView = PhotonView.Find(targetViewId);
+        if (targetView == null)
+        {
+            return;
+        }
 
-        player.photonView.RPC(nameof(RPC_PlayHit), RpcTarget.All);
+        PlayerController targetPlayer = targetView.GetComponent<PlayerController>();
+        if (targetPlayer == null)
+        {
+            return;
+        }
 
-        player.TakeDamage_OwnerOnly(damage);
+        if (targetPlayer._isDead)
+        {
+            return;
+        }
+
+        targetView.RPC(nameof(RPC_ApplyDamageFromMaster), targetView.Owner, damage);
+    }
+
+    [PunRPC]
+    public void RPC_ApplyDamageFromMaster(int damage)
+    {
+        ApplyDamage_FromMaster(damage);
     }
 
     [PunRPC]
@@ -583,10 +707,18 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
             return;
         }
 
-        StopCoroutine(_hitRecoverCoroutine);
+        if (_hitRecoverCoroutine != null)
+        {
+            StopCoroutine(_hitRecoverCoroutine);
+            _hitRecoverCoroutine = null;
+        }
         _hitRecoverCoroutine = StartCoroutine(HitRecoverRoutine());
 
-        StopCoroutine(_invincibleCoroutine);
+        if (_invincibleCoroutine != null)
+        {
+            StopCoroutine(_invincibleCoroutine);
+            _invincibleCoroutine = null;
+        }
         _invincibleCoroutine = StartCoroutine(InvincibleRoutine());
     }
 
@@ -675,47 +807,61 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         }
     }
 
+
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)
         {
             stream.SendNext(_facing);
+            stream.SendNext(_isDead);
         }
         else
         {
             _netFacing = (int)stream.ReceiveNext();
+            _netIsDead = (bool)stream.ReceiveNext();
         }
     }
 
     public void ResetForNewDay(float hpRatio)
     {
+        ResetForNewDay_AllClients();
+
+        if (photonView.IsMine)
+        {
+            ResetForNewDay_Local(hpRatio);
+        }
+    }
+
+    public void ResetForNewDay_AllClients()
+    {
         _isDead = false;
+        _netIsDead = false;
         _droppedAllOnDeath = false;
 
         _state.ChangeState(PlayerState.State.Idle);
 
         _view.SetDead(false);
-
+        _view.SetVisible(true);
         _view.ForceResetAnimator();
 
-        if (photonView.IsMine)
+        if (_weaponHitBox != null)
         {
-            _rigid.bodyType = RigidbodyType2D.Dynamic;
+            _weaponHitBox.SetActive(false);
+            _weaponHitBox.SetFacing(_facing);
         }
-        else
-        {
-            _rigid.bodyType = RigidbodyType2D.Kinematic;
-        }
-        //_rigid.bodyType = RigidbodyType2D.Dynamic;
-        _rigid.linearVelocity = Vector2.zero;
-        _rigid.angularVelocity = 0f;
 
         Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+        {
+            col.isTrigger = false;
+            col.enabled = true;
+        }
 
-        col.isTrigger = false;
-        col.enabled = true;
-
-        _weaponHitBox.SetActive(false);
+        if (_rigid != null)
+        {
+            _rigid.linearVelocity = Vector2.zero;
+            _rigid.angularVelocity = 0f;
+        }
 
         _isInvincible = false;
 
@@ -729,40 +875,35 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         {
             StopCoroutine(_hitRecoverCoroutine);
         }
-        ;
         _hitRecoverCoroutine = null;
-
-        //int hp = Mathf.RoundToInt(_model.maxHP * hpRatio);
-        //if (hp < 1)
-        //{
-        //    hp = 1;
-        //}
-
-        //_model.currentHP = hp;
-        //UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
-
-        //SetInputEnabled(true);
-        //_view.SetVisible(true);
-
-        if (photonView.IsMine)
-        {
-            int hp = Mathf.RoundToInt(_model.maxHP * hpRatio);
-            if (hp < 1)
-            {
-                hp = 1;
-            }
-
-            _model.currentHP = hp;
-            UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
-        }
-
-        if (photonView.IsMine)
-        {
-            SetInputEnabled(true);
-        }
-
-        _view.SetVisible(true);
     }
+
+    private void ResetForNewDay_Local(float hpRatio)
+    {
+        int hp = Mathf.RoundToInt(_model.maxHP * hpRatio);
+        if (hp < 1)
+        {
+            hp = 1;
+        }
+
+        _model.currentHP = hp;
+        UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
+
+        SetInputEnabled(true);
+
+        if (_playerInput != null)
+        {
+            _playerInput.enabled = true;
+        }
+
+        if (_rigid != null)
+        {
+            _rigid.bodyType = RigidbodyType2D.Dynamic;
+            _rigid.linearVelocity = Vector2.zero;
+            _rigid.angularVelocity = 0f;
+        }
+    }
+
     public void SetRoomMode()
     {
         if (photonView.IsMine)
@@ -792,7 +933,10 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         }
 
         Collider2D col = GetComponent<Collider2D>();
-        col.enabled = false;
+        if (col != null)
+        {
+            col.enabled = false;
+        }
 
         _view.SetVisible(false);
     }
@@ -825,7 +969,10 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
         }
 
         Collider2D col = GetComponent<Collider2D>();
-        col.enabled = true;
+        if (col != null)
+        {
+            col.enabled = true;
+        }
 
         _view.SetVisible(true);
     }

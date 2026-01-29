@@ -49,6 +49,10 @@ public class PlayerView : MonoBehaviour
     {
         _anim.Rebind();
         _anim.Update(0f);
+        _anim.SetBool("IsDead", false); 
+        _anim.ResetTrigger("Hit");     
+        _anim.ResetTrigger("Attack");   
+
         _anim.Play("IdleAndRun", 0, 0f);
         _anim.Update(0f);
     }

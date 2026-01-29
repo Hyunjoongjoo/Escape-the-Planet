@@ -42,4 +42,16 @@ public class EnemyView : MonoBehaviour
     {
         _anim.SetBool("IsDead", true);
     }
+
+    public void SetAlpha(float alpha)
+    {
+        if (_sprite == null)
+        {
+            return;
+        }
+
+        Color c = _sprite.color;
+        c.a = alpha;
+        _sprite.color = c;
+    }
 }
