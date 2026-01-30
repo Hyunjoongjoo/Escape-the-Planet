@@ -56,6 +56,7 @@ public class UIManager : MonoBehaviour
     {
         _roomUIRoot.SetActive(true);
         _inGameUIRoot.SetActive(false);
+        FindFirstObjectByType<RepairPanelUI>()?.RefreshFromRoom(GameManager.Instance.GetRepair());
     }
 
     public void SetInGamePhase()

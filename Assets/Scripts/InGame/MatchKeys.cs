@@ -24,6 +24,7 @@ public static class MatchKeys
     public const string DayStartTime = "DayStartTime";
     public const string DayDuration = "DayDuration";
     public const string DayEndReason = "DayEndReason";
+    public const string Repair = "Repair";
 
     public const string EndingUntil = "EndingUntil";
 

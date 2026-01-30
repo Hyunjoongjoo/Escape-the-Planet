@@ -120,6 +120,32 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         PhotonNetwork.CurrentRoom.SetCustomProperties(props);
     }
+
+    public void AddRepair_Master(int amount)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        int currentRepair = 0;
+
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+            MatchKeys.Repair, out object value))
+        {
+            currentRepair = (int)value;
+        }
+
+        currentRepair = Mathf.Clamp(currentRepair + amount, 0, 100);
+
+        Hashtable props = new Hashtable
+    {
+        { MatchKeys.Repair, currentRepair }
+    };
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(props);
+    }
+
     public override void OnRoomPropertiesUpdate(Hashtable changedProps)
     {
         if (changedProps == null)
@@ -155,6 +181,17 @@ public class GameManager : MonoBehaviourPunCallbacks
             {
                 _cachedState = newState;
                 ApplyState_Local(newState);
+            }
+        }
+
+        if (changedProps.TryGetValue(MatchKeys.Repair, out object repairValue))
+        {
+            int repair = (int)repairValue;
+
+            RepairPanelUI panel = FindFirstObjectByType<RepairPanelUI>();
+            if (panel != null)
+            {
+                panel.RefreshFromRoom(repair);
             }
         }
     }
@@ -228,9 +265,9 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
-    private async void ApplyRepairPenalty(DayEndReason reason)
+    private void ApplyRepairPenalty(DayEndReason reason)
     {
-        if (FirebaseUserData.Instance == null)
+        if (!PhotonNetwork.IsMasterClient)
         {
             return;
         }
@@ -255,17 +292,23 @@ public class GameManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        string key = SaveKeyProvider.GetPlayerKey();
-
-        int current = await FirebaseUserData.Instance.GetRepairPercentAsync(key);
-
+        int current = GetRepair();
         int next = Mathf.Clamp(current - penalty, 0, 100);
 
-        await FirebaseUserData.Instance.SetRepairPercentAsync(key, next);
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { MatchKeys.Repair, next } });
 
-        Debug.Log($"Repair penalty applied: -{penalty}% ¡æ {next}%");
+        Debug.Log($"[Repair] Penalty -{penalty} ¡æ {next}");
+    }
 
-        FindFirstObjectByType<RepairPanelUI>()?.RefreshFromServer();
+    public int GetRepair()
+    {
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
+            MatchKeys.Repair, out object value))
+        {
+            return (int)value;
+        }
+
+        return 0;
     }
 
     private void HandleInventoryByDayEndReason(DayEndReason reason)

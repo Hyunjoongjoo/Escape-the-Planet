@@ -17,6 +17,27 @@ public class NetworkRelay : MonoBehaviourPunCallbacks
         Instance = this;
     }
 
+    public void RequestRepair(int amount)
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        photonView.RPC(nameof(RPC_RequestRepair), RpcTarget.MasterClient, amount);
+    }
+
+    [PunRPC]
+    private void RPC_RequestRepair(int amount)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        GameManager.Instance.AddRepair_Master(amount);
+    }
+
     public void RequestStartDay()
     {
         if (!PhotonNetwork.InRoom)

@@ -1,6 +1,7 @@
+using System.Threading.Tasks;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Threading.Tasks;
 
 public class RepairPanelUI : MonoBehaviour
 {
@@ -9,8 +10,7 @@ public class RepairPanelUI : MonoBehaviour
 
     [SerializeField] private ItemDatabase _itemDatabase;
 
-    private int _repairPercent = 0;
-    private bool _isLoading = false;
+    private int _currentRepair = 0;
 
     private void Awake()
     {
@@ -22,35 +22,16 @@ public class RepairPanelUI : MonoBehaviour
 
     private void Start()
     {
-        _ = LoadRepairPercent();
+        if (GameManager.Instance != null)
+        {
+            RefreshFromRoom(GameManager.Instance.GetRepair());
+        }
     }
 
-    private async Task LoadRepairPercent()
+    public void RefreshFromRoom(int repair)
     {
-        if (_isLoading == true)
-        {
-            return;
-        }
-
-        _isLoading = true;
-
-        while (FirebaseUserData.Instance != null && FirebaseUserData.Instance.IsReady == false)
-        {
-            await Task.Delay(100);
-        }
-
-        if (FirebaseUserData.Instance == null)
-        {
-            _isLoading = false;
-            return;
-        }
-
-        string key = SaveKeyProvider.GetPlayerKey();
-
-        _repairPercent = await FirebaseUserData.Instance.GetRepairPercentAsync(key);
+        _currentRepair = repair;
         RefreshText();
-
-        _isLoading = false;
     }
 
     private void RefreshText()
@@ -60,12 +41,12 @@ public class RepairPanelUI : MonoBehaviour
             return;
         }
 
-        _repairText.text = $"¼ö¸®·ü : {_repairPercent}%";
+        _repairText.text = $"¼ö¸®·ü : {_currentRepair}%";
     }
 
-    private async void OnClickSettle()
+    private void OnClickSettle()
     {
-        if (_isLoading == true)
+        if (GameManager.Instance == null)
         {
             return;
         }
@@ -88,28 +69,17 @@ public class RepairPanelUI : MonoBehaviour
             return;
         }
 
-        int newValue = Mathf.Clamp(_repairPercent + gain, 0, 100);
-        _isLoading = true;
-
-        await FirebaseUserData.Instance.SetRepairPercentAsync(key, newValue);
-
-        _repairPercent = newValue;
-        RefreshText();
+        NetworkRelay.Instance.RequestRepair(gain);
 
         ClearSaveDataQuickSlots(data);
         SaveManager.Save(key, data);
 
-        if (QuickSlotManager.Instance != null)
-        {
-            QuickSlotManager.Instance.ClearAllSlots(); 
-        }
-
-        _isLoading = false;
+        QuickSlotManager.Instance?.ClearAllSlots();
     }
 
     private int CalculateRepairGainFromSaveData(SaveData data)
     {
-        if (data == null || data.quickSlots == null)
+        if (data.quickSlots == null)
         {
             return 0;
         }
@@ -125,13 +95,13 @@ public class RepairPanelUI : MonoBehaviour
                 continue;
             }
 
-            ItemData itemData = _itemDatabase.GetItem(itemId);
-            if (itemData == null)
+            ItemData item = _itemDatabase.GetItem(itemId);
+            if (item == null)
             {
                 continue;
             }
 
-            total += Mathf.Max(0, Mathf.RoundToInt(itemData.repairPoint));
+            total += Mathf.Max(0, Mathf.RoundToInt(item.repairPoint));
         }
 
         return total;
@@ -139,24 +109,9 @@ public class RepairPanelUI : MonoBehaviour
 
     private void ClearSaveDataQuickSlots(SaveData data)
     {
-        if (data == null || data.quickSlots == null)
-        {
-            return;
-        }
-
         for (int i = 0; i < data.quickSlots.Length; i++)
         {
             data.quickSlots[i] = ItemId.NONE;
         }
-    }
-
-    public async void RefreshFromServer()
-    {
-        if (_isLoading)
-        {
-            return;
-        }
-
-        await LoadRepairPercent();
     }
 }

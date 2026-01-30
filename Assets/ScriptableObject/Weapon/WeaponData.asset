@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: "\uD30C\uC774\uD504"
   damage: 5
-  hitBoxSize: {x: 3.5, y: 4}
-  hitBoxOffset: {x: 1, y: 0.2}
+  hitBoxSize: {x: 4, y: 5}
+  hitBoxOffset: {x: 1, y: -0.2}
   attackDuration: 0.5
   cooldown: 1
