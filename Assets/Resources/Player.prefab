@@ -428,6 +428,7 @@ MonoBehaviour:
   _invincibleTime: 0.5
   _weaponHitBox: {fileID: 5360751775010526504}
   _defaultWeapon: {fileID: 11400000, guid: e33a3a823a07922459f8b2faf0159427, type: 2}
+  _spotLight2D: {fileID: 8785108241397600553}
   _followTarget: {fileID: 2044130316993191334}
   _interaction: {fileID: 3237113970098252198}
   _groundItemPrefabName: GroundItem

@@ -58,6 +58,11 @@ public class EnemyChaserAI : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (_enemy.IsDead)
+        {
+            return;
+        }
+
         if (!PhotonNetwork.IsMasterClient)
         {
             return;
@@ -72,6 +77,7 @@ public class EnemyChaserAI : MonoBehaviour
         if ((DayState)(int)stateValue != DayState.Running)
         {
             _enemy.StopMove();
+            _enemy.CurrentAnimSpeed01 = 0f;
             return;
         }
 
@@ -93,9 +99,7 @@ public class EnemyChaserAI : MonoBehaviour
             }
 
             _enemy.StopMove();
-            _enemy.View.SetMove(Vector2.zero, 0f);
-            _enemy.State.ChangeState(EnemyState.State.Idle);
-
+            _enemy.CurrentAnimSpeed01 = 0f;
             return;
         }
 
@@ -158,7 +162,7 @@ public class EnemyChaserAI : MonoBehaviour
                 continue;
             }
 
-            if (player.IsDead)
+            if (player.IsDead || player.NetIsInRoom)
             {
                 continue;
             }
@@ -178,6 +182,11 @@ public class EnemyChaserAI : MonoBehaviour
 
     private void UpdateWander()
     {
+        if (_enemy.IsDead)
+        {
+            return;
+        }
+
         _stateTimer -= Time.fixedDeltaTime;
 
         if (_stateTimer <= 0f)
@@ -201,18 +210,23 @@ public class EnemyChaserAI : MonoBehaviour
 
         if (_isWanderMoving)
         {
+            _enemy.CurrentAnimSpeed01 = 0.5f;
             _enemy.ApplyExternalMove(_wanderDir, _wanderSpeedMultiplier);
         }
         else
         {
+            _enemy.CurrentAnimSpeed01 = 0f;
             _enemy.StopMove();
-            _enemy.View.SetMove(_wanderDir, 0f);
-            _enemy.State.ChangeState(EnemyState.State.Idle);
         }
     }
 
     private void ChangeState(State next)
     {
+        if (_enemy.IsDead)
+        {
+            return;
+        }
+
         _state = next;
 
         if (next == State.Patrol)
@@ -222,6 +236,7 @@ public class EnemyChaserAI : MonoBehaviour
                 _pathChase.ClearTarget();
             }
 
+            _enemy.CurrentAnimSpeed01 = 0f;
             _enemy.StopMove();
 
             _stateTimer = 0f;
@@ -229,6 +244,8 @@ public class EnemyChaserAI : MonoBehaviour
         }
         else if (next == State.Chase)
         {
+            _enemy.CurrentAnimSpeed01 = 1f;
+
             if (_pathChase != null)
             {
                 _pathChase.SetTarget(_player);
@@ -238,6 +255,11 @@ public class EnemyChaserAI : MonoBehaviour
 
     public void ForceChase(Transform target)
     {
+        if (_enemy.IsDead)
+        {
+            return;
+        }
+
         if (target == null)
         {
             return;
@@ -271,8 +293,8 @@ public class EnemyChaserAI : MonoBehaviour
             ChangeState(State.Patrol);
         }
 
+        _enemy.CurrentAnimSpeed01 = 0f;
         _enemy.StopMove();
-        _enemy.View.SetMove(Vector2.zero, 0f);
 
         _stateTimer = 0f;
         _isWanderMoving = false;

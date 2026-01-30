@@ -110,7 +110,8 @@ public class EnemyLurkerAI : MonoBehaviour
         if ((DayState)(int)stateValue != DayState.Running)
         {
             _controller.StopMove();
-            SetAlpha(0f);
+            _controller.CurrentAnimSpeed01 = 0f;
+            _view.SetAlpha(0f);
             return;
         }
 
@@ -119,13 +120,14 @@ public class EnemyLurkerAI : MonoBehaviour
         if (_enemyState.current == EnemyState.State.Dead)
         {
             _controller.StopMove();
-            SetAlpha(1f);
+            _controller.CurrentAnimSpeed01 = 0f;
+            _view.SetAlpha(1f);
             return;
         }
 
         if (_player == null)
         {
-            SetAlpha(0f);
+            _view.SetAlpha(0f);
 
             if (_state != State.Patrol)
             {
@@ -179,7 +181,7 @@ public class EnemyLurkerAI : MonoBehaviour
                 continue;
             }
 
-            if (player.IsDead)
+            if (player.IsDead || player.NetIsInRoom)
             {
                 continue;
             }
@@ -210,6 +212,7 @@ public class EnemyLurkerAI : MonoBehaviour
         if (_patrolMode == PatrolMode.Idle)
         {
             _controller.StopMove();
+            _controller.CurrentAnimSpeed01 = 0f;
 
             if (_wanderTimer <= 0f)
             {
@@ -231,6 +234,7 @@ public class EnemyLurkerAI : MonoBehaviour
             return;
         }
 
+        _controller.CurrentAnimSpeed01 = 0.5f;
         _controller.ApplyExternalMove(_wanderDir, _wanderSpeedMultiplier);
 
         if (_wanderTimer <= 0f)
@@ -265,6 +269,7 @@ public class EnemyLurkerAI : MonoBehaviour
     private void UpdateHidden(float dist)
     {
         _controller.StopMove();
+        _controller.CurrentAnimSpeed01 = 0f;
 
         _stateTimer -= Time.fixedDeltaTime;
 
@@ -283,6 +288,7 @@ public class EnemyLurkerAI : MonoBehaviour
     private void UpdateChase(float dist)
     {
         Vector2 dir = ((Vector2)_player.position - (Vector2)transform.position).normalized;
+        _controller.CurrentAnimSpeed01 = 1f;
         _controller.ApplyExternalMove(dir, 1f);
 
         if (dist >= _hideRange)
@@ -297,8 +303,8 @@ public class EnemyLurkerAI : MonoBehaviour
 
         Vector2 awayDir = ((Vector2)transform.position - (Vector2)_player.position).normalized;
 
-        float speedMul = _fleeSpeedMultiplier;
-        _controller.ApplyExternalMove(awayDir, speedMul);
+        _controller.CurrentAnimSpeed01 = 1f;        
+        _controller.ApplyExternalMove(awayDir, _fleeSpeedMultiplier);
 
         if (_fleeTimer >= _minFleeTime && dist >= _hideRange)
         {
@@ -309,6 +315,22 @@ public class EnemyLurkerAI : MonoBehaviour
     private void ChangeState(State next)
     {
         _state = next;
+
+        switch (next)
+        {
+            case State.Chase:
+            case State.Flee:
+                _controller.CurrentAnimSpeed01 = 1f;
+                break;
+
+            case State.Patrol:
+                _controller.CurrentAnimSpeed01 = _patrolMode == PatrolMode.Move ? 0.5f : 0f;
+                break;
+
+            default:
+                _controller.CurrentAnimSpeed01 = 0f;
+                break;
+        }
 
         if (next == State.Hidden)
         {
@@ -334,13 +356,13 @@ public class EnemyLurkerAI : MonoBehaviour
 
         if (dist <= _fullRevealRange)
         {
-            SetAlpha(1f);
-            return; // 어떤 상태든 여기서 확정
+            _view.SetAlpha(1f);
+            return; 
         }
 
         if (_state == State.Hidden)
         {
-            SetAlpha(0f);
+            _view.SetAlpha(0f);
             return;
         }
 
@@ -355,19 +377,19 @@ public class EnemyLurkerAI : MonoBehaviour
             }
 
             float a = Mathf.Lerp(_fleeStartAlpha, 0f, t);
-            SetAlpha(a);
+            _view.SetAlpha(a);
             return;
         }
 
         if (dist > _revealRange)
         {
-            SetAlpha(0f);
+            _view.SetAlpha(0f);
             return;
         }
 
         if (dist > _fullRevealRange)
         {
-            SetAlpha(_revealAlpha);
+            _view.SetAlpha(_revealAlpha);
             return;
         }
     }
@@ -393,18 +415,6 @@ public class EnemyLurkerAI : MonoBehaviour
         {
             ChangeState(State.Flee);
         }
-    }
-
-    private void SetAlpha(float alpha)
-    {
-        if (_sprite == null)
-        {
-            return;
-        }
-
-        Color c = _sprite.color;
-        c.a = alpha;
-        _sprite.color = c;
     }
 
     private void HandlePlayerDead()

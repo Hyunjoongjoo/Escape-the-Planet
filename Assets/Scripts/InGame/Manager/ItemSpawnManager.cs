@@ -159,4 +159,8 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
 
         _spawnedItems.Clear();
     }
+    public void OnMasterChanged()
+    {
+        enabled = PhotonNetwork.IsMasterClient;
+    }
 }

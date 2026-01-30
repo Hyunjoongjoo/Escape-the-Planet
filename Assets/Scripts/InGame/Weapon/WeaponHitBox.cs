@@ -108,13 +108,18 @@ public class WeaponHitBox : MonoBehaviour
 
             _hitTargets.Add(enemyView.ViewID);
 
-            enemyView.RPC("RPC_RequestDamage", RpcTarget.MasterClient, _damage);
+            enemy.RequestTakeDamage(_damage, _ownerView.ViewID);
 
             return;
         }
 
         PlayerController targetPlayer = other.GetComponentInParent<PlayerController>();
         if (targetPlayer == null)
+        {
+            return;
+        }
+
+        if (targetPlayer.NetIsInRoom)
         {
             return;
         }

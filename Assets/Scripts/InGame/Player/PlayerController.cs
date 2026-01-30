@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using Photon.Pun;
 using Photon.Realtime;
+using UnityEngine.Rendering.Universal;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(PlayerView))]
@@ -17,6 +18,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
     [SerializeField] private WeaponHitBox _weaponHitBox;
     [SerializeField] private WeaponData _defaultWeapon;
+    [SerializeField] private Light2D _spotLight2D;
 
     [SerializeField] private Transform _followTarget;
     [SerializeField] private PlayerInteraction _interaction;
@@ -66,6 +68,25 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
     public bool IsDead => _isDead;
     public Transform FollowTarget => _followTarget != null ? _followTarget : transform;
+
+    public bool NetIsInRoom
+    {
+        get
+        {
+            if (photonView == null || photonView.Owner == null)
+            {
+                return false;
+            }
+
+            if (photonView.Owner.CustomProperties.TryGetValue(
+                    MatchKeys.Loc, out object value))
+            {
+                return (PlayerLocation)(int)value == PlayerLocation.Room;
+            }
+
+            return false;
+        }
+    }
 
     private void Awake()
     {
@@ -912,33 +933,17 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
             if (_playerInput != null)
             {
-                _playerInput.enabled = true;
-            }
-        }
-        else
-        {
-            SetInputEnabled(false);
-
-            if (_playerInput != null)
-            {
                 _playerInput.enabled = false;
             }
-        }
 
-        _rigid.linearVelocity = Vector2.zero;
-
-        if (!photonView.IsMine)
-        {
+            _rigid.linearVelocity = Vector2.zero;
+            _rigid.angularVelocity = 0f;
             _rigid.bodyType = RigidbodyType2D.Kinematic;
-        }
 
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
-        {
-            col.enabled = false;
+            ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+            props[MatchKeys.Loc] = (int)PlayerLocation.Room;
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
-
-        _view.SetVisible(false);
     }
 
     public void SetInGameMode()
@@ -953,27 +958,44 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             }
 
             _rigid.bodyType = RigidbodyType2D.Dynamic;
+
+            ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+            props[MatchKeys.Loc] = (int)PlayerLocation.InGame;
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
         }
-        else
+    }
+    public override void OnPlayerPropertiesUpdate(Photon.Realtime.Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
+    {
+        if (photonView == null)
         {
-            SetInputEnabled(false);
-
-            if (_playerInput != null)
-            {
-                _playerInput.enabled = false;
-            }
-
-            _rigid.bodyType = RigidbodyType2D.Kinematic;
-            _rigid.linearVelocity = Vector2.zero;
-            _rigid.angularVelocity = 0f;
+            return;
         }
 
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
+        if (targetPlayer != photonView.Owner)
         {
-            col.enabled = true;
+            return;
         }
 
-        _view.SetVisible(true);
+        if (!changedProps.ContainsKey(MatchKeys.Loc))
+        {
+            return;
+        }
+
+        PlayerLocation location = (PlayerLocation)(int)changedProps[MatchKeys.Loc];
+
+        bool isInGame = location == PlayerLocation.InGame;
+
+        _view.SetVisible(isInGame);
+
+        Collider2D collider = GetComponent<Collider2D>();
+        if (collider != null)
+        {
+            collider.enabled = isInGame;
+        }
+
+        if (_spotLight2D != null)
+        {
+            _spotLight2D.enabled = isInGame; 
+        }
     }
 }

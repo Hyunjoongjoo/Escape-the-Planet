@@ -1,7 +1,8 @@
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
-public class NetworkRelay : MonoBehaviourPun
+public class NetworkRelay : MonoBehaviourPunCallbacks
 {
     public static NetworkRelay Instance { get; private set; }
 
@@ -56,5 +57,39 @@ public class NetworkRelay : MonoBehaviourPun
         }
 
         GameManager.Instance.EndDay_Master((DayEndReason)reason);
+    }
+
+    public override void OnMasterClientSwitched(Player newMasterClient)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        Debug.Log($"Master switched to {newMasterClient.NickName}");
+
+        RebindMasterAuthority();
+    }
+
+    private void RebindMasterAuthority()
+    {
+        EnemyController[] enemies = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+
+        foreach (EnemyController enemy in enemies)
+        {
+            enemy.OnMasterChanged();
+        }
+
+        EnemySpawnManager enemySpawner = FindFirstObjectByType<EnemySpawnManager>();
+        if (enemySpawner != null)
+        {
+            enemySpawner.OnMasterChanged();
+        }
+
+        ItemSpawnManager itemSpawner = FindFirstObjectByType<ItemSpawnManager>();
+        if (itemSpawner != null)
+        {
+            itemSpawner.OnMasterChanged();
+        }
     }
 }

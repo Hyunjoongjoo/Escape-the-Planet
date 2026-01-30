@@ -243,8 +243,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   _data: {fileID: 11400000, guid: f4540e269ef5de9459ee5a947660decc, type: 2}
-  _contactInterval: 0.4
-  _destroyDelay: 1
+  _damageInterval: 0.5
+  _dataId: -1
+  _enemyDatabase: {fileID: 0}
+  _netPosLerpSpeed: 30
+  _deadDestroyDelay: 1
 --- !u!114 &6382597744313503650
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -262,8 +265,11 @@ MonoBehaviour:
   _maxExpand: 2500
   _repathCellThreshold: 2
   _waypointReachDist: 0.3
+  _isForced: 0
   _fallbackSpeedMultiplier: 1
   _goalFixRadius: 4
+  _forcedSearchRadius: 16
+  _forcedSearchSamples: 120
   _agentRadius: 0.45
   _lookAhead: 0.6
 --- !u!114 &8141405357572836501

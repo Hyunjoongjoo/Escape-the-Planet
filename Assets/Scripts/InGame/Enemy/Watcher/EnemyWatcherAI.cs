@@ -67,15 +67,13 @@ public class EnemyWatcherAI : MonoBehaviour
 
         if ((DayState)(int)stateValue != DayState.Running)
         {
-            _rigid.linearVelocity = Vector2.zero;
-            _view.SetMove(Vector2.zero, 0f);
+            StopWatchMove();
             return;
         }
 
         if (_enemyState.current == EnemyState.State.Dead)
         {
-            _rigid.linearVelocity = Vector2.zero;
-            _view.SetMove(Vector2.zero, 0f);
+            StopWatchMove();
             return;
         }
 
@@ -106,23 +104,13 @@ public class EnemyWatcherAI : MonoBehaviour
 
         if (_watching && dist >= _cancelRange)
         {
-            _watching = false;
-
-            if (_resetTimerOnCancel)
-            {
-                _watchTimer = 0f;
-                _called = false;
-            }
-
-            _rigid.linearVelocity = Vector2.zero;
-            _view.SetMove(Vector2.zero, 0f);
+            CancelWatching();
             return;
         }
 
         if (!_watching)
         {
-            _rigid.linearVelocity = Vector2.zero;
-            _view.SetMove(Vector2.zero, 0f);
+            StopWatchMove();
             return;
         }
 
@@ -136,18 +124,18 @@ public class EnemyWatcherAI : MonoBehaviour
 
         if (dist > maxDist)
         {
+            _controller.CurrentAnimSpeed01 = 1f;
             _rigid.linearVelocity = dirToPlayer * speed;
-            _view.SetMove(dirToPlayer, 0.5f);
         }
         else if (dist < minDist)
         {
+            _controller.CurrentAnimSpeed01 = 1f;
             _rigid.linearVelocity = -dirToPlayer * speed;
-            _view.SetMove(-dirToPlayer, 0.5f);
         }
         else
         {
+            _controller.CurrentAnimSpeed01 = 0f;
             _rigid.linearVelocity = Vector2.zero;
-            _view.SetMove(dirToPlayer, 0f);
         }
 
         if (!_called)
@@ -177,7 +165,7 @@ public class EnemyWatcherAI : MonoBehaviour
                 continue;
             }
 
-            if (player.IsDead)
+            if (player.IsDead || player.NetIsInRoom)
             {
                 continue;
             }
@@ -195,14 +183,32 @@ public class EnemyWatcherAI : MonoBehaviour
         return best;
     }
 
+    private void StopWatchMove()
+    {
+        _rigid.linearVelocity = Vector2.zero;
+        _controller.CurrentAnimSpeed01 = 0f;
+    }
+
+    private void CancelWatching()
+    {
+        _watching = false;
+
+        if (_resetTimerOnCancel)
+        {
+            _watchTimer = 0f;
+            _called = false;
+        }
+
+        StopWatchMove();
+    }
+
     private void ResetWatchState()
     {
         _watching = false;
         _called = false;
         _watchTimer = 0f;
 
-        _rigid.linearVelocity = Vector2.zero;
-        _view.SetMove(Vector2.zero, 0f);
+        StopWatchMove();
     }
 
     private void HandlePlayerDead()

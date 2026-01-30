@@ -445,4 +445,5 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         SetAllPlayersRoomMode();
     }
+    
 }

@@ -5,6 +5,8 @@ public class EnemyView : MonoBehaviour
     [SerializeField] private Animator _anim;
     [SerializeField] private SpriteRenderer _sprite;
 
+    public float CurrentAlpha => _sprite.color.a;
+
     private void Awake()
     {
         if (_anim == null)
@@ -18,9 +20,8 @@ public class EnemyView : MonoBehaviour
         }
     }
 
-    public void SetMove(Vector2 dir, float speed01)
+    public void SetDirection(Vector2 dir)
     {
-
         if (dir.x > 0f)
         {
             _sprite.flipX = false;
@@ -29,7 +30,11 @@ public class EnemyView : MonoBehaviour
         {
             _sprite.flipX = true;
         }
+    }
 
+    public void SetMove(Vector2 dir, float speed01)
+    {
+        SetDirection(dir);
         _anim.SetFloat("Speed", speed01);
     }
 

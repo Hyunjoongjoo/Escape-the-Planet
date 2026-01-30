@@ -90,8 +90,6 @@ public class ChaserPathChase : MonoBehaviour
         if (_enemy != null)
         {
             _enemy.StopMove();
-            _enemy.View.SetMove(Vector2.zero, 0f);
-            _enemy.State.ChangeState(EnemyState.State.Idle);
         }
     }
 
@@ -117,6 +115,11 @@ public class ChaserPathChase : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (_enemy.State.current == EnemyState.State.Dead)
+        {
+            return;
+        }
+
         if (_grid == null || _astar == null)
         {
             return;
@@ -128,8 +131,6 @@ public class ChaserPathChase : MonoBehaviour
             _pathIndex = 0;
 
             _enemy.StopMove();
-            _enemy.View.SetMove(Vector2.zero, 0f);
-            _enemy.State.ChangeState(EnemyState.State.Idle);
 
             return;
         }

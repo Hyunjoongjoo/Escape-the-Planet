@@ -273,8 +273,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   _data: {fileID: 11400000, guid: 2ac661661d85a1e48aafc70cc8c14c76, type: 2}
-  _contactInterval: 0.4
-  _destroyDelay: 1
+  _damageInterval: 0.5
+  _dataId: -1
+  _enemyDatabase: {fileID: 0}
+  _netPosLerpSpeed: 30
+  _deadDestroyDelay: 1
 --- !u!114 &3131796683418922067
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,6 +320,7 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 6167899845666770973}
   - {fileID: 9205766176478148707}
+  - {fileID: 0}
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0

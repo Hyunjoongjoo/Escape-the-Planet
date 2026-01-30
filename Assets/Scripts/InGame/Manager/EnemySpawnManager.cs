@@ -210,4 +210,8 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
 
         return center;
     }
+    public void OnMasterChanged()
+    {
+        enabled = PhotonNetwork.IsMasterClient;
+    }
 }
