@@ -334,6 +334,11 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             {
                 col.isTrigger = true;
             }
+
+            if (_spotLight2D != null)
+            {
+                _spotLight2D.enabled = false;
+            }
         }
     }
 
@@ -555,6 +560,11 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         if (col != null)
         {
             col.isTrigger = true;
+        }
+
+        if (_spotLight2D != null)
+        {
+            _spotLight2D.enabled = false;
         }
 
         _weaponHitBox.SetActive(false);

@@ -13,6 +13,10 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     [SerializeField] private int _dataId = -1;
     [SerializeField] private EnemyDatabase _enemyDatabase;
 
+    [SerializeField] private float _baseHitRange = 0.45f;
+    [SerializeField] private float _netTolerance = 0.15f;
+    [SerializeField] private float _speedCompensation = 0.15f;
+
     private EnemyModel _model;
     private EnemyView _view;
     private EnemyState _state;
@@ -64,7 +68,7 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
 
     private void FixedUpdate()
     {
-        if (_state.current == EnemyState.State.Dead)
+        if (IsDead)
         {
             return;
         }
@@ -128,14 +132,22 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
             return;
         }
 
-        PhotonView playerView = player.photonView;
-        if (playerView == null)
+        float dist = Vector2.Distance(transform.position, player.transform.position);
+
+        float dynamicRange = _baseHitRange + _netTolerance + (_model.moveSpeed * _speedCompensation);
+
+        if (dist > dynamicRange)
         {
             return;
         }
 
         player.RequestDamageFromOther(_model.contactDamage, photonView.ViewID);
 
+        EnemyLurkerAI lurker = GetComponent<EnemyLurkerAI>();
+        if (lurker != null)
+        {
+            lurker.OnHit();
+        }
         _nextDamageTime = Time.time + _damageInterval;
     }
 
@@ -257,7 +269,11 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         float speed = _model.moveSpeed * Mathf.Max(0f, speedMultiplier);
         _rigid.linearVelocity = dir * speed;
 
-        _view.SetMove(dir, CurrentAnimSpeed01);
+        float speed01 = Mathf.Clamp01(_rigid.linearVelocity.magnitude / _model.moveSpeed);
+
+        CurrentAnimSpeed01 = speed01;
+
+        _view.SetMove(dir, speed01);
         _state.ChangeState(EnemyState.State.Move);
     }
 
@@ -284,6 +300,8 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         }
 
         _rigid.linearVelocity = Vector2.zero;
+
+        CurrentAnimSpeed01 = 0f;
     }
 
     private void Die_Master()
@@ -351,6 +369,47 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         }
 
         _view.PlayDead();
+    }
+
+    public void RequestHitFromPlayer(int damage, Vector2 attackerPos)
+    {
+        photonView.RPC(
+            nameof(RPC_RequestHitFromPlayer),
+            RpcTarget.MasterClient,
+            photonView.ViewID,
+            damage,
+            attackerPos
+        );
+    }
+
+    [PunRPC]
+    private void RPC_RequestHitFromPlayer(int enemyViewId, int damage, Vector2 attackerPos)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        PhotonView enemyView = PhotonView.Find(enemyViewId);
+        if (enemyView == null)
+        {
+            return;
+        }
+
+        EnemyController enemy = enemyView.GetComponent<EnemyController>();
+        if (enemy == null || enemy.IsDead)
+        {
+            return;
+        }
+
+        float dist = Vector2.Distance(attackerPos, enemy.transform.position);
+
+        float hitRange = 0.45f + 0.15f + (_model.moveSpeed * 0.15f);
+
+        if (dist <= hitRange)
+        {
+            enemy.TakeDamage(damage);
+        }
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)

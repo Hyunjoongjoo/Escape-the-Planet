@@ -276,6 +276,9 @@ MonoBehaviour:
   _damageInterval: 0.5
   _dataId: -1
   _enemyDatabase: {fileID: 0}
+  _baseHitRange: 0.45
+  _netTolerance: 0.15
+  _speedCompensation: 0.15
   _netPosLerpSpeed: 30
   _deadDestroyDelay: 1
 --- !u!114 &3131796683418922067

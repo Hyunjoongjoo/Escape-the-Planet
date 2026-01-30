@@ -16,6 +16,7 @@ public class EnemyData : ScriptableObject
     public float baseMoveSpeed = 1.5f;
     public int baseMaxHP = 30;
     public int baseContactDamage = 5;
+    public float baseApproachDistance = 0.7f;
 
     [Range(0f, 1f)] public float hpGrowthPerMinute = 0.10f;      // 분당 +10%
     [Range(0f, 1f)] public float damageGrowthPerMinute = 0.08f;  // 분당 +8%

@@ -20,6 +20,8 @@ public class EnemyModel
         maxHP = stats.baseMaxHP;
         currentHP = maxHP;
         contactDamage = stats.baseContactDamage;
+
+        approachDistance = stats.baseApproachDistance;
     }
 
     public void ApplySpawnGrowth(float elapsedMinutes)

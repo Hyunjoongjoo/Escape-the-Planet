@@ -404,19 +404,6 @@ public class EnemyLurkerAI : MonoBehaviour
         ChangeState(State.Flee);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        if (_enemyState.current == EnemyState.State.Dead)
-        {
-            return;
-        }
-
-        if (_state == State.Chase && collision.collider.CompareTag("Player"))
-        {
-            ChangeState(State.Flee);
-        }
-    }
-
     private void HandlePlayerDead()
     {
         _player = null;
