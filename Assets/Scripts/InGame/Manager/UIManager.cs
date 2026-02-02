@@ -17,6 +17,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject _gameTimePanel;
     [SerializeField] private Text _timeText;
 
+    [SerializeField] private GameObject _gameClearPanel;
+    [SerializeField] private Text _gameClearText;
+
     [SerializeField] private GameObject _gameEndPanel;
     [SerializeField] private Text _gameEndText;
 
@@ -24,8 +27,7 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private GameObject _spectatorPanel;
     [SerializeField] private Text _spectatorNameText;
-    [SerializeField] private Slider _spectatorHpSlider;
-    [SerializeField] private Text _spectatorHpText;
+    private PlayerController _currentSpectatorTarget;
 
     private Coroutine _gameEndRoutine;
 
@@ -55,6 +57,19 @@ public class UIManager : MonoBehaviour
         {
             GameManager.Instance.OnTimeChanged -= HandleTimeChanged;
             GameManager.Instance.OnGameEndTriggered -= HandleGameEnd;
+        }
+    }
+
+    private void Update()
+    {
+        if (_spectatorPanel.activeSelf == false)
+        {
+            return;
+        }
+
+        if (_currentSpectatorTarget == null)
+        {
+            return;
         }
     }
 
@@ -177,31 +192,72 @@ public class UIManager : MonoBehaviour
 
     public void UpdateSpectatorTarget(PlayerController target)
     {
+        _currentSpectatorTarget = target;
+
         if (target == null)
         {
             _spectatorNameText.text = "";
-            _spectatorHpSlider.value = 0f;
-            _spectatorHpText.text = "";
             return;
         }
 
-        string name = target.photonView.Owner.NickName;
-        float hp = target.CurrentHP;
-        float maxHp = target.MaxHP;
-
-        _spectatorNameText.text = name;
-        _spectatorHpSlider.maxValue = maxHp;
-        _spectatorHpSlider.value = hp;
-        _spectatorHpText.text = $"{hp} / {maxHp}";
+        _spectatorNameText.text = target.photonView.Owner.NickName;
     }
 
     public void EnterSpectatorMode()
     {
         _spectatorPanel.SetActive(true);
+        _playerNameText.gameObject.SetActive(false);
+        _hpSlider.gameObject.SetActive(false);
+        _hpText.gameObject.SetActive(false);
+
+        _inGameUIRoot.SetActive(false);
     }
 
     public void ExitSpectatorMode()
     {
         _spectatorPanel.SetActive(false);
+        _currentSpectatorTarget = null;
+    }
+    public void EnterEndingMode()
+    {
+        _gameClearPanel.SetActive(true);
+        _inGameUIRoot.SetActive(false);
+        _gameTimePanel.SetActive(false);
+        _spectatorPanel.SetActive(false);
+        ExitSpectatorMode();
+
+        PlayerController local = FindLocalPlayer();
+        if (local != null)
+        {
+            local.SetInputEnabled(true);
+        }
+
+        RepairPanelUI repairPanel = FindFirstObjectByType<RepairPanelUI>();
+        repairPanel.EnterEnding();
+
+        RoomManager roomManager = FindFirstObjectByType<RoomManager>();
+        roomManager.EnterEnding();
+
+        StartCoroutine(EndingRoutine());
+    }
+
+    private IEnumerator EndingRoutine()
+    {
+        yield return new WaitForSeconds(3f);
+        _gameClearPanel.SetActive(false);
+    }
+
+    public void HideLocalPlayerUI()
+    {
+        _playerNameText.gameObject.SetActive(false);
+        _hpSlider.gameObject.SetActive(false);
+        _hpText.gameObject.SetActive(false);
+    }
+
+    public void ShowLocalPlayerUI()
+    {
+        _playerNameText.gameObject.SetActive(true);
+        _hpSlider.gameObject.SetActive(true);
+        _hpText.gameObject.SetActive(true);
     }
 }

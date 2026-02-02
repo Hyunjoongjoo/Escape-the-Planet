@@ -91,13 +91,14 @@ public class GroundItemNetwork : MonoBehaviourPun
 
         photonView.RPC(nameof(RPC_PickupApproved), RpcTarget.All, actorNumber);
 
-        PoolManager.Instance.ReturnItem(gameObject);
+        //PoolManager.Instance.ReturnItem(gameObject); //풀링제거....
+        PhotonNetwork.Destroy(gameObject);
     }
 
-    public void ResetForPool()
-    {
-        _pickedUp = false;
-    }
+    //public void ResetForPool() //풀링제거....
+    //{
+    //    _pickedUp = false;
+    //}
 
     [PunRPC]
     private void RPC_PickupApproved(int actorNumber)

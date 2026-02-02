@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class RepairPanelUI : MonoBehaviour
 {
+    [SerializeField] private GameObject _repairPanel;
     [SerializeField] private Text _repairText;
     [SerializeField] private Button _settleButton;
 
@@ -32,6 +33,14 @@ public class RepairPanelUI : MonoBehaviour
     {
         _currentRepair = repair;
         RefreshText();
+
+        if (_currentRepair >= 100)
+        {
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.TriggerEnding_Master();
+            }
+        }
     }
 
     private void RefreshText()
@@ -118,5 +127,9 @@ public class RepairPanelUI : MonoBehaviour
         {
             data.quickSlots[i] = ItemId.NONE;
         }
+    }
+    public void EnterEnding()
+    {
+        _repairPanel.gameObject.SetActive(false);
     }
 }

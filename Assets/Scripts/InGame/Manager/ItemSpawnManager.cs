@@ -14,6 +14,10 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
     [SerializeField] private float _checkRadius = 0.25f;
     [SerializeField] private int _tryCount = 12;
 
+    [SerializeField] private GameObject _inGameWorld;
+
+    [SerializeField] private string _groundItemPrefabName = "GroundItem";
+
     private bool _spawnedThisDay = false;
 
     private readonly List<ItemSpawnPoint> _points = new List<ItemSpawnPoint>();
@@ -96,7 +100,13 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
                 item.spawnRadius
             );
 
-            GameObject spawnedObject = PoolManager.Instance.GetItem(item.id, spawnPosition);
+            GameObject spawnedObject = PhotonNetwork.InstantiateRoomObject(
+           _groundItemPrefabName,
+           spawnPosition,
+           Quaternion.identity
+           );
+            //GameObject spawnedObject = PoolManager.Instance.GetItem(item.id, spawnPosition); //풀링 제거
+            spawnedObject.transform.SetParent(_inGameWorld.transform);
 
             if (spawnedObject == null)
             {
@@ -151,7 +161,8 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
         {
             if (allItems[i] != null)
             {
-                PoolManager.Instance.ReturnItem(allItems[i].gameObject);
+                //PoolManager.Instance.ReturnItem(allItems[i].gameObject); //풀링 제거..
+                PhotonNetwork.Destroy(allItems[i].gameObject);
             }
         }
 

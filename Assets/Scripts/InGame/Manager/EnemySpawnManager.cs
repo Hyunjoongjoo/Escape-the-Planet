@@ -17,6 +17,8 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
     [SerializeField] private float _checkRadius = 0.3f;
     [SerializeField] private int _tryCount = 12;
 
+    [SerializeField] private GameObject _inGameWorld;
+
     private readonly List<EnemySpawnPoint> _points = new List<EnemySpawnPoint>();
     private readonly List<EnemyController> _alive = new List<EnemyController>();
 
@@ -118,7 +120,8 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
         {
             if (enemies[i] != null)
             {
-                PoolManager.Instance.ReturnEnemy(enemies[i]);
+                //PoolManager.Instance.ReturnEnemy(enemies[i]); //풀링 제거
+                PhotonNetwork.Destroy(enemies[i].gameObject);
             }
         }
 
@@ -165,7 +168,16 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             enemyData.spawnRadius
         );
 
-        EnemyController enemy = PoolManager.Instance.GetEnemy(enemyData.id, spawnPosition);
+        GameObject obj = PhotonNetwork.InstantiateRoomObject(
+        enemyData.prefabName,
+        spawnPosition,
+        Quaternion.identity
+    );
+
+        obj.transform.SetParent(_inGameWorld.transform);
+
+        EnemyController enemy = obj.GetComponent<EnemyController>();
+        //EnemyController enemy = PoolManager.Instance.GetEnemy(enemyData.id, spawnPosition); //풀링 제거..
 
         if (enemy == null)
         {

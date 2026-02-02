@@ -9,6 +9,7 @@ public class PlayerSpawner : MonoBehaviourPunCallbacks
     [SerializeField] private string _playerPrefabName = "Player";
 
     [SerializeField] private Transform[] _spawnPoints;
+    [SerializeField] private GameObject _inGameWorld;
 
     public PlayerController SpawnLocalPlayer()
     {
@@ -30,7 +31,7 @@ public class PlayerSpawner : MonoBehaviourPunCallbacks
         Vector3 spawnPos = GetSpawnPosition(PhotonNetwork.LocalPlayer);
 
         GameObject player = PhotonNetwork.Instantiate(_playerPrefabName, spawnPos, Quaternion.identity);
-
+        player.transform.SetParent(_inGameWorld.transform);
         PlayerController controller = player.GetComponent<PlayerController>();
 
         if (controller != null)

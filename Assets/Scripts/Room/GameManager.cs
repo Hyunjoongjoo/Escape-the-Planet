@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     [SerializeField] private AudioListener _roomCameraListener;
     [SerializeField] private AudioListener _playerListener;
+    [SerializeField] private GameObject _inGameWorld;
 
     private float _remainTime;
     private double _dayStartNetworkTime;
@@ -61,6 +62,11 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void Update()
     {
+        if (!IsRunning)
+        {
+            return;
+        }
+
         if (!PhotonNetwork.InRoom)
         {
             return;
@@ -495,5 +501,14 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         SetAllPlayersRoomMode();
     }
-    
+    public void TriggerEnding_Master()
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+        SpectatorCameraManager.Instance?.StopSpectate();
+        _inGameWorld.SetActive(false);
+        NetworkRelay.Instance.BroadcastEnding();
+    }
 }

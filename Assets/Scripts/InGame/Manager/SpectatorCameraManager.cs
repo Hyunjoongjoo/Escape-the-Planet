@@ -61,6 +61,8 @@ public class SpectatorCameraManager : MonoBehaviour
         FocusToFirstAlive();
 
         EnableSpectatorInput(true);
+        UIManager.Instance.HideLocalPlayerUI();
+        UIManager.Instance.EnterSpectatorMode();
     }
 
     public void StopSpectate()
@@ -70,6 +72,8 @@ public class SpectatorCameraManager : MonoBehaviour
         _currentIndex = 0;
 
         EnableSpectatorInput(false);
+        UIManager.Instance.ExitSpectatorMode();
+        UIManager.Instance.ShowLocalPlayerUI();
     }
 
     private void EnableSpectatorInput(bool enable)
@@ -217,4 +221,5 @@ public class SpectatorCameraManager : MonoBehaviour
         _cam.Follow = follow;
         _cam.LookAt = follow;
     }
+
 }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: WeaponData
   m_EditorClassIdentifier: Assembly-CSharp::WeaponData
   weaponName: "\uD30C\uC774\uD504"
-  damage: 5
+  damage: 10
   hitBoxSize: {x: 4, y: 5}
   hitBoxOffset: {x: 1, y: -0.2}
   attackDuration: 0.5

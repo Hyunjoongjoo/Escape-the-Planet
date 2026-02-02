@@ -114,4 +114,25 @@ public class NetworkRelay : MonoBehaviourPunCallbacks
             itemSpawner.OnMasterChanged();
         }
     }
+
+    public void BroadcastEnding()
+    {
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        photonView.RPC(nameof(RPC_BroadcastEnding), RpcTarget.All);
+    }
+
+    [PunRPC]
+    private void RPC_BroadcastEnding()
+    {
+        PhotonPlayerLocationManager.SetLocation(PlayerLocation.Room);
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.EnterEndingMode();
+        }
+    }
 }

@@ -33,8 +33,8 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     private float _netAnimSpeed01;
     private float _netAlpha = 1f;
 
-    private float _netSendTimer;
-    private const float NET_INTERVAL = 0.08f;
+    //private float _netSendTimer; //보류
+    //private const float NET_INTERVAL = 0.08f;
 
     public float MoveSpeed => _model.moveSpeed;
     public Rigidbody2D Rigidbody => _rigid;
@@ -373,7 +373,8 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     {
         yield return _deadWait;
 
-        PoolManager.Instance.ReturnEnemy(this);
+        //PoolManager.Instance.ReturnEnemy(this); //풀링 제거..
+        PhotonNetwork.Destroy(gameObject);
     }
 
     [PunRPC]
@@ -464,13 +465,17 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     {
         if (stream.IsWriting)
         {
-
-            _netSendTimer += Time.deltaTime;
-            if (_netSendTimer < NET_INTERVAL)
+            if (IsDead)
             {
-                return;
+                return; 
             }
-            _netSendTimer = 0f;
+
+            //_netSendTimer += Time.deltaTime; //전송제한은...보류
+            //if (_netSendTimer < NET_INTERVAL)
+            //{
+            //    return;
+            //}
+            //_netSendTimer = 0f;
 
             stream.SendNext(_rigid.position);
 
@@ -484,6 +489,11 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         }
         else
         {
+            if (IsDead)
+            {
+                return;
+            }
+
             _netTargetPos = (Vector2)stream.ReceiveNext();
             _netMoveDir = (Vector2)stream.ReceiveNext();
             _netAnimSpeed01 = (float)stream.ReceiveNext();

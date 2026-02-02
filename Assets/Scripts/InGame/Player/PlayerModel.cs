@@ -13,7 +13,6 @@ public class PlayerModel
     {
         moveSpeed = model.baseMoveSpeed;
         maxHP = model.baseMaxHP;
-        attackPower = model.baseAttackPower;
     }
     public void TakeDamage(int damage)
     {

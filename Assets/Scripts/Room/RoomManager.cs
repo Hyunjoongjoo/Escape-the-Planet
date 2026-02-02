@@ -20,6 +20,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     [SerializeField] private PlayerSlot[] _slots;
     [SerializeField] private ChatManager _chatManager;
 
+    [SerializeField] private Button _readyButton;
     [SerializeField] private Button _exitButton;
     [SerializeField] private Button _startDayButton;
     [SerializeField] private Button _enterFactoryButton;
@@ -75,7 +76,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        StartCoroutine(ButtonCoroutine());   
+        StartCoroutine(ButtonCoroutine());
     }
 
     public void OnClickEndDay()
@@ -119,7 +120,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
         StartCoroutine(EnterFactoryCoroutine());
 
-        
+
     }
 
     private IEnumerator ButtonCoroutine()
@@ -306,21 +307,21 @@ public class RoomManager : MonoBehaviourPunCallbacks
     private void ApplyCurrentDayState()
     {
         if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayState, out object stateValue))
-    {
-        UIManager.Instance.SetRoomPhase();
-        return;
-    }
+        {
+            UIManager.Instance.SetRoomPhase();
+            return;
+        }
 
-    DayState state = (DayState)(int)stateValue;
+        DayState state = (DayState)(int)stateValue;
 
-    if (state == DayState.Running)
-    {
-        UIManager.Instance.SetInGamePhase();
-    }
-    else
-    {
-        UIManager.Instance.SetRoomPhase();
-    }
+        if (state == DayState.Running)
+        {
+            UIManager.Instance.SetInGamePhase();
+        }
+        else
+        {
+            UIManager.Instance.SetRoomPhase();
+        }
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable changedProps)
@@ -363,5 +364,21 @@ public class RoomManager : MonoBehaviourPunCallbacks
     public override void OnLeftRoom()
     {
         SceneManager.LoadScene("Lobby");
+    }
+
+    public void EnterEnding()
+    {
+        Player[] players = PhotonNetwork.PlayerList;
+        for (int i = 0; i < players.Length; i++)
+        {
+            Hashtable table = new Hashtable
+            {
+                { MatchKeys.Ready, false }
+            };
+
+            players[i].SetCustomProperties(table);
+        }
+        _readyButton.gameObject.SetActive(false);
+        _exitButton.interactable = true;
     }
 }

@@ -186,7 +186,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             SetInputEnabled(false);
             _weaponHitBox.SetActive(false);
 
-            _rigid.bodyType = RigidbodyType2D.Kinematic;
+            _rigid.bodyType = RigidbodyType2D.Dynamic;
             _rigid.linearVelocity = Vector2.zero;
             _rigid.angularVelocity = 0f;
 
