@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
@@ -27,6 +28,9 @@ public class GameManager : MonoBehaviourPunCallbacks
     [SerializeField] private float _defaultDayDuration = 600f;
 
     [SerializeField] private float _endingDuration = 5f;
+
+    [SerializeField] private AudioListener _roomCameraListener;
+    [SerializeField] private AudioListener _playerListener;
 
     private float _remainTime;
     private double _dayStartNetworkTime;
@@ -203,13 +207,16 @@ public class GameManager : MonoBehaviourPunCallbacks
             IsRunning = false;
             SetAllPlayersRoomMode();
             UIManager.Instance.SetRoomPhase();
+            UIManager.Instance.ExitSpectatorMode();
             SpectatorCameraManager.Instance?.StopSpectate();
+
             return;
         }
 
         if (state == DayState.Running)
         {
             IsRunning = true;
+            UIManager.Instance.ExitSpectatorMode();
             SetAllPlayersInGameMode();
             _remainTime = _defaultDayDuration;
             UIManager.Instance.SetInGamePhase();
@@ -251,9 +258,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void ResetAllPlayersForNewDay_AllClients()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             PlayerController player = players[i];
             if (player == null)
@@ -375,9 +382,9 @@ public class GameManager : MonoBehaviourPunCallbacks
             _cachedLocalPlayer = null;
         }
 
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             PlayerController player = players[i];
 
@@ -403,9 +410,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void SetAllPlayersRoomMode()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             if (players[i] != null)
             {
@@ -474,9 +481,9 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void SetAllPlayersInGameMode()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             if (players[i] != null)
             {

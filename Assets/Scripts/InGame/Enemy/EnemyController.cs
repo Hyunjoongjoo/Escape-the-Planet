@@ -13,9 +13,7 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     [SerializeField] private int _dataId = -1;
     [SerializeField] private EnemyDatabase _enemyDatabase;
 
-    [SerializeField] private float _baseHitRange = 0.45f;
-    [SerializeField] private float _netTolerance = 0.15f;
-    [SerializeField] private float _speedCompensation = 0.15f;
+    [SerializeField] private EnemySoundController _soundController;
 
     private EnemyModel _model;
     private EnemyView _view;
@@ -35,6 +33,9 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     private float _netAnimSpeed01;
     private float _netAlpha = 1f;
 
+    private float _netSendTimer;
+    private const float NET_INTERVAL = 0.08f;
+
     public float MoveSpeed => _model.moveSpeed;
     public Rigidbody2D Rigidbody => _rigid;
     public EnemyView View => _view;
@@ -50,6 +51,16 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         _state = GetComponent<EnemyState>();
         _rigid = GetComponent<Rigidbody2D>();
         _deadWait = new WaitForSeconds(_deadDestroyDelay);
+    }
+
+    private void OnEnable()
+    {
+        EnemyRegistry.Instance?.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        EnemyRegistry.Instance?.Unregister(this);
     }
 
     private void Start()
@@ -69,21 +80,39 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
 
     private void FixedUpdate()
     {
+        if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(MatchKeys.DayState, out object stateValueObj))
+        {
+            if ((DayState)(int)stateValueObj != DayState.Running)
+            {
+                if (_soundController != null)
+                {
+                    _soundController.StopIdleLoop();
+                }
+
+                if (_rigid != null)
+                {
+                    _rigid.linearVelocity = Vector2.zero;
+                }
+
+                return;
+            }
+        }
+
         if (IsDead)
         {
+            if (_soundController != null)
+            {
+                _soundController.StopIdleLoop();
+            }
             return;
         }
 
         if (PhotonNetwork.IsMasterClient)
         {
-            if (!PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue(
-                    MatchKeys.DayState, out object stateValue))
+            if (_soundController != null)
             {
-                _rigid.linearVelocity = Vector2.zero;
-            }
-            else if ((DayState)(int)stateValue != DayState.Running)
-            {
-                _rigid.linearVelocity = Vector2.zero;
+                float speed01_master = CurrentAnimSpeed01;
+                _soundController.TryPlayFootstep(speed01_master);
             }
 
             return;
@@ -98,6 +127,12 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         _rigid.MovePosition(smooth);
 
         UpdateRemoteAnimation();
+
+        if (_soundController != null)
+        {
+            float speed01 = CurrentAnimSpeed01;
+            _soundController.TryPlayFootstep(speed01);
+        }
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -133,22 +168,17 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
             return;
         }
 
-        float dist = Vector2.Distance(transform.position, player.transform.position);
-
-        float dynamicRange = _baseHitRange + _netTolerance + (_model.moveSpeed * _speedCompensation);
-
-        if (dist > dynamicRange)
-        {
-            return;
-        }
-
-        player.RequestDamageFromOther(_model.contactDamage, photonView.ViewID);
+        player.RequestDamageFromOther(
+         _model.contactDamage,
+         photonView.ViewID
+        );
 
         EnemyLurkerAI lurker = GetComponent<EnemyLurkerAI>();
         if (lurker != null)
         {
             lurker.OnHit();
         }
+
         _nextDamageTime = Time.time + _damageInterval;
     }
 
@@ -200,6 +230,11 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         if (_state.current == EnemyState.State.Dead)
         {
             return;
+        }
+
+        if (_soundController != null)
+        {
+            _soundController.PlayHit();
         }
 
         _model.TakeDamage(damage);
@@ -319,6 +354,12 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
 
         _state.ChangeState(EnemyState.State.Dead);
 
+        if (_soundController != null)
+        {
+            _soundController.StopIdleLoop();
+            _soundController.PlayDead();
+        }
+
         _rigid.linearVelocity = Vector2.zero;
 
         _rigid.simulated = false;
@@ -403,20 +444,34 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
             return;
         }
 
-        float dist = Vector2.Distance(attackerPos, enemy.transform.position);
+        Collider2D enemyCol = enemy.GetComponent<Collider2D>();
+        Collider2D playerCol = PhotonView.Find(enemyViewId).GetComponent<Collider2D>();
 
-        float hitRange = 0.45f + 0.15f + (_model.moveSpeed * 0.15f);
+        float closestDist = Vector2.Distance(
+            enemyCol.ClosestPoint(attackerPos),
+            enemyCol.bounds.center
+        );
 
-        if (dist <= hitRange)
+        if (closestDist > 0.6f)
         {
-            enemy.TakeDamage(damage);
+            return;
         }
+
+        enemy.TakeDamage(damage);
     }
 
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)
         {
+
+            _netSendTimer += Time.deltaTime;
+            if (_netSendTimer < NET_INTERVAL)
+            {
+                return;
+            }
+            _netSendTimer = 0f;
+
             stream.SendNext(_rigid.position);
 
             Vector2 dir = _rigid.linearVelocity.sqrMagnitude > 0.0001f

@@ -69,6 +69,11 @@ public class RepairPanelUI : MonoBehaviour
             return;
         }
 
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayRepair();
+        }
+
         NetworkRelay.Instance.RequestRepair(gain);
 
         ClearSaveDataQuickSlots(data);

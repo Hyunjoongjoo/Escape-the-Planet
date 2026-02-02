@@ -1,7 +1,8 @@
-using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
+using UnityEngine;
 
 public class PlayerSpawner : MonoBehaviourPunCallbacks
 {
@@ -42,20 +43,23 @@ public class PlayerSpawner : MonoBehaviourPunCallbacks
 
     private bool HasLocalPlayer()
     {
-        PhotonView[] views = Object.FindObjectsByType<PhotonView>(FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        foreach (PhotonView view in views)
+        for (int i = 0; i < players.Count; i++)
         {
-            if (view == null)
+            PlayerController player = players[i];
+
+            if (player == null)
             {
                 continue;
             }
 
-            if (view.IsMine && view.GetComponent<PlayerController>() != null)
+            if (player.photonView != null && player.photonView.IsMine)
             {
                 return true;
             }
         }
+
         return false;
     }
     public Vector3 GetSpawnPosition(Player player)

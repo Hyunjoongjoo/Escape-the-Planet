@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
@@ -74,7 +75,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
             return;
         }
 
-        NetworkRelay.Instance.RequestStartDay();
+        StartCoroutine(ButtonCoroutine());   
     }
 
     public void OnClickEndDay()
@@ -87,6 +88,11 @@ public class RoomManager : MonoBehaviourPunCallbacks
         if (NetworkRelay.Instance == null)
         {
             return;
+        }
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayDayEnd();
         }
 
         NetworkRelay.Instance.RequestEndDay(DayEndReason.ManualEnd);
@@ -110,6 +116,40 @@ public class RoomManager : MonoBehaviourPunCallbacks
         {
             return;
         }
+
+        StartCoroutine(EnterFactoryCoroutine());
+
+        
+    }
+
+    private IEnumerator ButtonCoroutine()
+    {
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayDayStart(); // 버튼 클릭음
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayEnterFactory(); // 문 여닫는 소리
+        }
+
+        yield return new WaitForSeconds(1f); // 문 여는 연출 시간
+
+        NetworkRelay.Instance.RequestStartDay();
+
+    }
+
+    private IEnumerator EnterFactoryCoroutine()
+    {
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayEnterFactory(); // 문 여닫는 소리
+        }
+
+        yield return new WaitForSeconds(1f); // 문 여는 연출 시간
 
         EnterFactory_Local();
     }
@@ -138,9 +178,9 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     private PlayerController FindLocalPlayer()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             if (players[i] != null && players[i].photonView.IsMine)
             {

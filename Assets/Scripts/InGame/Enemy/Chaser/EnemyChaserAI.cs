@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
@@ -149,12 +150,12 @@ public class EnemyChaserAI : MonoBehaviour
 
     private Transform FindClosestAlivePlayer()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
         float bestDist = float.MaxValue;
         Transform best = null;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             PlayerController player = players[i];
             if (player == null)
@@ -225,6 +226,18 @@ public class EnemyChaserAI : MonoBehaviour
         if (_enemy.IsDead)
         {
             return;
+        }
+
+        if (_state == State.Patrol && next == State.Chase)
+        {
+            if (_enemy != null)
+            {
+                EnemySoundController sound = _enemy.GetComponent<EnemySoundController>();
+                if (sound != null)
+                {
+                    sound.PlayAlert();
+                }
+            }
         }
 
         _state = next;

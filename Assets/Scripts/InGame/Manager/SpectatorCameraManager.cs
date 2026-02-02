@@ -124,9 +124,9 @@ public class SpectatorCameraManager : MonoBehaviour
     {
         _targets.Clear();
 
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             if (players[i] == null)
             {
@@ -204,6 +204,8 @@ public class SpectatorCameraManager : MonoBehaviour
 
         _cam.Follow = follow;
         _cam.LookAt = follow;
+
+        UIManager.Instance.UpdateSpectatorTarget(target);
     }
     public void ForceFollow(Transform follow)
     {

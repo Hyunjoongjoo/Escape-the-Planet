@@ -145,9 +145,9 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
         _spawnedThisDay = false;
         _lastSpawnedId = ItemId.NONE;
 
-        GroundItemNetwork[] allItems = UnityEngine.Object.FindObjectsByType<GroundItemNetwork>(FindObjectsSortMode.None);
+        IReadOnlyList<GroundItemNetwork> allItems = ItemRegistry.Instance.Items;
 
-        for (int i = 0; i < allItems.Length; i++)
+        for (int i = 0; i < allItems.Count; i++)
         {
             if (allItems[i] != null)
             {

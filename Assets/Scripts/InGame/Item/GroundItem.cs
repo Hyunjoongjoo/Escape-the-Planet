@@ -23,6 +23,7 @@ public class GroundItem : MonoBehaviour, IInteractable
         Apply();
     }
 
+
     public void Setup(ItemData data)
     {
         _data = data;

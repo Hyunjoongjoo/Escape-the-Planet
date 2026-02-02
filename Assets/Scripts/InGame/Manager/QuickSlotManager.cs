@@ -1,5 +1,6 @@
-using UnityEngine;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class QuickSlotManager : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class QuickSlotManager : MonoBehaviour
     public event Action<int, QuickSlot> OnSlotUpdated;
 
     [SerializeField] private QuickSlot[] _slots = new QuickSlot[5];
+    
 
     public int CurrentIndex { get; private set; } = 0;
     public QuickSlot[] Slots => _slots;
@@ -66,6 +68,7 @@ public class QuickSlotManager : MonoBehaviour
             {
                 _slots[i].Set(data);
                 RaiseSlotUpdated(i);
+
                 return true;
             }
         }
@@ -87,6 +90,7 @@ public class QuickSlotManager : MonoBehaviour
         slot.Clear();
 
         RaiseSlotUpdated(CurrentIndex);
+
         return true;
     }
 
@@ -234,7 +238,7 @@ public class QuickSlotManager : MonoBehaviour
 
     private PlayerController FindLocalPlayer()
     {
-        PlayerController[] players = UnityEngine.Object.FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        IReadOnlyList <PlayerController> players = PlayerRegistry.Instance.Players;
 
         foreach (PlayerController player in players)
         {

@@ -19,6 +19,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     [SerializeField] private WeaponHitBox _weaponHitBox;
     [SerializeField] private WeaponData _defaultWeapon;
     [SerializeField] private Light2D _spotLight2D;
+    [SerializeField] private PlayerSoundController _soundController;
 
     [SerializeField] private Transform _followTarget;
     [SerializeField] private PlayerInteraction _interaction;
@@ -31,6 +32,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     [SerializeField] private float _softBlockStrength = 0.5f;
 
     [SerializeField] private PlayerInput _playerInput;
+    [SerializeField] private AudioListener _audioListener;
 
     [SerializeField] private bool _isDead = false;
 
@@ -66,6 +68,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
     public static event Action OnPlayerDead;
 
+    public float CurrentHP => _model.currentHP;
+    public float MaxHP => _model.maxHP;
     public bool IsDead => _isDead;
     public Transform FollowTarget => _followTarget != null ? _followTarget : transform;
 
@@ -73,16 +77,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     {
         get
         {
-            if (photonView == null || photonView.Owner == null)
-            {
-                return false;
-            }
-
-            if (photonView.Owner.CustomProperties.TryGetValue(
-                    MatchKeys.Loc, out object value))
-            {
-                return (PlayerLocation)(int)value == PlayerLocation.Room;
-            }
+            if (photonView == null || photonView.Owner == null) { return false; }
+            if (photonView.Owner.CustomProperties.TryGetValue(MatchKeys.Loc, out object value)) { return (PlayerLocation)(int)value == PlayerLocation.Room; }
 
             return false;
         }
@@ -97,20 +93,9 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         _state = GetComponent<PlayerState>();
         _rigid = GetComponent<Rigidbody2D>();
 
-        if (_playerInput == null)
-        {
-            _playerInput = GetComponent<PlayerInput>();
-        }
-
-        if (_interaction == null)
-        {
-            _interaction = GetComponentInChildren<PlayerInteraction>(true);
-        }
-
-        if (_weaponHitBox == null)
-        {
-            _weaponHitBox = GetComponentInChildren<WeaponHitBox>(true);
-        }
+        if (_playerInput == null) { _playerInput = GetComponent<PlayerInput>(); }
+        if (_interaction == null) {_interaction = GetComponentInChildren<PlayerInteraction>(true); }
+        if (_weaponHitBox == null) { _weaponHitBox = GetComponentInChildren<WeaponHitBox>(true); }
     }
 
     public override void OnEnable()
@@ -133,14 +118,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         Vector2 input = ctx.ReadValue<Vector2>();
         _moveInput = input.normalized;
 
-        if (_moveInput.x > 0.01f)
-        {
-            _facing = 1;
-        }
-        else if (_moveInput.x < -0.01f)
-        {
-            _facing = -1;
-        }
+        if (_moveInput.x > 0.01f) { _facing = 1; }
+        else if (_moveInput.x < -0.01f) { _facing = -1; }
 
         _weaponHitBox.SetFacing(_facing);
     }
@@ -176,7 +155,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     {
         if (_inputEnabled == false) { return; }
         if (ctx.started == false) { return; }
-
+        if (_soundController != null) { _soundController.PlayDrop(); }
         TryDrop();
     }
 
@@ -195,16 +174,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
     private void Start()
     {
-        if (PlayerRegistry.Instance != null)
-        {
-            PlayerRegistry.Instance.Register(this);
-        }
-
-        if (photonView.IsMine && PhotonNetwork.InRoom)
-        {
-            PhotonPlayerLocationManager.SetLocation(PlayerLocation.InGame);
-        }
-
+        if (PlayerRegistry.Instance != null) { PlayerRegistry.Instance.Register(this); }
+        if (photonView.IsMine && PhotonNetwork.InRoom) { PhotonPlayerLocationManager.SetLocation(PlayerLocation.InGame); }
         if (!photonView.IsMine)
         {
             if (_playerInput != null)
@@ -226,10 +197,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             return;
         }
 
-        if (_playerInput != null)
-        {
-            _playerInput.enabled = true;
-        }
+        if (_playerInput != null) { _playerInput.enabled = true; }
 
         EnsureWeaponApplied();
 
@@ -243,18 +211,12 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
     private void OnDestroy()
     {
-        if (PlayerRegistry.Instance != null)
-        {
-            PlayerRegistry.Instance.Unregister(this);
-        }
+        if (PlayerRegistry.Instance != null) { PlayerRegistry.Instance.Unregister(this); }
     }
 
     private void EnsureWeaponApplied()
     {
-        if (_model.currentWeapon == null)
-        {
-            _model.currentWeapon = _defaultWeapon;
-        }
+        if (_model.currentWeapon == null) { _model.currentWeapon = _defaultWeapon; }
 
         _weaponHitBox.ApplyWeapon(_model.currentWeapon);
         _weaponHitBox.SetActive(false);
@@ -266,10 +228,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         float ratio = PhotonPlayerStateManager.GetNextDayHpRatio(PhotonNetwork.LocalPlayer);
 
         int hp = Mathf.RoundToInt(_model.maxHP * ratio);
-        if (hp < 1)
-        {
-            hp = 1;
-        }
+        if (hp < 1) { hp = 1; }
 
         _model.currentHP = hp;
     }
@@ -279,10 +238,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         yield return null;
 
         var cam = FindFirstObjectByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsInactive.Include);
-        if (cam == null)
-        {
-            yield break;
-        }
+        if (cam == null) {  yield break; }
 
         cam.Follow = FollowTarget;
     }
@@ -307,21 +263,14 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
     private void ApplyRemoteDeadSync()
     {
-        if (photonView.IsMine)
-        {
-            return;
-        }
-
+        if (photonView.IsMine) { return; }
         if (_netIsDead && !_isDead)
         {
             _isDead = true;
             _state.ChangeState(PlayerState.State.Dead);
             _view.SetDead(true);
 
-            if (_weaponHitBox != null)
-            {
-                _weaponHitBox.SetActive(false);
-            }
+            if (_weaponHitBox != null) { _weaponHitBox.SetActive(false); }
 
             if (_rigid != null)
             {
@@ -330,15 +279,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             }
 
             Collider2D col = GetComponent<Collider2D>();
-            if (col != null)
-            {
-                col.isTrigger = true;
-            }
-
-            if (_spotLight2D != null)
-            {
-                _spotLight2D.enabled = false;
-            }
+            if (col != null) { col.isTrigger = true; }
+            if (_spotLight2D != null) { _spotLight2D.enabled = false; }
         }
     }
 
@@ -378,14 +320,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
         float speed = delta.magnitude / dt;
 
-        if (_model != null && _model.moveSpeed > 0f)
-        {
-            _remoteSpeed01 = Mathf.Clamp01(speed / _model.moveSpeed);
-        }
-        else
-        {
-            _remoteSpeed01 = 0f;
-        }
+        if (_model != null && _model.moveSpeed > 0f) { _remoteSpeed01 = Mathf.Clamp01(speed / _model.moveSpeed); }
+        else { _remoteSpeed01 = 0f; }
     }
 
     private void UpdateAnimations()
@@ -404,14 +340,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
         float speed01 = 0f;
 
-        if (photonView.IsMine)
-        {
-            speed01 = Mathf.Clamp01(_rigid.linearVelocity.magnitude / _model.moveSpeed);
-        }
-        else
-        {
-            speed01 = _remoteSpeed01;
-        }
+        if (photonView.IsMine) { speed01 = Mathf.Clamp01(_rigid.linearVelocity.magnitude / _model.moveSpeed); }
+        else { speed01 = _remoteSpeed01; }
 
         _view.SetMove(_facing, speed01);
     }
@@ -423,6 +353,12 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
         Move();
         ResolveSoftPlayerBlock();
+
+        if (_soundController != null)
+        {
+            bool isMoving = _moveInput.sqrMagnitude > 0.01f;
+            _soundController.TryPlayFootstep(isMoving);
+        }
     }
 
     private void ResolveSoftPlayerBlock()
@@ -468,14 +404,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
         _rigid.linearVelocity = _moveInput * _model.moveSpeed;
 
-        if (_moveInput.sqrMagnitude > 0.01f)
-        {
-            _state.ChangeState(PlayerState.State.Move);
-        }
-        else
-        {
-            _state.ChangeState(PlayerState.State.Idle);
-        }
+        if (_moveInput.sqrMagnitude > 0.01f) { _state.ChangeState(PlayerState.State.Move); }
+        else { _state.ChangeState(PlayerState.State.Idle); }
     }
 
     public void ApplyDamage_FromMaster(int damage)
@@ -501,21 +431,12 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     {
         yield return new WaitForSeconds(_hitStunTime);
 
-        if (_state.current == PlayerState.State.Dead)
-        {
-            yield break;
-        }
+        if (_state.current == PlayerState.State.Dead) { yield break; }
 
         if (_state.current == PlayerState.State.Hit)
         {
-            if (_moveInput.sqrMagnitude > 0.01f)
-            {
-                _state.ChangeState(PlayerState.State.Move);
-            }
-            else
-            {
-                _state.ChangeState(PlayerState.State.Idle);
-            }
+            if (_moveInput.sqrMagnitude > 0.01f) { _state.ChangeState(PlayerState.State.Move); }
+            else { _state.ChangeState(PlayerState.State.Idle); }
         }
 
         _hitRecoverCoroutine = null;
@@ -553,19 +474,15 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         _state.ChangeState(PlayerState.State.Dead);
         _isDead = true;
 
+        if (_soundController != null) { _soundController.PlayDead(); }
+
         _rigid.linearVelocity = Vector2.zero;
         _rigid.bodyType = RigidbodyType2D.Kinematic;
 
         Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
-        {
-            col.isTrigger = true;
-        }
+        if (col != null) { col.isTrigger = true; }
 
-        if (_spotLight2D != null)
-        {
-            _spotLight2D.enabled = false;
-        }
+        if (_spotLight2D != null) { _spotLight2D.enabled = false; }
 
         _weaponHitBox.SetActive(false);
 
@@ -575,6 +492,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         _view.SetDead(true);
         OnPlayerDead?.Invoke();
         SpectatorCameraManager.Instance?.StartSpectate();
+        UIManager.Instance.EnterSpectatorMode();
     }
 
     private void TryAttack()
@@ -584,17 +502,10 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         if (_state.current == PlayerState.State.Dead) { return; }
         if (_state.current == PlayerState.State.Attack) { return; }
         if (Time.time < _nextAttackTime) { return; }
-
-        if (_model.currentWeapon == null)
-        {
-            EnsureWeaponApplied();
-        }
-
+        if (_model.currentWeapon == null) { EnsureWeaponApplied(); }
         _rigid.linearVelocity = Vector2.zero;
-
         _attackFacing = _facing;
         _nextAttackTime = Time.time + _model.currentWeapon.cooldown;
-
         photonView.RPC(nameof(RPC_PlayAttack), RpcTarget.All, _attackFacing);
     }
 
@@ -614,26 +525,20 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
         _state.ChangeState(PlayerState.State.Attack);
         _view.PlayAttack();
+
+        if (_soundController != null) { _soundController.PlayAttack(); }
     }
 
     public void OnAttackStart()
     {
-        if (!photonView.IsMine)
-        {
-            return;
-        }
-
+        if (!photonView.IsMine) { return; }
         _weaponHitBox.SetFacing(_attackFacing);
         _weaponHitBox.SetActive(true);
     }
 
     public void OnAttackEnd()
     {
-        if (!photonView.IsMine)
-        {
-            return;
-        }
-
+        if (!photonView.IsMine) { return; }
         _weaponHitBox.SetActive(false);
     }
 
@@ -648,14 +553,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             return;
         }
 
-        if (_moveInput.sqrMagnitude > 0.01f)
-        {
-            _state.ChangeState(PlayerState.State.Move);
-        }
-        else
-        {
-            _state.ChangeState(PlayerState.State.Idle);
-        }
+        if (_moveInput.sqrMagnitude > 0.01f) { _state.ChangeState(PlayerState.State.Move); }
+        else { _state.ChangeState(PlayerState.State.Idle); }
     }
 
     public void RequestDamageFromOther(int damage, int attackerViewId)
@@ -677,27 +576,14 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     [PunRPC]
     private void RPC_RequestDamageToMaster(int targetViewId, int damage, int attackerViewId, PhotonMessageInfo info)
     {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            return;
-        }
+        if (!PhotonNetwork.IsMasterClient) { return; }
 
         PhotonView targetView = PhotonView.Find(targetViewId);
-        if (targetView == null)
-        {
-            return;
-        }
+        if (targetView == null) { return; }
 
         PlayerController targetPlayer = targetView.GetComponent<PlayerController>();
-        if (targetPlayer == null)
-        {
-            return;
-        }
-
-        if (targetPlayer._isDead)
-        {
-            return;
-        }
+        if (targetPlayer == null) { return; }
+        if (targetPlayer._isDead) { return; }
 
         targetView.RPC(nameof(RPC_ApplyDamageFromMaster), targetView.Owner, damage);
     }
@@ -728,7 +614,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         if (photonView.IsMine == false) { return; }
         if (_state.current == PlayerState.State.Dead) { return; }
         if (_isInvincible) { return; }
-
+        if (_soundController != null) { _soundController.PlayHit(); }
         _model.TakeDamage(damage);
         UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
 
@@ -769,10 +655,15 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         _interaction.TryInteract(gameObject);
     }
 
+    public void PlayPickupSound()
+    {
+        if (!photonView.IsMine) { return; }
+        if (_soundController != null) { _soundController.PlayPickup(); }
+    }
+
     private void TryDrop()
     {
         if (!photonView.IsMine) { return; }
-
         QuickSlotManager.Instance.DropSelectedItem();
     }
 
@@ -795,10 +686,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
 
         GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
-        if (net != null)
-        {
-            net.SetItemId((ItemId)itemId);
-        }
+        if (net != null) { net.SetItemId((ItemId)itemId); }
     }
 
     public void RequestDropAll(ItemId[] itemIds, Vector2 center)
@@ -806,10 +694,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         if (!photonView.IsMine) { return; }
 
         int[] ids = new int[itemIds.Length];
-        for (int i = 0; i < itemIds.Length; i++)
-        {
-            ids[i] = (int)itemIds[i];
-        }
+        for (int i = 0; i < itemIds.Length; i++) { ids[i] = (int)itemIds[i]; }
 
         photonView.RPC(nameof(RPC_RequestDropAll), RpcTarget.MasterClient, ids, center.x, center.y);
     }
@@ -831,10 +716,7 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             GameObject obj = PhotonNetwork.Instantiate(_groundItemPrefabName, pos, Quaternion.identity);
 
             GroundItemNetwork net = obj.GetComponent<GroundItemNetwork>();
-            if (net != null)
-            {
-                net.SetItemId(itemId);
-            }
+            if (net != null) { net.SetItemId(itemId); }
         }
     }
 
@@ -896,36 +778,24 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
 
         _isInvincible = false;
 
-        if (_invincibleCoroutine != null)
-        {
-            StopCoroutine(_invincibleCoroutine);
-        }
+        if (_invincibleCoroutine != null) { StopCoroutine(_invincibleCoroutine); }
         _invincibleCoroutine = null;
 
-        if (_hitRecoverCoroutine != null)
-        {
-            StopCoroutine(_hitRecoverCoroutine);
-        }
+        if (_hitRecoverCoroutine != null) { StopCoroutine(_hitRecoverCoroutine); }
         _hitRecoverCoroutine = null;
     }
 
     private void ResetForNewDay_Local(float hpRatio)
     {
         int hp = Mathf.RoundToInt(_model.maxHP * hpRatio);
-        if (hp < 1)
-        {
-            hp = 1;
-        }
+        if (hp < 1) { hp = 1; }
 
         _model.currentHP = hp;
         UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
 
         SetInputEnabled(true);
 
-        if (_playerInput != null)
-        {
-            _playerInput.enabled = true;
-        }
+        if (_playerInput != null) { _playerInput.enabled = true; }
 
         if (_rigid != null)
         {
@@ -941,11 +811,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         {
             SetInputEnabled(false);
 
-            if (_playerInput != null)
-            {
-                _playerInput.enabled = false;
-            }
-
+            if (_playerInput != null) { _playerInput.enabled = false; }
+            if (_audioListener != null) { _audioListener.enabled = false; }
             _rigid.linearVelocity = Vector2.zero;
             _rigid.angularVelocity = 0f;
             _rigid.bodyType = RigidbodyType2D.Kinematic;
@@ -962,11 +829,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         {
             SetInputEnabled(true);
 
-            if (_playerInput != null)
-            {
-                _playerInput.enabled = true;
-            }
-
+            if (_playerInput != null) { _playerInput.enabled = true; }
+            if (_audioListener != null) { _audioListener.enabled = true; }
             _rigid.bodyType = RigidbodyType2D.Dynamic;
 
             ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
@@ -976,20 +840,9 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     }
     public override void OnPlayerPropertiesUpdate(Photon.Realtime.Player targetPlayer, ExitGames.Client.Photon.Hashtable changedProps)
     {
-        if (photonView == null)
-        {
-            return;
-        }
-
-        if (targetPlayer != photonView.Owner)
-        {
-            return;
-        }
-
-        if (!changedProps.ContainsKey(MatchKeys.Loc))
-        {
-            return;
-        }
+        if (photonView == null) { return; }
+        if (targetPlayer != photonView.Owner) { return; }
+        if (!changedProps.ContainsKey(MatchKeys.Loc)) {  return; }
 
         PlayerLocation location = (PlayerLocation)(int)changedProps[MatchKeys.Loc];
 
@@ -998,14 +851,13 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
         _view.SetVisible(isInGame);
 
         Collider2D collider = GetComponent<Collider2D>();
-        if (collider != null)
+        if (collider != null) { collider.enabled = isInGame; }
+        if (_spotLight2D != null) { _spotLight2D.enabled = isInGame;  }
+        if (photonView.IsMine && _audioListener != null) { _audioListener.enabled = isInGame; }
+        if (photonView.IsMine)
         {
-            collider.enabled = isInGame;
-        }
-
-        if (_spotLight2D != null)
-        {
-            _spotLight2D.enabled = isInGame; 
+            AudioListener roomListener = Camera.main?.GetComponent<AudioListener>();
+            if (roomListener != null) { roomListener.enabled = !isInGame; }
         }
     }
 }

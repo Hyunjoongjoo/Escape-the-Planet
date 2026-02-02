@@ -112,10 +112,9 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
         _spawnTimer = 0f;
         _lastSpawnedId = EnemyId.NONE;
 
-        EnemyController[] enemies =
-            UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        IReadOnlyList<EnemyController> enemies = EnemyRegistry.Instance.Enemies;
 
-        for (int i = 0; i < enemies.Length; i++)
+        for (int i = 0; i < enemies.Count; i++)
         {
             if (enemies[i] != null)
             {

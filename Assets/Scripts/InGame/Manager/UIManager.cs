@@ -1,6 +1,7 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
@@ -20,6 +21,11 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Text _gameEndText;
 
     [SerializeField] private float _gameEndShowTime = 2.5f;
+
+    [SerializeField] private GameObject _spectatorPanel;
+    [SerializeField] private Text _spectatorNameText;
+    [SerializeField] private Slider _spectatorHpSlider;
+    [SerializeField] private Text _spectatorHpText;
 
     private Coroutine _gameEndRoutine;
 
@@ -140,9 +146,9 @@ public class UIManager : MonoBehaviour
 
     private PlayerController FindLocalPlayer()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             if (players[i] != null && players[i].photonView.IsMine)
             {
@@ -167,5 +173,35 @@ public class UIManager : MonoBehaviour
         {
             _gameTimePanel.SetActive(false);
         }
+    }
+
+    public void UpdateSpectatorTarget(PlayerController target)
+    {
+        if (target == null)
+        {
+            _spectatorNameText.text = "";
+            _spectatorHpSlider.value = 0f;
+            _spectatorHpText.text = "";
+            return;
+        }
+
+        string name = target.photonView.Owner.NickName;
+        float hp = target.CurrentHP;
+        float maxHp = target.MaxHP;
+
+        _spectatorNameText.text = name;
+        _spectatorHpSlider.maxValue = maxHp;
+        _spectatorHpSlider.value = hp;
+        _spectatorHpText.text = $"{hp} / {maxHp}";
+    }
+
+    public void EnterSpectatorMode()
+    {
+        _spectatorPanel.SetActive(true);
+    }
+
+    public void ExitSpectatorMode()
+    {
+        _spectatorPanel.SetActive(false);
     }
 }

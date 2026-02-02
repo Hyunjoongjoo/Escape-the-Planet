@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -94,7 +95,7 @@ public class NetworkRelay : MonoBehaviourPunCallbacks
 
     private void RebindMasterAuthority()
     {
-        EnemyController[] enemies = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        IReadOnlyList<EnemyController> enemies = EnemyRegistry.Instance.Enemies;
 
         foreach (EnemyController enemy in enemies)
         {

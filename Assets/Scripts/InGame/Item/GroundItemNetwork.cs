@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
@@ -19,6 +20,16 @@ public class GroundItemNetwork : MonoBehaviourPun
         }
 
         _pickedUp = false;
+    }
+
+    private void OnEnable()
+    {
+        ItemRegistry.Instance?.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        ItemRegistry.Instance?.Unregister(this);
     }
 
     public void SetItemId(ItemId itemId)
@@ -106,6 +117,32 @@ public class GroundItemNetwork : MonoBehaviourPun
             return;
         }
 
-        QuickSlotManager.Instance.TryPickup(_groundItem.Data);
+        bool picked = QuickSlotManager.Instance.TryPickup(_groundItem.Data);
+        if (!picked)
+        {
+            return;
+        }
+
+        PlayerController localPlayer = FindLocalPlayer();
+        if (localPlayer != null)
+        {
+            localPlayer.PlayPickupSound();
+        }
+    }
+
+    private PlayerController FindLocalPlayer()
+    {
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
+
+        foreach (PlayerController player in players)
+        {
+            PhotonView view = player.GetComponent<PhotonView>();
+            if (view != null && view.IsMine)
+            {
+                return player;
+            }
+        }
+
+        return null;
     }
 }

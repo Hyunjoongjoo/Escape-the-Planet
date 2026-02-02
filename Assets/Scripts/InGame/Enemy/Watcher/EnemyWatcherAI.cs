@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
@@ -100,6 +101,15 @@ public class EnemyWatcherAI : MonoBehaviour
             _watching = true;
             _watchTimer = 0f;
             _called = false;
+
+            if (_controller != null)
+            {
+                EnemySoundController sound = _controller.GetComponent<EnemySoundController>();
+                if (sound != null)
+                {
+                    sound.PlayAlert();
+                }
+            }
         }
 
         if (_watching && dist >= _cancelRange)
@@ -152,12 +162,12 @@ public class EnemyWatcherAI : MonoBehaviour
 
     private Transform FindClosestAlivePlayer()
     {
-        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
 
         float bestDist = float.MaxValue;
         Transform best = null;
 
-        for (int i = 0; i < players.Length; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             PlayerController player = players[i];
             if (player == null)

@@ -10,8 +10,8 @@ public class PoolManager : MonoBehaviourPunCallbacks
 
     [SerializeField] private string _groundItemPrefabName = "GroundItem";
 
-    [SerializeField] private int _prewarmEnemyCount = 20;
-    [SerializeField] private int _prewarmItemCount = 20;
+    [SerializeField] private int _prewarmEnemyCount = 15;
+    [SerializeField] private int _prewarmItemCount = 10;
 
     private readonly Dictionary<EnemyId, Queue<EnemyController>> _enemyPools = new Dictionary<EnemyId, Queue<EnemyController>>();
 
