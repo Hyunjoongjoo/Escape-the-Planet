@@ -5,7 +5,6 @@ using UnityEngine;
 public class ItemSpawnManager : MonoBehaviourPunCallbacks
 {
     [SerializeField] private ItemDatabase _itemDatabase;
-    [SerializeField] private string _groundItemPrefabName = "GroundItem";
 
     [SerializeField] private Transform _spawnPointsRoot;
     [SerializeField] private int _minSpawnCount = 12;
@@ -97,13 +96,12 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
                 item.spawnRadius
             );
 
-            GameObject spawnedObject = PhotonNetwork.InstantiateRoomObject(
-                _groundItemPrefabName,
-                spawnPosition,
-                Quaternion.identity
-            );
+            GameObject spawnedObject = PoolManager.Instance.GetItem(item.id, spawnPosition);
 
-            _spawnedItems.Add(spawnedObject);
+            if (spawnedObject == null)
+            {
+                continue;
+            }
 
             GroundItemNetwork net = spawnedObject.GetComponent<GroundItemNetwork>();
             if (net != null)
@@ -153,7 +151,7 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
         {
             if (allItems[i] != null)
             {
-                PhotonNetwork.Destroy(allItems[i].gameObject);
+                PoolManager.Instance.ReturnItem(allItems[i].gameObject);
             }
         }
 

@@ -41,6 +41,7 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     public EnemyState State => _state;
     public bool IsDead => _state.current == EnemyState.State.Dead;
     public float CurrentAnimSpeed01 { get; set; }
+    public EnemyId DataId => (EnemyId)_dataId;
 
     private void Awake()
     {
@@ -331,7 +332,7 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
     {
         yield return _deadWait;
 
-        PhotonNetwork.Destroy(gameObject);
+        PoolManager.Instance.ReturnEnemy(this);
     }
 
     [PunRPC]
@@ -487,6 +488,22 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
         if (lurker != null)
         {
             lurker.enabled = false;
+        }
+    }
+    public void ResetForPool()
+    {
+        _rigid.simulated = true;
+        _rigid.linearVelocity = Vector2.zero;
+
+        _state.ChangeState(EnemyState.State.Idle);
+
+        CurrentAnimSpeed01 = 0f;
+        _view.SetAlpha(1f);
+
+        ChaserPathChase pathAI = GetComponent<ChaserPathChase>();
+        if (pathAI != null)
+        {
+            pathAI.enabled = true;
         }
     }
 }

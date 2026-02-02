@@ -9,6 +9,8 @@ public class GroundItemNetwork : MonoBehaviourPun
 
     private bool _pickedUp = false;
 
+    public ItemId ItemId { get; private set; }
+
     private void Awake()
     {
         if (_groundItem == null)
@@ -25,6 +27,8 @@ public class GroundItemNetwork : MonoBehaviourPun
         {
             return;
         }
+
+        ItemId = itemId;
 
         photonView.RPC(nameof(RPC_SetItemId), RpcTarget.AllBuffered, (int)itemId);
     }
@@ -76,7 +80,12 @@ public class GroundItemNetwork : MonoBehaviourPun
 
         photonView.RPC(nameof(RPC_PickupApproved), RpcTarget.All, actorNumber);
 
-        PhotonNetwork.Destroy(gameObject);
+        PoolManager.Instance.ReturnItem(gameObject);
+    }
+
+    public void ResetForPool()
+    {
+        _pickedUp = false;
     }
 
     [PunRPC]

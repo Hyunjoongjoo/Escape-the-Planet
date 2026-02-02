@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   id: 3
   prefabName: Lurker
-  baseMoveSpeed: 6
+  baseMoveSpeed: 8
   baseMaxHP: 30
   baseContactDamage: 10
+  baseApproachDistance: 0.7
   hpGrowthPerMinute: 0.1
   damageGrowthPerMinute: 0.08
   speedGrowthPerMinute: 0.03

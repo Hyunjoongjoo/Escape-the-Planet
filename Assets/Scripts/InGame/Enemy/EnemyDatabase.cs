@@ -44,6 +44,11 @@ public class EnemyDatabase : ScriptableObject
         return _map.TryGetValue(id, out EnemyData data) ? data : null;
     }
 
+    public EnemyData[] GetAll()
+    {
+        return _enemies;
+    }
+
     public EnemyData GetRandomWeighted(EnemyId lastId = EnemyId.NONE)
     {
         if (_enemies == null || _enemies.Length == 0)

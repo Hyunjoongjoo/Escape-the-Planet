@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyStats
   id: 2
   prefabName: Watcher
-  baseMoveSpeed: 4
+  baseMoveSpeed: 6
   baseMaxHP: 15
   baseContactDamage: 5
   baseApproachDistance: 0.7

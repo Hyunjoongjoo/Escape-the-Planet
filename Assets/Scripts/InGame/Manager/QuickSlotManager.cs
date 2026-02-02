@@ -103,7 +103,6 @@ public class QuickSlotManager : MonoBehaviour
         return false;
     }
 
-    // CHANGED: 드롭은 네트워크 요청만 PlayerController에 위임
     public void DropSelectedItem()
     {
         if (TryDropCurrent(out ItemData dropped) == false)

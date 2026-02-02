@@ -119,7 +119,7 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
         {
             if (enemies[i] != null)
             {
-                PhotonNetwork.Destroy(enemies[i].gameObject);
+                PoolManager.Instance.ReturnEnemy(enemies[i]);
             }
         }
 
@@ -166,19 +166,13 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
             enemyData.spawnRadius
         );
 
-        GameObject spawnedObject = PhotonNetwork.InstantiateRoomObject(
-            enemyData.prefabName,
-            spawnPosition,
-            Quaternion.identity
-        );
+        EnemyController enemy = PoolManager.Instance.GetEnemy(enemyData.id, spawnPosition);
 
-        EnemyController enemy = spawnedObject.GetComponent<EnemyController>();
         if (enemy == null)
         {
             return;
         }
 
-        //enemy.Init(enemyData, GameManager.Instance.RemainTime / 60f);
         float elapsedMinutes = (GameManager.Instance.DefaultDayDuration - GameManager.Instance.RemainTime) / 60f;
         enemy.Init(enemyData, elapsedMinutes);
         _alive.Add(enemy);
