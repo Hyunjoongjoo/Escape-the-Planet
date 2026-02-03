@@ -2,7 +2,8 @@ public enum DayState
 {
     Idle = 0,
     Running = 1,
-    Ending = 2
+    Ending = 2,
+    Clear = 3
 }
 
 public enum DayEndReason

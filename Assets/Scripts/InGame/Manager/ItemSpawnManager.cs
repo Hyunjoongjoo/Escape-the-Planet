@@ -14,8 +14,6 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
     [SerializeField] private float _checkRadius = 0.25f;
     [SerializeField] private int _tryCount = 12;
 
-    [SerializeField] private GameObject _inGameWorld;
-
     [SerializeField] private string _groundItemPrefabName = "GroundItem";
 
     private bool _spawnedThisDay = false;
@@ -106,7 +104,9 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
            Quaternion.identity
            );
             //GameObject spawnedObject = PoolManager.Instance.GetItem(item.id, spawnPosition); //풀링 제거
-            spawnedObject.transform.SetParent(_inGameWorld.transform);
+            Transform world = GameManager.Instance.InGameWorldTransform;
+            spawnedObject.transform.SetParent(world, true);
+            spawnedObject.GetComponent<PhotonView>().RPC("RPC_SetParentToWorld", RpcTarget.AllBuffered);
 
             if (spawnedObject == null)
             {
@@ -155,19 +155,22 @@ public class ItemSpawnManager : MonoBehaviourPunCallbacks
         _spawnedThisDay = false;
         _lastSpawnedId = ItemId.NONE;
 
-        IReadOnlyList<GroundItemNetwork> allItems = ItemRegistry.Instance.Items;
+        Transform world = GameManager.Instance.InGameWorldTransform;
 
-        for (int i = 0; i < allItems.Count; i++)
+        for (int i = world.childCount - 1; i >= 0; i--)
         {
-            if (allItems[i] != null)
+            Transform child = world.GetChild(i);
+
+            GroundItemNetwork item = child.GetComponent<GroundItemNetwork>();
+            if (item != null)
             {
-                //PoolManager.Instance.ReturnItem(allItems[i].gameObject); //풀링 제거..
-                PhotonNetwork.Destroy(allItems[i].gameObject);
+                PhotonNetwork.Destroy(item.gameObject);
             }
         }
 
         _spawnedItems.Clear();
     }
+
     public void OnMasterChanged()
     {
         enabled = PhotonNetwork.IsMasterClient;

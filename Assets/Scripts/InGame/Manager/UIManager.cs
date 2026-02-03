@@ -104,13 +104,13 @@ public class UIManager : MonoBehaviour
         _playerNameText.text = playerName;
         _hpSlider.maxValue = maxHP;
         _hpSlider.value = currentHP;
-        _hpText.text = $"{currentHP} / {maxHP}";
+        _hpText.text = $"{currentHP:F0} / {maxHP:F0}";
     }
 
     public void UpdateHP(float currentHP, float maxHP)
     {
         _hpSlider.value = currentHP;
-        _hpText.text = $"{currentHP} / {maxHP}";
+        _hpText.text = $"{currentHP:F0} / {maxHP:F0}";
     }
 
     private void HandleGameEnd(GameEndType type)
@@ -259,5 +259,12 @@ public class UIManager : MonoBehaviour
         _playerNameText.gameObject.SetActive(true);
         _hpSlider.gameObject.SetActive(true);
         _hpText.gameObject.SetActive(true);
+    }
+    public void ShowClear()
+    {
+        _gameClearPanel.SetActive(true);
+        _inGameUIRoot.SetActive(false);
+        _gameTimePanel.SetActive(false);
+        _spectatorPanel.SetActive(false);
     }
 }

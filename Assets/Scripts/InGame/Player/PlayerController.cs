@@ -34,6 +34,8 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
     [SerializeField] private PlayerInput _playerInput;
     [SerializeField] private AudioListener _audioListener;
 
+    [SerializeField] private float _hpRegenPerSecond = 0.5f;
+
     [SerializeField] private bool _isDead = false;
 
     [SerializeField] private float _hitFxCooldown = 0.08f;
@@ -258,7 +260,29 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             return;
         }
 
+        if (photonView.IsMine && GameManager.Instance != null && GameManager.Instance.IsRunning)
+        {
+            RegenerateHp();
+        }
+
         UpdateAnimations();
+    }
+
+    private void RegenerateHp()
+    {
+        float currentHp = _model.currentHP;
+        float maxHp = _model.maxHP;
+
+        if (currentHp >= maxHp)
+        {
+            return;
+        }
+
+        float nextHp = currentHp + _hpRegenPerSecond * Time.deltaTime;
+        nextHp = Mathf.Min(nextHp, maxHp);
+
+        _model.currentHP = nextHp;
+        UIManager.Instance.UpdateHP(_model.currentHP, _model.maxHP);
     }
 
     private void ApplyRemoteDeadSync()
@@ -859,5 +883,12 @@ public class PlayerController : MonoBehaviourPunCallbacks, IPunObservable
             AudioListener roomListener = Camera.main?.GetComponent<AudioListener>();
             if (roomListener != null) { roomListener.enabled = !isInGame; }
         }
+    }
+
+    [PunRPC]
+    public void RPC_SetParentToWorld()
+    {
+        Transform world = GameManager.Instance.InGameWorldTransform;
+        transform.SetParent(world, true);
     }
 }

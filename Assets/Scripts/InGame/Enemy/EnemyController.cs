@@ -571,4 +571,11 @@ public class EnemyController : MonoBehaviourPun, IPunObservable
             pathAI.enabled = true;
         }
     }
+
+    [PunRPC]
+    public void RPC_SetParentToWorld()
+    {
+        Transform world = GameManager.Instance.InGameWorldTransform;
+        transform.SetParent(world, true);
+    }
 }

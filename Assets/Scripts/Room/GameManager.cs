@@ -44,6 +44,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public float RemainTime => _remainTime;
     public float DefaultDayDuration => _defaultDayDuration;
+    public Transform InGameWorldTransform => _inGameWorld.transform;
     public bool IsRunning { get; private set; }
 
     public event Action<float> OnTimeChanged;
@@ -62,12 +63,12 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void Update()
     {
-        if (!IsRunning)
+        if (!PhotonNetwork.InRoom)
         {
             return;
         }
 
-        if (!PhotonNetwork.InRoom)
+        if (_cachedState == DayState.Clear)
         {
             return;
         }
@@ -153,6 +154,12 @@ public class GameManager : MonoBehaviourPunCallbacks
         { MatchKeys.Repair, currentRepair }
     };
 
+        if (currentRepair >= 100)
+        {
+            props[MatchKeys.DayEndReason] = (int)DayEndReason.ManualEnd;
+            props[MatchKeys.EndingUntil] = 0.0;
+            props[MatchKeys.DayState] = (int)DayState.Clear;
+        }
         PhotonNetwork.CurrentRoom.SetCustomProperties(props);
     }
 
@@ -249,7 +256,7 @@ public class GameManager : MonoBehaviourPunCallbacks
             SetAllPlayersRoomMode();
 
             UIManager.Instance.HideTimer();
-
+            UIManager.Instance.ExitSpectatorMode();
             HandleInventoryByDayEndReason(_cachedEndReason);
             ApplyRepairPenalty(_cachedEndReason);
 
@@ -259,6 +266,30 @@ public class GameManager : MonoBehaviourPunCallbacks
                 FindFirstObjectByType<ItemSpawnManager>()?.ResetForNextDay();
                 FindFirstObjectByType<EnemySpawnManager>()?.ResetForNextDay();
             }
+        }
+
+        if (state == DayState.Clear)
+        {
+            IsRunning = false;
+
+            SetAllPlayersRoomMode();
+            
+            UIManager.Instance.HideTimer();
+            UIManager.Instance.ExitSpectatorMode();
+            UIManager.Instance.EnterEndingMode();
+
+            HandleInventoryByDayEndReason(_cachedEndReason);
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                ApplyNextDayHpRules_Master(_cachedEndReason);
+
+                FindFirstObjectByType<ItemSpawnManager>()?.ResetForNextDay();
+                FindFirstObjectByType<EnemySpawnManager>()?.ResetForNextDay();
+            }
+
+
+            return;
         }
     }
 
@@ -508,7 +539,6 @@ public class GameManager : MonoBehaviourPunCallbacks
             return;
         }
         SpectatorCameraManager.Instance?.StopSpectate();
-        _inGameWorld.SetActive(false);
         NetworkRelay.Instance.BroadcastEnding();
     }
 }

@@ -322,6 +322,12 @@ public class RoomManager : MonoBehaviourPunCallbacks
         {
             UIManager.Instance.SetRoomPhase();
         }
+
+        if (state == DayState.Ending || state == DayState.Clear || state == DayState.Idle)
+        {
+            UIManager.Instance.SetRoomPhase();
+            return;
+        }
     }
 
     public override void OnRoomPropertiesUpdate(Hashtable changedProps)

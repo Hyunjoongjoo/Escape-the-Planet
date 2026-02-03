@@ -1,7 +1,7 @@
-using UnityEngine;
-using UnityEngine.Tilemaps;
 using System.Collections.Generic;
 using Photon.Pun;
+using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class EnemySpawnManager : MonoBehaviourPunCallbacks
 {
@@ -16,8 +16,6 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
     [SerializeField] private LayerMask _blockedMask;
     [SerializeField] private float _checkRadius = 0.3f;
     [SerializeField] private int _tryCount = 12;
-
-    [SerializeField] private GameObject _inGameWorld;
 
     private readonly List<EnemySpawnPoint> _points = new List<EnemySpawnPoint>();
     private readonly List<EnemyController> _alive = new List<EnemyController>();
@@ -114,18 +112,18 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
         _spawnTimer = 0f;
         _lastSpawnedId = EnemyId.NONE;
 
-        IReadOnlyList<EnemyController> enemies = EnemyRegistry.Instance.Enemies;
+        Transform world = GameManager.Instance.InGameWorldTransform;
 
-        for (int i = 0; i < enemies.Count; i++)
+        for (int i = world.childCount - 1; i >= 0; i--)
         {
-            if (enemies[i] != null)
+            Transform child = world.GetChild(i);
+
+            EnemyController enemy = child.GetComponent<EnemyController>();
+            if (enemy != null)
             {
-                //PoolManager.Instance.ReturnEnemy(enemies[i]); //풀링 제거
-                PhotonNetwork.Destroy(enemies[i].gameObject);
+                PhotonNetwork.Destroy(enemy.gameObject);
             }
         }
-
-        _alive.Clear();
     }
 
     private void CleanupAlive()
@@ -173,8 +171,9 @@ public class EnemySpawnManager : MonoBehaviourPunCallbacks
         spawnPosition,
         Quaternion.identity
     );
-
-        obj.transform.SetParent(_inGameWorld.transform);
+        Transform world = GameManager.Instance.InGameWorldTransform;
+        obj.transform.SetParent(world, true);
+        obj.GetComponent<PhotonView>().RPC("RPC_SetParentToWorld", RpcTarget.AllBuffered);
 
         EnemyController enemy = obj.GetComponent<EnemyController>();
         //EnemyController enemy = PoolManager.Instance.GetEnemy(enemyData.id, spawnPosition); //풀링 제거..

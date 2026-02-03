@@ -95,9 +95,9 @@ public class NetworkRelay : MonoBehaviourPunCallbacks
 
     private void RebindMasterAuthority()
     {
-        IReadOnlyList<EnemyController> enemies = EnemyRegistry.Instance.Enemies;
+        IReadOnlyList<EnemyController> Enemies = EnemyRegistry.Instance.Enemies;
 
-        foreach (EnemyController enemy in enemies)
+        foreach (EnemyController enemy in Enemies)
         {
             enemy.OnMasterChanged();
         }
@@ -129,10 +129,5 @@ public class NetworkRelay : MonoBehaviourPunCallbacks
     private void RPC_BroadcastEnding()
     {
         PhotonPlayerLocationManager.SetLocation(PlayerLocation.Room);
-
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.EnterEndingMode();
-        }
-    }
+    }  
 }

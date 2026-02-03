@@ -146,4 +146,11 @@ public class GroundItemNetwork : MonoBehaviourPun
 
         return null;
     }
+
+    [PunRPC]
+    public void RPC_SetParentToWorld()
+    {
+        Transform world = GameManager.Instance.InGameWorldTransform;
+        transform.SetParent(world, true);
+    }
 }
