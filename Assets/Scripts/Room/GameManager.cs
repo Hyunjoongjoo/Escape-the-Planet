@@ -6,6 +6,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
+using System.Threading.Tasks;
 
 public enum GameEndType
 {
@@ -103,7 +104,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             return;
         }
-
+        
         Hashtable props = new Hashtable
         {
             { MatchKeys.DayStartTime, PhotonNetwork.Time },
@@ -258,7 +259,12 @@ public class GameManager : MonoBehaviourPunCallbacks
             UIManager.Instance.HideTimer();
             UIManager.Instance.ExitSpectatorMode();
             HandleInventoryByDayEndReason(_cachedEndReason);
-            ApplyRepairPenalty(_cachedEndReason);
+            int penalizedRepair = ApplyRepairPenalty(_cachedEndReason);
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                SaveRepairToFirebase_Master(penalizedRepair);
+            }
 
             if (PhotonNetwork.IsMasterClient)
             {
@@ -293,6 +299,30 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
+    private async void SaveRepairToFirebase_Master(int repairToSave)
+    {
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        if (FirebaseUserData.Instance == null)
+        {
+            return;
+        }
+
+        while (!FirebaseUserData.Instance.IsReady)
+        {
+            await Task.Yield();
+        }
+
+        string key = SaveKeyProvider.GetPlayerKey();
+
+        await FirebaseUserData.Instance.SetRepairPercentAsync(key, repairToSave);
+
+        Debug.Log($"[Repair] Saved party progress (after penalty) = {repairToSave}");
+    }
+
     private void ResetAllPlayersForNewDay_AllClients()
     {
         IReadOnlyList<PlayerController> players = PlayerRegistry.Instance.Players;
@@ -309,11 +339,11 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
-    private void ApplyRepairPenalty(DayEndReason reason)
+    private int ApplyRepairPenalty(DayEndReason reason)
     {
         if (!PhotonNetwork.IsMasterClient)
         {
-            return;
+            return GetRepair();
         }
 
         int penalty = 0;
@@ -331,17 +361,21 @@ public class GameManager : MonoBehaviourPunCallbacks
             penalty = 10;
         }
 
-        if (penalty <= 0)
+        int current = GetRepair();
+        int next = current;
+
+        if (penalty > 0)
         {
-            return;
+            next = Mathf.Clamp(current - penalty, 0, 100);
+
+            PhotonNetwork.CurrentRoom.SetCustomProperties(
+                new ExitGames.Client.Photon.Hashtable { { MatchKeys.Repair, next } }
+            );
+
+            Debug.Log($"[Repair] Penalty -{penalty} ¡æ {next}");
         }
 
-        int current = GetRepair();
-        int next = Mathf.Clamp(current - penalty, 0, 100);
-
-        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { MatchKeys.Repair, next } });
-
-        Debug.Log($"[Repair] Penalty -{penalty} ¡æ {next}");
+        return next;
     }
 
     public int GetRepair()

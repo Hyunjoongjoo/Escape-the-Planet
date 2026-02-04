@@ -74,7 +74,6 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     }
     private void UpdateRoomList()
     {
-        // 기존 버튼 제거
         foreach (var btn in _roomButtons.Values)
         {
             Destroy(btn);

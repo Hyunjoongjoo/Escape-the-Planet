@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
+using System.Threading.Tasks;
 
 public class RoomManager : MonoBehaviourPunCallbacks
 {
@@ -41,6 +42,8 @@ public class RoomManager : MonoBehaviourPunCallbacks
         UpdateButtons();
 
         ApplyCurrentDayState();
+
+        StartCoroutine(RefreshUIAfterJoin());
     }
 
     public override void OnJoinedRoom()
@@ -56,6 +59,8 @@ public class RoomManager : MonoBehaviourPunCallbacks
         UpdateUI();
         UpdateButtons();
         ApplyCurrentDayState();
+
+        RefreshRepairFromFirebase();
     }
 
     public void OnClickStartDay()
@@ -354,12 +359,50 @@ public class RoomManager : MonoBehaviourPunCallbacks
         UpdateUI();
     }
 
+
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
     {
         if (changedProps.ContainsKey(MatchKeys.Ready))
         {
             UpdateUI();
         }
+    }
+
+    private async void RefreshRepairFromFirebase()
+    {
+        Debug.Log($"[Repair][ENTER] inRoom={PhotonNetwork.InRoom} isMaster={PhotonNetwork.IsMasterClient}");
+        if (!PhotonNetwork.InRoom)
+        {
+            return;
+        }
+
+        if (FirebaseUserData.Instance == null)
+        {
+            return;
+        }
+
+        if (!PhotonNetwork.IsMasterClient)
+        {
+            return;
+        }
+
+        while (!FirebaseUserData.Instance.IsReady)
+        {
+            await Task.Yield();
+        }
+
+        string masterKey = SaveKeyProvider.GetPlayerKey();
+        Debug.Log($"[Repair][KEY] masterKey={masterKey}");
+        Debug.Log($"[Repair][KEY] photonUserId={PhotonNetwork.LocalPlayer.UserId}");
+        Debug.Log($"[Repair][KEY] nick={PhotonNetwork.LocalPlayer.NickName}");
+        int repair = await FirebaseUserData.Instance.GetRepairPercentAsync(masterKey);
+        Debug.Log($"[Repair][LOAD] key={masterKey} repair={repair}");
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
+    {
+        { MatchKeys.Repair, repair }
+    });
+
+        Debug.Log($"[Repair] Room initialized from MASTER Firebase ¡æ {repair}");
     }
 
     public void OnClickLeaveRoom()
