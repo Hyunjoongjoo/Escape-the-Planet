@@ -88,7 +88,6 @@ public class NetworkRelay : MonoBehaviourPunCallbacks
             return;
         }
 
-        Debug.Log($"Master switched to {newMasterClient.NickName}");
 
         RebindMasterAuthority();
     }

@@ -8,13 +8,11 @@ public class RoomSaveLoader : MonoBehaviour
     {
         if (_itemDatabase == null)
         {
-            Debug.LogWarning("[RoomSaveLoader] ItemDatabase is null");
             return;
         }
 
         if (QuickSlotManager.Instance == null)
         {
-            Debug.LogWarning("[RoomSaveLoader] QuickSlotManager.Instance is null");
             return;
         }
 
@@ -23,11 +21,9 @@ public class RoomSaveLoader : MonoBehaviour
         if (SaveManager.TryLoad(key, out SaveData data))
         {
             QuickSlotManager.Instance.LoadFromSaveData(data, _itemDatabase);
-            Debug.Log("[RoomSaveLoader] QuickSlot loaded from SaveData");
         }
         else
         {
-            Debug.Log($"[RoomSaveLoader] No save for: {key}");
         }
     }
 }

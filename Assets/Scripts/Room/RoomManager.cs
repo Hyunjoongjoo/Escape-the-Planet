@@ -369,8 +369,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     }
 
     private async void RefreshRepairFromFirebase()
-    {
-        Debug.Log($"[Repair][ENTER] inRoom={PhotonNetwork.InRoom} isMaster={PhotonNetwork.IsMasterClient}");
+    {;
         if (!PhotonNetwork.InRoom)
         {
             return;
@@ -392,17 +391,14 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
 
         string masterKey = SaveKeyProvider.GetPlayerKey();
-        Debug.Log($"[Repair][KEY] masterKey={masterKey}");
-        Debug.Log($"[Repair][KEY] photonUserId={PhotonNetwork.LocalPlayer.UserId}");
-        Debug.Log($"[Repair][KEY] nick={PhotonNetwork.LocalPlayer.NickName}");
+
         int repair = await FirebaseUserData.Instance.GetRepairPercentAsync(masterKey);
-        Debug.Log($"[Repair][LOAD] key={masterKey} repair={repair}");
+
         PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
     {
         { MatchKeys.Repair, repair }
     });
 
-        Debug.Log($"[Repair] Room initialized from MASTER Firebase ¡æ {repair}");
     }
 
     public void OnClickLeaveRoom()

@@ -320,7 +320,6 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         await FirebaseUserData.Instance.SetRepairPercentAsync(key, repairToSave);
 
-        Debug.Log($"[Repair] Saved party progress (after penalty) = {repairToSave}");
     }
 
     private void ResetAllPlayersForNewDay_AllClients()
@@ -372,7 +371,6 @@ public class GameManager : MonoBehaviourPunCallbacks
                 new ExitGames.Client.Photon.Hashtable { { MatchKeys.Repair, next } }
             );
 
-            Debug.Log($"[Repair] Penalty -{penalty} ¡æ {next}");
         }
 
         return next;

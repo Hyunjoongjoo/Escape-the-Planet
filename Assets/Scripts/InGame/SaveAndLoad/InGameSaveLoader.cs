@@ -8,13 +8,11 @@ public class InGameSaveLoader : MonoBehaviour
     {
         if (_itemDatabase == null)
         {
-            Debug.LogWarning("[InGameSaveLoader] ItemDatabase is null");
             return;
         }
 
         if (QuickSlotManager.Instance == null)
         {
-            Debug.LogWarning("[InGameSaveLoader] QuickSlotManager.Instance is null");
             return;
         }
 
@@ -26,7 +24,6 @@ public class InGameSaveLoader : MonoBehaviour
         }
         else
         {
-            Debug.Log($"No save for: {key}");
         }
     }
 }

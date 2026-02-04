@@ -37,13 +37,11 @@ public class FirebaseUserData : MonoBehaviour
         var status = await FirebaseApp.CheckAndFixDependenciesAsync();
         if (status != DependencyStatus.Available)
         {
-            Debug.LogError($"[FirebaseUserData] Firebase dependency error: {status}");
             return;
         }
 
         if (string.IsNullOrEmpty(_databaseUrl))
         {
-            Debug.LogError("[FirebaseUserData] Database URL is empty.");
             return;
         }
 
@@ -62,13 +60,11 @@ public class FirebaseUserData : MonoBehaviour
     {
         if (IsReady == false)
         {
-            Debug.LogWarning("[FirebaseUserData] Not ready.");
             return 0;
         }
 
         if (string.IsNullOrEmpty(playerKey))
         {
-            Debug.LogWarning("[FirebaseUserData] playerKey is null.");
             return 0;
         }
 
@@ -92,13 +88,11 @@ public class FirebaseUserData : MonoBehaviour
     {
         if (IsReady == false)
         {
-            Debug.LogWarning("[FirebaseUserData] Not ready.");
             return;
         }
 
         if (string.IsNullOrEmpty(playerKey))
         {
-            Debug.LogWarning("[FirebaseUserData] playerKey is null.");
             return;
         }
 
@@ -106,7 +100,5 @@ public class FirebaseUserData : MonoBehaviour
 
         string path = GetUserRepairPercentPath(playerKey);
         await FirebaseDatabase.DefaultInstance.GetReference(path).SetValueAsync(value);
-
-        Debug.Log($"[FirebaseUserData] Saved {path} = {value}");
     }
 }

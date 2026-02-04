@@ -26,7 +26,6 @@ public class SaveManager
     {
         if (data == null)
         {
-            Debug.LogWarning("[SaveManager] Save failed: data is null");
             return false;
         }
 
@@ -37,12 +36,10 @@ public class SaveManager
             string json = JsonUtility.ToJson(data, true);
             File.WriteAllText(path, json);
 
-            Debug.Log($"[SaveManager] Saved: {path}\n{json}");
             return true;
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveManager] Save failed: {path}\n{e}");
             return false;
         }
     }
@@ -55,7 +52,6 @@ public class SaveManager
 
         if (File.Exists(path) == false)
         {
-            Debug.Log($"[SaveManager] No save file: {path}");
             return false;
         }
 
@@ -64,12 +60,10 @@ public class SaveManager
             string json = File.ReadAllText(path);
             data = JsonUtility.FromJson<SaveData>(json);
 
-            Debug.Log($"[SaveManager] Loaded: {path}\n{json}");
             return data != null;
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveManager] Load failed: {path}\n{e}");
             data = null;
             return false;
         }
@@ -84,14 +78,12 @@ public class SaveManager
             if (File.Exists(path) == true)
             {
                 File.Delete(path);
-                Debug.Log($"[SaveManager] Deleted: {path}");
             }
 
             return true;
         }
         catch (Exception e)
         {
-            Debug.LogError($"[SaveManager] Delete failed: {path}\n{e}");
             return false;
         }
     }
